@@ -1,5 +1,4 @@
 import axios, {AxiosResponse} from 'axios';
-import {ApiSurvey, SurveyAccess, SurveyData, User} from "./types";
 import Cookies from "js-cookie";
 
 // Add this at the top of the file
@@ -11,18 +10,17 @@ export class AuthenticationError extends Error {
 }
 
 // Use the direct API URL from environment variables if available
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001/api';
 
 // Configure Axios defaults
 axios.defaults.headers.common['Content-Type'] = 'application/json';
-axios.defaults.withCredentials = true;
 
-// Add this function to get headers with auth token
+
+// Add this function to get headers without auth token
 const getHeaders = (): { [key: string]: string } => {
-  const token = Cookies.get('accessToken');
   return {
-    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
+    'Accept': 'application/json'
   };
 };
 
@@ -83,7 +81,7 @@ export const deleteProject = async (data: { project_id: string }) => {
 export const getProjects = async () => {
   try {
     const response = await axios.get(`${API_URL}/projects`, {
-      headers: getHeaders()
+      headers: getHeaders(),
     });
     return response.data;
   } catch (error) {
@@ -92,9 +90,9 @@ export const getProjects = async () => {
   }
 };
 
-export const getProjectById = async (project_id: string) => {
+export const getProjectById = async (projectId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/projects/${project_id}`, {
+    const response = await axios.get(`${API_URL}/projects/${projectId}`, {
       headers: getHeaders()
     });
     return response.data;

@@ -1,13 +1,10 @@
 import { createGlobalStyle } from 'styled-components';
 
-
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;700&display=swap');
-
   body {
     margin: 0;
     padding: 0;
-    font-family: ${props => props.theme.fonts.main};
+    font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: ${props => props.theme.colors.background};
     color: ${props => props.theme.colors.text};
   }

@@ -11,9 +11,9 @@ from database.database import db_session
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Status(Enum):
-    PRE_PERMIT = 'pre_permit'
-    POST_PERMIT = 'post_permit'
-    FINAL = 'final'
+    PRE_PERMIT = 'PRE_PERMIT'
+    POST_PERMIT = 'POST_PERMIT'
+    FINAL = 'FINAL'
 
 class DocumentType(Enum):
     A = 'a'
@@ -157,9 +157,9 @@ class Project(Base):
     project_description = Column(String, nullable=True)
     project_address = Column(String, nullable=False)
     project_case_id = Column(String, nullable=False)
-    project_due_date = Column(Date, nullable=True)
     project_status = Column(SQLAlchemyEnum(Status), nullable=True)
     project_status_due_date = Column(Date, nullable=True)
+    project_due_date = Column(Date, nullable=True)
     project_docs_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

@@ -120,7 +120,7 @@ const Sidebar: React.FC = () => {
           </ToggleButtonHolder>
         </SidebarGroup>
         <SidebarGroup>
-          <div style={{marginTop: '70px'}}>
+          <div style={{marginTop: '20px'}}>
             {routes.map((route, index) => (
               <Link key={index} href={route.path} passHref>
                 <SidebarItemHolder isActive={isActive(route.path)}>

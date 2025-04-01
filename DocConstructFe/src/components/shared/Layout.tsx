@@ -41,14 +41,7 @@ const SidebarHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 40px;
-`;
-
-const Logo = styled.img<{ isCollapsed: boolean }>`
-  width: ${props => props.isCollapsed ? '40px' : '180px'};
-  height: auto;
-  transition: width 0.3s ease;
-  object-fit: contain;
+  margin-bottom: 20px;
 `;
 
 const MainContent = styled.div`
@@ -191,8 +184,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, [isCollapsed]);
 
   const handleLogout = () => {
-    // Remove token or any authentication data
-    // For example: Cookies.remove('token');
     router.push('/login');
   };
 
@@ -210,10 +201,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </ToggleButton>
           </ToggleButtonHolder>
           
-          <SidebarHeader>
-            <Logo src="/opa.png" alt="OPA Logo" isCollapsed={isCollapsed} />
-          </SidebarHeader>
-          
           <SidebarNav>
             <MenuItemComponent 
               href="/projects" 
@@ -229,27 +216,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               isActive={currentPath.startsWith('/professionals')}
               isCollapsed={isCollapsed}
             />
-            <MenuItemComponent 
-              href="/documents" 
-              icon={<FaFileAlt />}
-              text="מסמכים"
-              isActive={currentPath.startsWith('/documents')}
-              isCollapsed={isCollapsed}
-            />
-            <MenuItemComponent 
-              href="/municipalities" 
-              icon={<FaUniversity />}
-              text="רשויות"
-              isActive={currentPath.startsWith('/municipalities')}
-              isCollapsed={isCollapsed}
-            />
-            <MenuItemComponent 
-              href="/surveys" 
-              icon={<FaClipboardList />}
-              text="סקרים"
-              isActive={currentPath.startsWith('/surveys')}
-              isCollapsed={isCollapsed}
-            />
           </SidebarNav>
         </div>
         
@@ -260,7 +226,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </LogoutButton>
         </SidebarFooter>
       </Sidebar>
-      
       <MainContent>
         {children}
       </MainContent>

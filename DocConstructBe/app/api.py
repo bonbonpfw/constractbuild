@@ -22,8 +22,7 @@ def api_project_create(project_data: Dict[str, Any]) -> Project:
             project_case_id=project_data.get('project_case_id'),
             project_due_date=project_data.get('project_due_date'),
             project_status=Status(project_data.get('project_status')),
-            project_status_due_date=project_data.get('project_status_due_date'),
-            project_docs_path=project_data.get('project_docs_path')
+            project_status_due_date=project_data.get('project_status_due_date')
         )
         db_session.add(project)
         db_session.commit()

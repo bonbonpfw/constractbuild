@@ -25,9 +25,14 @@ export const TopPanel = styled.div`
 `;
 
 export const TopPanelLogo = styled.img.attrs({
-  src: "/tachtlith_white_logo.png",
-  alt: "Logo"
-})``;
+  src: "/opa.png",
+  alt: "OPA Logo"
+})`
+  width: 120px;
+  height: 40px;
+  object-fit: contain;
+  margin-right: 24px;
+`;
 
 export const TopPanelTitleHolder = styled.div`
   width: 100%;
@@ -591,4 +596,39 @@ export const TabContent = styled.div`
   display: flex;
   flex-direction: column;
   overflow-y: 'hidden';
+`;
+
+export const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+`;
+
+export const EmptyStateIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  &::before {
+    content: '';
+    width: 32px;
+    height: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+`;
+
+export const EmptyStateText = styled.p`
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
 `;

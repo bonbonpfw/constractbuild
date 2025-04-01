@@ -90,27 +90,16 @@ export interface GeneratedDocument {
 
 // Project Types
 export enum ProjectStatus {
-  DRAFT = 'draft',
-  IN_PROGRESS = 'in_progress',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  COMPLETED = 'completed'
+  PRE_PERMIT = 'PRE_PERMIT',
+  POST_PERMIT = 'POST_PERMIT',
+  FINAL = 'FINAL'
 }
 
 export interface Project {
-  project_id: number;
-  name: string;
-  description?: string;
-  address: string;
-  municipality_id: number;
-  status?: string;
-  start_date?: string;
-  end_date?: string;
-  created_at?: string;
-  updated_at?: string;
-  municipality?: Municipality;
-  professional_associations?: ProjectProfessional[];
-  generated_documents?: GeneratedDocument[];
+  project_id: string;
+  project_name: string;
+  project_case_id: string;
+  project_status: ProjectStatus;
 }
 
 export interface ProjectProfessional {

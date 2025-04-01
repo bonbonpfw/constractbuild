@@ -89,15 +89,20 @@ def init_routes(app):
     def retrieve_all_projects():
         try:
             projects = api_project_get_all()
-            return SuccessResponse([{
-                'project_id': project.project_id,
-                'project_name': project.project_name,
-                'project_case_id': project.project_case_id,
-                'project_due_date': project.project_due_date.isoformat(),
-                'project_status': project.project_status.value
-            } for project in projects]).generate_response()
+            return SuccessResponse({
+                'projects': [{
+                    'project_id': project.project_id,
+                    'project_name': project.project_name,
+                    'project_case_id': project.project_case_id,
+                    'project_status': project.project_status.value
+                } for project in projects]
+            }).generate_response()
         except Exception as e:
-            return jsonify({'error': str(e)}), 400
+            logging.error(f"Error in retrieve_all_projects: {str(e)}")
+            return jsonify({
+                'error': str(e),
+                'status_code': 'error'
+            }), 400
     
     @app.route('/api/projects/<string:project_id>', methods=['GET'])
     def retrieve_project_by_id(project_id):
@@ -193,12 +198,14 @@ def init_routes(app):
     def retrieve_all_proffsionals():
         try:
             professionals = api_professional_get_all()
-            return SuccessResponse([{
-                'professional_id': prof.proffsional_id,
-                'professional_name': prof.proffsional_name,
-                'professional_type': prof.proffsional_type.value,
-                'professional_status': prof.proffsional_status.value
-            } for prof in professionals]).generate_response()
+            return SuccessResponse({
+                'professionals': [{
+                    'professional_id': prof.proffsional_id,
+                    'professional_name': prof.proffsional_name,
+                    'professional_type': prof.proffsional_type.value,
+                    'professional_status': prof.proffsional_status.value
+                } for prof in professionals]
+            }).generate_response()
         except Exception as e:
             return jsonify({'error': str(e)}), 400
 
@@ -294,12 +301,14 @@ def init_routes(app):
         try:
             project_id = request.args.get('project_id')
             documents = api_document_get_all(project_id)
-            return SuccessResponse([{
-                'document_id': doc.document_id,
-                'document_name': doc.document_name,
-                'document_type': doc.document_type.value,
-                'created_at': doc.created_at.isoformat()
-            } for doc in documents]).generate_response()
+            return SuccessResponse({
+                'documents': [{
+                    'document_id': doc.document_id,
+                    'document_name': doc.document_name,
+                    'document_type': doc.document_type.value,
+                    'created_at': doc.created_at.isoformat()
+                } for doc in documents]
+            }).generate_response()
         except Exception as e:
             return jsonify({'error': str(e)}), 400
     
