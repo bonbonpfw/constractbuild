@@ -24,7 +24,6 @@ const ProfessionalManagement: React.FC = () => {
     license_number: '',
     professional_type_id: 0,
     status: ProfessionalStatus.PENDING,
-    id_number: '',
     address: ''
   });
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
@@ -75,7 +74,6 @@ const ProfessionalManagement: React.FC = () => {
       license_number: '',
       professional_type_id: 0,
       status: ProfessionalStatus.PENDING,
-      id_number: '',
       address: ''
     });
     setLicenseFile(null);
@@ -103,8 +101,7 @@ const ProfessionalManagement: React.FC = () => {
       phone: professional.phone,
       license_number: professional.license_number,
       professional_type_id: professional.professional_type_id,
-      status: professional.status,
-      id_number: professional.id_number || '',
+      status: professional.status as ProfessionalStatus,
       address: professional.address || ''
     });
     setShowEditModal(true);
@@ -115,9 +112,9 @@ const ProfessionalManagement: React.FC = () => {
     if (!currentProfessional) return;
     
     try {
-      const response = await updateProfessional(currentProfessional.id, formData);
+      const response = await updateProfessional(currentProfessional.professional_id, formData);
       setProfessionals(professionals.map(p => 
-        p.id === currentProfessional.id ? response : p
+        p.professional_id === currentProfessional.professional_id ? response : p
       ));
       setShowEditModal(false);
       resetForm();
@@ -127,11 +124,11 @@ const ProfessionalManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteProfessional = async (id: number) => {
+  const handleDeleteProfessional = async (professionalId: number) => {
     if (window.confirm('Are you sure you want to delete this professional?')) {
       try {
-        await deleteProfessional(id);
-        setProfessionals(professionals.filter(p => p.id !== id));
+        await deleteProfessional(professionalId);
+        setProfessionals(professionals.filter(p => p.professional_id !== professionalId));
       } catch (err) {
         setError('Failed to delete professional. Please try again.');
         console.error('Error deleting professional:', err);
@@ -145,14 +142,14 @@ const ProfessionalManagement: React.FC = () => {
     setIsExtracting(true);
     setError(null);
     try {
-      const extractedData = await extractProfessionalData(currentProfessional.id, licenseFile);
+      const extractedData = await extractProfessionalData(currentProfessional.professional_id, licenseFile);
       setFormData({
         ...formData,
         ...extractedData
       });
       setExtractionSuccess(true);
     } catch (err) {
-      setError('Failed to extract data from license. Please try again or enter data manually.');
+      setError('Failed to extract data from license. Please try again.');
       console.error('Error extracting data:', err);
     } finally {
       setIsExtracting(false);
@@ -207,13 +204,13 @@ const ProfessionalManagement: React.FC = () => {
                 </tr>
               ) : (
                 professionals.map(professional => (
-                  <tr key={professional.id}>
+                  <tr key={professional.professional_id}>
                     <td className="py-2 px-4 border-b">{professional.name}</td>
                     <td className="py-2 px-4 border-b">{professional.email}</td>
                     <td className="py-2 px-4 border-b">{professional.phone}</td>
                     <td className="py-2 px-4 border-b">{professional.license_number}</td>
                     <td className="py-2 px-4 border-b">
-                      {professionalTypes.find(pt => pt.id === professional.professional_type_id)?.name || 'Unknown'}
+                      {professionalTypes.find(pt => pt.type_id === professional.professional_type_id)?.type_name || 'Unknown'}
                     </td>
                     <td className="py-2 px-4 border-b">
                       <span className={`px-2 py-1 rounded text-sm ${
@@ -233,7 +230,7 @@ const ProfessionalManagement: React.FC = () => {
                       </button>
                       <button 
                         className="text-red-500 hover:text-red-700"
-                        onClick={() => handleDeleteProfessional(professional.id)}
+                        onClick={() => handleDeleteProfessional(professional.professional_id)}
                       >
                         Delete
                       </button>
@@ -295,9 +292,11 @@ const ProfessionalManagement: React.FC = () => {
                     className="w-full p-2 border rounded"
                     required
                   >
-                    <option value="">Select Type</option>
+                    <option value="">Select Professional Type</option>
                     {professionalTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
+                      <option key={type.type_id} value={type.type_id}>
+                        {type.type_name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -307,16 +306,6 @@ const ProfessionalManagement: React.FC = () => {
                     type="text" 
                     name="license_number" 
                     value={formData.license_number} 
-                    onChange={handleInputChange} 
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">ID Number</label>
-                  <input 
-                    type="text" 
-                    name="id_number" 
-                    value={formData.id_number} 
                     onChange={handleInputChange} 
                     className="w-full p-2 border rounded"
                   />
@@ -404,9 +393,11 @@ const ProfessionalManagement: React.FC = () => {
                     className="w-full p-2 border rounded"
                     required
                   >
-                    <option value="">Select Type</option>
+                    <option value="">Select Professional Type</option>
                     {professionalTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
+                      <option key={type.type_id} value={type.type_id}>
+                        {type.type_name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -433,16 +424,6 @@ const ProfessionalManagement: React.FC = () => {
                     <option value={ProfessionalStatus.INACTIVE}>Inactive</option>
                     <option value={ProfessionalStatus.PENDING}>Pending</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">ID Number</label>
-                  <input 
-                    type="text" 
-                    name="id_number" 
-                    value={formData.id_number} 
-                    onChange={handleInputChange} 
-                    className="w-full p-2 border rounded"
-                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium mb-1">Address</label>

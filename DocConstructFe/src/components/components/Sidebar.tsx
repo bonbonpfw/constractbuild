@@ -3,11 +3,7 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import {FaClipboardList, FaChartLine, FaBars, FaSearch} from 'react-icons/fa';
 import Link from 'next/link';
-import { useAuth } from '../context/AuthContext';
-import {IoPersonCircleOutline} from "react-icons/io5";
-import {BiExit} from "react-icons/bi";
 import {IoSettingsSharp} from "react-icons/io5";
-
 
 const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
   width: ${props => props.isCollapsed ? '60px' : '250px'};
@@ -70,14 +66,6 @@ const SidebarItemIcon = styled.div`
   font-size: 28px;
 `;
 
-const UserSectionBorder = styled.div`
-  padding-top: 10px;
-  margin-right: 10px;
-  margin-top: 10px;
-  margin-left: 10px;
-  border-top: 2px solid ${props => props.theme.colors.lightGrey};
-`;
-
 const ToggleButtonHolder = styled.div`
   align-items: center;
   justify-content: right;
@@ -101,34 +89,21 @@ const ToggleButton = styled.button`
   }
 `;
 
-const LogoutButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  color: #ffffff;
-  margin-bottom: 20px;
-`;
-
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const stored = localStorage.getItem('sidebarCollapsed');
     return stored ? JSON.parse(stored) : true;
   });
   const router = useRouter();
-  const {logout, roles} = useAuth();
 
   const isActive = (path: string) => router.pathname === path;
 
   const routes = [
-    {'label': 'סקרים', 'icon': <FaClipboardList/>, 'path': '/surveys'},
-    {'label': 'סקרים לאורך זמן', 'icon': <FaChartLine/>, 'path': '/surveys-timeline'},
-    {'label': 'חיפוש', 'icon': <FaSearch/>, 'path': '/search-questions'},
+    {'label': 'Projects', 'icon': <FaClipboardList/>, 'path': '/projects'},
+    {'label': 'Professionals', 'icon': <FaChartLine/>, 'path': '/professionals'},
+    {'label': 'Municipalities', 'icon': <FaSearch/>, 'path': '/municipalities'},
+    {'label': 'Settings', 'icon': <IoSettingsSharp/>, 'path': '/settings'},
   ]
-
-  if (roles.includes('admin')) {
-    routes.push({'label': 'הגדרות', 'icon': <IoSettingsSharp/>, 'path': '/settings'});
-  }
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
@@ -160,27 +135,6 @@ const Sidebar: React.FC = () => {
             ))}
           </div>
         </SidebarGroup>
-      </SidebarGroup>
-      <SidebarGroup>
-        <UserSectionBorder/>
-        <Link href='/profile' passHref>
-          <SidebarItemHolder isActive={isActive('/profile')}>
-            <SidebarItemIcon>
-              <IoPersonCircleOutline/>
-            </SidebarItemIcon>
-            <SidebarItemLabel isCollapsed={isCollapsed} isActive={isActive('/profile')}>
-              Profile
-            </SidebarItemLabel>
-          </SidebarItemHolder>
-        </Link>
-        <LogoutButton onClick={logout}>
-          <SidebarItemHolder isActive={false}>
-            <SidebarItemIcon>
-              <BiExit/>
-            </SidebarItemIcon>
-            <SidebarItemLabel isCollapsed={isCollapsed} isActive={false}>Logout</SidebarItemLabel>
-          </SidebarItemHolder>
-        </LogoutButton>
       </SidebarGroup>
     </SidebarContainer>
   );

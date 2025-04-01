@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getMunicipalities,
-  getMunicipalityById,
   createMunicipality,
   updateMunicipality,
   deleteMunicipality,
@@ -29,14 +28,13 @@ const MunicipalityManagement: React.FC = () => {
   const [municipalityForm, setMunicipalityForm] = useState({
     name: '',
     contact_person: '',
-    email: '',
-    phone: '',
-    address: ''
+    contact_email: '',
+    contact_phone: '',
+    website: ''
   });
   
   const [templateForm, setTemplateForm] = useState({
     template_name: '',
-    template_description: '',
     municipality_id: 0,
     professional_type_id: 0
   });
@@ -75,7 +73,7 @@ const MunicipalityManagement: React.FC = () => {
     });
   };
 
-  const handleTemplateInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleTemplateInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setTemplateForm({
       ...templateForm,
@@ -93,16 +91,15 @@ const MunicipalityManagement: React.FC = () => {
     setMunicipalityForm({
       name: '',
       contact_person: '',
-      email: '',
-      phone: '',
-      address: ''
+      contact_email: '',
+      contact_phone: '',
+      website: ''
     });
   };
 
   const resetTemplateForm = () => {
     setTemplateForm({
       template_name: '',
-      template_description: '',
       municipality_id: selectedMunicipalityId || 0,
       professional_type_id: 0
     });
@@ -126,10 +123,10 @@ const MunicipalityManagement: React.FC = () => {
     setCurrentMunicipality(municipality);
     setMunicipalityForm({
       name: municipality.name,
-      contact_person: municipality.contact_person,
-      email: municipality.email,
-      phone: municipality.phone,
-      address: municipality.address
+      contact_person: municipality.contact_person || '',
+      contact_email: municipality.contact_email || '',
+      contact_phone: municipality.contact_phone || '',
+      website: municipality.website || ''
     });
     setShowEditModal(true);
   };
@@ -139,9 +136,9 @@ const MunicipalityManagement: React.FC = () => {
     if (!currentMunicipality) return;
     
     try {
-      const response = await updateMunicipality(currentMunicipality.id, municipalityForm);
+      const response = await updateMunicipality(currentMunicipality.municipality_id, municipalityForm);
       setMunicipalities(municipalities.map(m => 
-        m.id === currentMunicipality.id ? response : m
+        m.municipality_id === currentMunicipality.municipality_id ? response : m
       ));
       setShowEditModal(false);
       resetMunicipalityForm();
@@ -151,17 +148,39 @@ const MunicipalityManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteMunicipality = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this municipality? This will also delete all associated templates.')) {
-      try {
-        await deleteMunicipality(id);
-        setMunicipalities(municipalities.filter(m => m.id !== id));
-        setDocumentTemplates(documentTemplates.filter(t => t.municipality_id !== id));
-      } catch (err) {
-        setError('Failed to delete municipality. Please try again.');
-        console.error('Error deleting municipality:', err);
-      }
+  const handleDeleteMunicipality = async (municipalityId: number) => {
+    if (!window.confirm('Are you sure you want to delete this municipality?')) return;
+    
+    try {
+      await deleteMunicipality(municipalityId);
+      setMunicipalities(municipalities.filter(m => m.municipality_id !== municipalityId));
+    } catch (err) {
+      setError('Failed to delete municipality. Please try again.');
+      console.error('Error deleting municipality:', err);
     }
+  };
+
+  const handleDeleteTemplate = async (templateId: number) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) return;
+    
+    try {
+      await deleteDocumentTemplate(templateId);
+      setDocumentTemplates(templates => templates.filter(t => t.template_id !== templateId));
+    } catch (err) {
+      setError('Failed to delete template. Please try again.');
+      console.error('Error deleting template:', err);
+    }
+  };
+
+  const openTemplateModal = (municipalityId: number) => {
+    setSelectedMunicipalityId(municipalityId);
+    setTemplateForm({
+      template_name: '',
+      municipality_id: municipalityId,
+      professional_type_id: 0
+    });
+    setTemplateFile(null);
+    setShowTemplateModal(true);
   };
 
   const handleAddTemplate = async (e: React.FormEvent) => {
@@ -174,7 +193,6 @@ const MunicipalityManagement: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('template_name', templateForm.template_name);
-      formData.append('template_description', templateForm.template_description);
       formData.append('municipality_id', String(templateForm.municipality_id));
       formData.append('professional_type_id', String(templateForm.professional_type_id));
       formData.append('file', templateFile);
@@ -187,27 +205,6 @@ const MunicipalityManagement: React.FC = () => {
       setError('Failed to add template. Please try again.');
       console.error('Error adding template:', err);
     }
-  };
-
-  const handleDeleteTemplate = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
-      try {
-        await deleteDocumentTemplate(id);
-        setDocumentTemplates(documentTemplates.filter(t => t.id !== id));
-      } catch (err) {
-        setError('Failed to delete template. Please try again.');
-        console.error('Error deleting template:', err);
-      }
-    }
-  };
-
-  const openTemplateModal = (municipalityId: number) => {
-    setSelectedMunicipalityId(municipalityId);
-    setTemplateForm({
-      ...templateForm,
-      municipality_id: municipalityId
-    });
-    setShowTemplateModal(true);
   };
 
   return (
@@ -245,19 +242,19 @@ const MunicipalityManagement: React.FC = () => {
             </div>
           ) : (
             municipalities.map(municipality => (
-              <div key={municipality.id} className="bg-white shadow rounded-lg p-6">
+              <div key={municipality.municipality_id} className="bg-white shadow rounded-lg p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h2 className="text-xl font-bold">{municipality.name}</h2>
                     <p className="text-sm text-gray-500">
-                      Contact: {municipality.contact_person} | {municipality.email} | {municipality.phone}
+                      Contact: {municipality.contact_person || 'N/A'} | {municipality.contact_email || 'N/A'} | {municipality.contact_phone || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-500">Address: {municipality.address}</p>
+                    <p className="text-sm text-gray-500">Website: {municipality.website || 'N/A'}</p>
                   </div>
                   <div className="flex space-x-2">
                     <button 
                       className="bg-green-500 hover:bg-green-700 text-white py-1 px-3 rounded text-sm"
-                      onClick={() => openTemplateModal(municipality.id)}
+                      onClick={() => openTemplateModal(municipality.municipality_id)}
                     >
                       Add Template
                     </button>
@@ -269,7 +266,7 @@ const MunicipalityManagement: React.FC = () => {
                     </button>
                     <button 
                       className="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded text-sm"
-                      onClick={() => handleDeleteMunicipality(municipality.id)}
+                      onClick={() => handleDeleteMunicipality(municipality.municipality_id)}
                     >
                       Delete
                     </button>
@@ -282,30 +279,26 @@ const MunicipalityManagement: React.FC = () => {
                     <thead>
                       <tr>
                         <th className="py-2 px-4 border-b">Template Name</th>
-                        <th className="py-2 px-4 border-b">Description</th>
                         <th className="py-2 px-4 border-b">Professional Type</th>
                         <th className="py-2 px-4 border-b">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {documentTemplates.filter(t => t.municipality_id === municipality.id).length === 0 ? (
+                      {documentTemplates.filter(t => t.municipality_id === municipality.municipality_id).length === 0 ? (
                         <tr>
                           <td colSpan={4} className="py-4 px-4 text-center">No templates found for this municipality</td>
                         </tr>
                       ) : (
                         documentTemplates
-                          .filter(template => template.municipality_id === municipality.id)
+                          .filter(template => template.municipality_id === municipality.municipality_id)
                           .map(template => (
-                            <tr key={template.id}>
+                            <tr key={template.template_id}>
                               <td className="py-2 px-4 border-b">{template.template_name}</td>
-                              <td className="py-2 px-4 border-b">{template.template_description}</td>
-                              <td className="py-2 px-4 border-b">
-                                {professionalTypes.find(pt => pt.id === template.professional_type_id)?.name || 'Unknown'}
-                              </td>
+                              <td className="py-2 px-4 border-b">{template.professional_type?.type_name || 'N/A'}</td>
                               <td className="py-2 px-4 border-b">
                                 <button 
                                   className="text-red-500 hover:text-red-700"
-                                  onClick={() => handleDeleteTemplate(template.id)}
+                                  onClick={() => handleDeleteTemplate(template.template_id)}
                                 >
                                   Delete
                                 </button>
@@ -355,8 +348,8 @@ const MunicipalityManagement: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Email</label>
                   <input 
                     type="email" 
-                    name="email" 
-                    value={municipalityForm.email} 
+                    name="contact_email" 
+                    value={municipalityForm.contact_email} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     required
@@ -366,18 +359,18 @@ const MunicipalityManagement: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Phone</label>
                   <input 
                     type="tel" 
-                    name="phone" 
-                    value={municipalityForm.phone} 
+                    name="contact_phone" 
+                    value={municipalityForm.contact_phone} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Address</label>
+                  <label className="block text-sm font-medium mb-1">Website</label>
                   <textarea 
-                    name="address" 
-                    value={municipalityForm.address} 
+                    name="website" 
+                    value={municipalityForm.website} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     rows={3}
@@ -441,8 +434,8 @@ const MunicipalityManagement: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Email</label>
                   <input 
                     type="email" 
-                    name="email" 
-                    value={municipalityForm.email} 
+                    name="contact_email" 
+                    value={municipalityForm.contact_email} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     required
@@ -452,18 +445,18 @@ const MunicipalityManagement: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Phone</label>
                   <input 
                     type="tel" 
-                    name="phone" 
-                    value={municipalityForm.phone} 
+                    name="contact_phone" 
+                    value={municipalityForm.contact_phone} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Address</label>
+                  <label className="block text-sm font-medium mb-1">Website</label>
                   <textarea 
-                    name="address" 
-                    value={municipalityForm.address} 
+                    name="website" 
+                    value={municipalityForm.website} 
                     onChange={handleMunicipalityInputChange} 
                     className="w-full p-2 border rounded"
                     rows={3}
@@ -513,17 +506,6 @@ const MunicipalityManagement: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea 
-                    name="template_description" 
-                    value={templateForm.template_description} 
-                    onChange={handleTemplateInputChange} 
-                    className="w-full p-2 border rounded"
-                    rows={2}
-                    required
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-1">Professional Type</label>
                   <select 
                     name="professional_type_id" 
@@ -534,7 +516,9 @@ const MunicipalityManagement: React.FC = () => {
                   >
                     <option value="">Select Professional Type</option>
                     {professionalTypes.map(type => (
-                      <option key={type.id} value={type.id}>{type.name}</option>
+                      <option key={type.type_id} value={type.type_id}>
+                        {type.type_name}
+                      </option>
                     ))}
                   </select>
                 </div>

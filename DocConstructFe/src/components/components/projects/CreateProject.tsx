@@ -65,12 +65,14 @@ const CreateProject: React.FC = () => {
         const groupedProfessionals: ProfessionalsMap = {};
         const types: ProfessionalType[] = [];
         
-        professionalsData.forEach(professional => {
-          if (!groupedProfessionals[professional.professional_type.type_id]) {
-            groupedProfessionals[professional.professional_type.type_id] = [];
-            types.push(professional.professional_type);
+        professionalsData.forEach((professional: Professional) => {
+          if (professional.professional_type) {
+            if (!groupedProfessionals[professional.professional_type.type_id]) {
+              groupedProfessionals[professional.professional_type.type_id] = [];
+              types.push(professional.professional_type);
+            }
+            groupedProfessionals[professional.professional_type.type_id].push(professional);
           }
-          groupedProfessionals[professional.professional_type.type_id].push(professional);
         });
         
         setProfessionalsByType(groupedProfessionals);
@@ -96,9 +98,7 @@ const CreateProject: React.FC = () => {
       
       setIsLoading(true);
       try {
-        const templatesData = await getDocumentTemplates({
-          municipality_id: parseInt(formData.municipality_id)
-        });
+        const templatesData = await getDocumentTemplates();
         setDocumentTemplates(templatesData);
       } catch (err: any) {
         setError('Failed to load document templates: ' + err.message);
@@ -199,10 +199,7 @@ const CreateProject: React.FC = () => {
       
       for (const template of selectedTemplates) {
         // Generate document for this template
-        const document = await generateDocument({
-          project_id: project.project_id,
-          template_id: template.template_id
-        });
+        const document = await generateDocument(project.project_id, template.template_id);
         
         generatedDocs.push({
           templateId: template.template_id,

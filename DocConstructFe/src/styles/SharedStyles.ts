@@ -307,7 +307,11 @@ export const DialogOverlay = styled.div`
   z-index: 900;
 `;
 
-export const DialogContainer = styled.div<{ width?: string }>`
+interface DialogContainerProps {
+  width?: string;
+}
+
+export const DialogContainer = styled.div<DialogContainerProps>`
   width: ${props => props.width || '380px'};
   background-color: #fff;
   border-radius: 8px;
@@ -339,7 +343,11 @@ export const DialogInput = styled.input`
   border-radius: 4px;
 `;
 
-export const DialogButton = styled.button <{ variant?: 'contained' }>`
+interface DialogButtonProps {
+  variant?: 'contained';
+}
+
+export const DialogButton = styled.button<DialogButtonProps>`
   background-color: ${props => props.variant === 'contained' ? 'rgb(80,111,145)' : props.theme.colors.secondary};
   color: ${props => props.variant === 'contained' ? "white" : props.theme.colors.primary};
   border: none;
@@ -403,7 +411,12 @@ export const Table = styled.table`
   border-collapse: collapse;
 `;
 
-export const TableHeader = styled.th<{ clickable?: boolean; align?: string }>`
+interface TableHeaderProps {
+  clickable?: boolean;
+  align?: string;
+}
+
+export const TableHeader = styled.th<TableHeaderProps>`
   background-color: ${(props) => props.theme.colors.accent};
   cursor: ${(props) => (props.clickable ? 'pointer' : 'default')};
 
@@ -549,7 +562,11 @@ export const TabNavPanel = styled.div`
   height: 100%;
 `;
 
-export const TabNavButton = styled.button<{ active: boolean }>`
+interface TabNavButtonProps {
+  active: boolean;
+}
+
+export const TabNavButton = styled.button<TabNavButtonProps>`
   display: block;
   width: 100%;
   padding: 12px 0 12px 12px;

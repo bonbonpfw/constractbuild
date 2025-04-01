@@ -1,6 +1,16 @@
 import styled from 'styled-components';
 
-
+const TopPanel = styled.div`
+  background-color: white;
+  padding: 10px 50px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  width: 100%;
+`;
 
 export const HomeContainer = styled.div`
   display: flex;

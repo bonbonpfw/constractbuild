@@ -2,7 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { FaBuilding, FaHardHat, FaHome, FaCity } from 'react-icons/fa';
 
-const LoadingContainer = styled.div`
+interface LoadingContainerProps {
+  fullHeight?: boolean;
+}
+
+const LoadingContainer = styled.div<LoadingContainerProps>`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -11,7 +15,15 @@ const LoadingContainer = styled.div`
   padding: ${props => props.fullHeight ? '0' : '30px 0'};
 `;
 
-const IconContainer = styled.div`
+interface IconContainerProps {
+  theme: {
+    colors: {
+      primary: string;
+    };
+  };
+}
+
+const IconContainer = styled.div<IconContainerProps>`
   font-size: 3rem;
   color: ${props => props.theme.colors.primary};
   display: flex;
@@ -58,7 +70,15 @@ const SecondaryIcon = styled.div`
   }
 `;
 
-const LoadingText = styled.p`
+interface LoadingTextProps {
+  theme: {
+    colors: {
+      text: string;
+    };
+  };
+}
+
+const LoadingText = styled.p<LoadingTextProps>`
   font-size: 1.2rem;
   color: ${props => props.theme.colors.text};
   text-align: center;

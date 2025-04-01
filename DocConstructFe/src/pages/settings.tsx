@@ -1,5 +1,4 @@
 import React, {useState} from 'react';
-import {useAuth} from "../context/AuthContext";
 import {useRouter} from "next/router";
 import UserManagement from "../components/userManagement/UserManagement";
 import {
@@ -14,12 +13,9 @@ import {
   TopPanelTitleHolder
 } from "../styles/SharedStyles";
 
-const SurveysPage: React.FC = () => {
-  const {roles, token} = useAuth();
+const SettingsPage: React.FC = () => {
   const router = useRouter();
-  if (!roles.includes('admin') && token) {
-    router.push('/surveys');
-  }
+  
   const [activeTab, setActiveTab] = useState<'UserManagement'>('UserManagement');
   const handleTabClick = (tab: 'UserManagement') => {
     setActiveTab(tab);
@@ -52,4 +48,4 @@ const SurveysPage: React.FC = () => {
   );
 };
 
-export default SurveysPage;
+export default SettingsPage;
