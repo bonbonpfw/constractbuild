@@ -1,0 +1,8 @@
+DOCUMENT_TYPES:
+  - "a"
+  - "b"
+  - "c"
+
+PROFESSIONAL_TYPES:
+  - "engineer"
+  - "architect"
