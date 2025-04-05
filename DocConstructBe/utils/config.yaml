@@ -1,0 +1,35 @@
+DOCUMENT_TYPES:
+  - "a"
+  - "b"
+  - "c"
+
+PROFESSIONAL_TYPES:
+  - "engineer"
+  - "architect"
+
+license_pattern:
+  id_name:
+    - "תעודת זהות"
+    - "ת.ז"
+    - "ח.פ"
+  id_pattern:
+    - r'\b\d{9,10}\b'
+  date_name:
+    - "תאריך תפוגה"
+    - "בתוקף עד"
+  date_pattern:
+    - r'\b\d{2}/\d{2}/\d{4}\b'
+  name_name:
+    - "שם"
+    - "שם פרטי"
+    - "שם פרטי ושם משפחה"
+    - "שם משפחה"
+  name_pattern:
+    - r'שם:\s*(.+)'
+  license_name:
+    - "מספר רישיון"
+    - "רישיון"
+  license_pattern:
+    - r'\b\d{4,8}\b'
+
+
