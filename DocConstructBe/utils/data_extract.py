@@ -1,183 +1,133 @@
+import logging
 import re
-import yaml
-import os
 
-class LicenseConfig:
+
+
+class LicenseData:
     def __init__(self):
-        self.config = {
-            "id_name": ["תעודת זהות", "ת.ז", "ח.פ"],
-            "id_pattern": [r'\b\d{9,10}\b'],
-            "date_name": ["תאריך תפוגה", "בתוקף עד"],
-            "date_pattern": [r'\b\d{2}/\d{2}/\d{4}\b'],
-            "name_name": ["שם", "שם פרטי", "שם פרטי ושם משפחה", "שם משפחה"],
-            "name_pattern": [r'שם:\s*(.+)'],
-            "license_name": ["מספר רישיון", "רישיון"],
-            "license_pattern": [r'\b\d{4,8}\b']
-        }
-
-
-
-
-class Proffional:
-    def __init__(self):
-        self.license_config = LicenseConfig().config
-        self.profession = None
-        self.department = None
+        self.profession_type = None
         self.name = None
         self.id_number = None
         self.license_number = None
         self.expiration_date = None
+        self.address = None
+     
+        
+    def __str__(self):
+        return (f"Profession: {self.profession_type}\n"
+                f"Name: {self.name}\n"
+                f"ID Number: {self.id_number}\n"
+                f"License Number: {self.license_number}\n"
+                f"Expiration Date: {self.expiration_date}\n"
+                f"Address: {self.address}\n"
+                )
+
+
+
+class LicenseExtract:
+    def __init__(self):
+         self.license_config = {
+            "id_pattern": r'(?:מספר ת"ז|מספר ת\.ז|ת\.ז|ת"ז|תעודת זהות|ח\.פ|ID)[\s:]*(\d{9})',
+            "date_pattern": r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{2}/\d{2}/\d{4})',
+            "name_pattern": r'(?:שם|שם פרטי|שם פרטי ושם משפחה|שם משפחה)[\s:]*((?:\S+\s+){0,1}\S+)',
+            "license_pattern": r'(?:מספר רישיון|רישיון|מס\' רישיון|מס רישיון)[\s:]*(\d{4,8})',
+            "proffessional_type_pattern": r'רישיון\s+(\S+)'
+        }
        
     @property
     def id_pattern(self):
         return self.license_config['id_pattern']  
-    @property
-    def id_name(self):
-        return self.license_config['id_name'] 
+  
     @property
     def date_pattern(self):
         return self.license_config['date_pattern'] 
-    @property
-    def date_name(self):
-        return self.license_config['date_name']
+   
     @property
     def name_pattern(self):
         return self.license_config['name_pattern']
-    @property
-    def name_name(self):
-        return self.license_config['name_name']
-    @property
-    def license_name(self):
-        return self.license_config['license_name']
+  
+    
     @property
     def license_pattern(self):
         return self.license_config['license_pattern']
+    
+    @property
+    def proffessional_type_pattern(self):
+        return self.license_config['proffessional_type_pattern']
     
     def __str__(self):
         return f"Professional: {self.profession}, Department: {self.department}, Name: {self.name}, ID: {self.id_number}, License: {self.license_number}, Expiration: {self.expiration_date}"
 
 class ExtractProfessional:
-    def __init__(self, binary_data: bytes):
-        self.text = binary_data.decode('utf-8', errors='ignore')
-        self.professional = Proffional()
+    def __init__(self, text: bytes):
+        self.text = text
+        self.license_extract = LicenseExtract()
+        self.license_data = LicenseData()
 
-    def extract_from_image(self):
-        lines = self.text.strip().split('\n')
-        for line in lines:
-            self._extract_id(line)
-            self._extract_date(line)
-            self._extract_name(line)
-            self._extract_license(line)
-
-    def extract_from_pdf(self):
-        self._extract_id(self.text)
-        self._extract_date(self.text)
-        self._extract_license(self.text)
-        self._extract_name_from_pdf(self.text)
-        return self.professional
+    def extract_text(self):
+        id = self._extract_id(self.text)
+        date = self._extract_date(self.text)
+        name = self._extract_name(self.text)
+        license = self._extract_license(self.text)
+        type = self._extract_type(self.text)
+        return self.license_data
 
     def _extract_id(self, text: str):
-        for id_name in self.professional.id_name:
-            if id_name in text:
-                id_match = re.search(self.professional.id_pattern, text)
-                if id_match:
-                    self.professional.id_number = id_match.group()
-                else:
-                    self.professional.id_number = text.split(id_name)[1].strip()
-       
+        id_match = re.search(self.license_extract.id_pattern, text)
+        if id_match:
+            # Use group(1) to get the actual ID number from the capture group
+            id_number = id_match.group(1) if len(id_match.groups()) > 0 else id_match.group()
+            self.license_data.id_number = id_number
+            return id_number
+        else:
+            logging.error(f"לא ניתן למצוא תעודת זהות בטקסט: ...")
+            return None
+
     def _extract_date(self, text: str):
-        for date_name in self.professional.date_name:
-            if date_name in text:
-                self.professional.expiration_date = text.split(date_name)[1].strip()
-        for pattern in self.professional.date_pattern:
-            expiration_match = re.search(pattern, text)
-            if expiration_match:
-                self.professional.expiration_date = expiration_match.group()
+        date_match = re.search(self.license_extract.date_pattern, text)
+        if date_match:
+            date = date_match.group(1) if len(date_match.groups()) > 0 else date_match.group()
+            self.license_data.expiration_date = date
+            return date
+        else:
+            logging.error(f"לא ניתן למצוא תאריך תפוגה בטקסט: ...")
+            return None
 
     def _extract_name(self, text: str):
-        for name_name in self.professional.name_name:
-            if name_name in text:
-                self.professional.name = text.split(name_name)[1].strip()
+        name_match = re.search(self.license_extract.name_pattern, text)
+        if name_match:
+            name = name_match.group(1) if len(name_match.groups()) > 0 else name_match.group()
+            self.license_data.name = name
+            return name
+        else:
+            # If standard pattern fails, try to find name near ID
+            id_position = text.find(self.license_extract.id_number) if self.license_extract.id_number else -1
+            if id_position > 0:
+                # Look for name before ID (typical format in Israeli documents)
+                name_text = text[:id_position].strip().split('\n')[-1]
+                if name_text and len(name_text) > 2:
+                    self.license_data.name = name_text
+                    return name_text
+            
+            logging.error(f"לא ניתן למצוא שם בטקסט: ...")
+            return None
 
     def _extract_license(self, text: str):
-        for license_name in self.professional.license_name:
-            if license_name in text:
-                self.professional.license_number = text.split(license_name)[1].strip()
-        for pattern in self.professional.license_pattern:
-            license_match = re.search(pattern, text)
-            if license_match:
-                self.professional.license_number = license_match.group()
+        license_match = re.search(self.license_extract.license_pattern, text)
+        if license_match:
+            license_number = license_match.group(1) if len(license_match.groups()) > 0 else license_match.group()
+            self.license_data.license_number = license_number
+            return license_number
+        else:
+            logging.error(f"לא ניתן למצוא מספר רישיון בטקסט: ...")
+            return None 
 
-    def _extract_name_from_pdf(self, text: str):
-        lines = text.strip().split('\n')
-        for line in lines:
-            name_match = re.match(r"^(.*?)\s+\d{9}$", line)
-            if name_match:
-                self.professional.name = name_match.group(1).strip()
-
-
-def smart_extract_license(binary_data):
-   
-    text = binary_data.decode('utf-8')
-    lines = text.strip().split('\n')  
-
-    profession = ""
-    department = ""
-    name = ""
-    id_number = ""
-    license_number = ""
-    expiration_date = ""
-    
-    # דפוסים לזיהוי (regex)
-    id_pattern = r'\b\d{9}\b' 
-    license_pattern = r'\b\d{5,8}\b' 
-    date_pattern = r'\b\d{2}/\d{2}/\d{4}\b'  # תאריך: dd/mm/yyyy
-    
-    # עיבוד כל שורה
-    for line in lines:
-        words = line.split()
-        for word in words:
-            # חיפוש תאריך תפוגה
-            date_match = re.search(date_pattern, word)
-            if date_match:
-                expiration_date = date_match.group()
-                continue
-            
-            # חיפוש ת"ז (9 ספרות)
-            id_match = re.search(id_pattern, word)
-            if id_match:
-                id_number = id_match.group()
-                # השם הוא מה שמופיע לפני הת"ז בשורה
-                name = line.replace(id_number, '').strip()
-                continue
-            
-            # חיפוש מספר רישיון (8 ספרות)
-            license_match = re.search(license_pattern, word)
-            if license_match:
-                license_number = license_match.group()
-                continue
-            
-            # אם אין ת"ז, תאריך או מספר רישיון, זו כנראה שורת מקצוע/מדור
-        
-            if not profession:  # אם עדיין לא מצאנו מקצוע
-                profession = word
-            else:  # אחרת, זה כנראה מדור
-                department = words
-    
-    # התמודדות עם מקרים שבהם המקצוע והמדור נדבקו יחד
-    if profession and not department:
-        if len(profession) > 1:
-            # נניח שהמילה האחרונה היא המדור והשאר המקצוע
-            department = [profession[-1]]
-            profession = profession[:-1]
-    
-    # החזרת המילון
-    return {
-        "Profession (מקצוע)": " ".join(profession) if profession else "לא נמצא",
-        "Department (מדור)": " ".join(department) if department else "לא נמצא",
-        "Name (שם)": name if name else "לא נמצא",
-        "ID Number (תעודת זהות)": id_number if id_number else "לא נמצא",
-        "License Number (מספר רישיון)": license_number if license_number else "לא נמצא",
-        "Expiration Date (תאריך תפוגה)": expiration_date if expiration_date else "לא נמצא"
-    }
-
+    def _extract_type(self, text: str):
+        type_match = re.search(self.license_extract.proffessional_type_pattern, text)
+        if type_match:
+            type = type_match.group(1) if len(type_match.groups()) > 0 else type_match.group()
+            self.license_data.profession_type = type
+            return type
+        else:
+            logging.error(f"לא ניתן למצוא תחום פעילות בטקסט: ...")
+            return None
