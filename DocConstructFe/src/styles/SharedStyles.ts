@@ -1,22 +1,32 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
+export const ErrorMessage = styled.div`
+  color: ${props => props.theme.colors.accent};
+  margin-top: 1rem;
+  font-weight: 600;
+`;
+
+// Page Container
 export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 10px 40px 0 40px;
   flex: 1;
   font-family: 'Inter', sans-serif;
   direction: rtl;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 export const TopPanel = styled.div`
+  position: relative;                /* <-- make it the positioning context */
   border-bottom: 1px solid #dee2e6;
   display: flex;
   padding-bottom: 10px;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
+  min-width: 800px;
   img {
     object-fit: contain;
     width: 160px; // Reduced by 50%
@@ -35,9 +45,9 @@ export const TopPanelLogo = styled.img.attrs({
 `;
 
 export const TopPanelTitleHolder = styled.div`
-  width: 100%;
-  justify-content: center;
-  padding-left: 156px; // compensating logo size at right
+  position: absolute;                /* <-- remove from normal flow */
+  left: 50%;
+  transform: translateX(-50%);       /* <-- truly center it */
 `;
 
 export const TopPanelTitle = styled.h1`
@@ -47,258 +57,156 @@ export const TopPanelTitle = styled.h1`
 `;
 
 export const TopPanelGroup = styled.div`
-  width: 420px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-direction: row-reverse;
-`;
-
-export const TopPanelPanelButton = styled.button`
-  ${props => props.theme.buttons.createSurvey}
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${props => props.theme.gradients.button};
-  border: none;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
-  width: 200px;
-  height: 40px;
-  font-size: 14px;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${props => props.theme.shadows.large};
-  }
-
-  &:active {
-    transform: translateY(0);
-    box-shadow: ${props => props.theme.shadows.small};
-  }
-
-  svg {
-    margin-right: 8px;
-    transition: transform 0.5s ease;
-  }
-
-  &:hover svg {
-    transform: rotate(180deg);
-  }
+  justify-content: left;
+  gap: 30px;
 `;
 
 export const PageContent = styled.div`
   overflow-y: auto;
+  padding-top: 30px;
+  display: flex;
+  justify-content: space-around;
 
   &::-webkit-scrollbar {
     display: none;
   }
 `;
 
-export const PageTitle = styled.h1`
-  font-size: 36px;
-  color: ${props => props.theme.colors.primary};
-  margin-bottom: 30px;
-  font-weight: 600;
-  text-align: right;
-  margin-top: 40px;
-`;
-
-export const Button = styled.button`
+// Buttons
+export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text' }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
+  height: 35px;
   font-weight: 500;
-  color: white;
-  border: none;
-  border-radius: ${props => props.theme.borderRadius.medium};
+  border-radius: ${p => p.theme.borderRadius.medium};
   cursor: pointer;
-  transition: background-color 0.3s ease;
-`;
+  transition: all 0.2s ease-in-out;
 
-export const AnalyticsContainer = styled.div`
-  background-color: ${props => props.theme.colors.background};
-  padding: 1.5rem;
-  border-radius: ${props => props.theme.borderRadius.medium};
-  box-shadow: ${props => props.theme.shadows.small};
-`;
-
-export const DropdownContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-export const Select = styled.select`
-  padding: 0.75rem;
-  font-size: 1rem;
-  border: 1px solid ${props => props.theme.colors.primary};
-  border-radius: ${props => props.theme.borderRadius.small};
-  background-color: ${props => props.theme.colors.background};
-  color: ${props => props.theme.colors.text};
-  width: 100%;
-  max-width: 300px;
-
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
+
+  /* OUTLINED */
+  ${p =>
+    p.variant === 'outlined' &&
+    css`
+      background: transparent;
+      border: 2px solid #99b1bd;
+      color: #4b6370;
+
+      &:hover:not(:disabled) {
+        transform: scale(1.05);
+        background: ${p.theme.colors.accent}33;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    `}
+
+  /* TEXT */
+  ${p =>
+    p.variant === 'text' &&
+    css`
+      background: transparent;
+      border: none;
+      color: ${p.theme.colors.accent};
+
+      &:hover:not(:disabled) {
+        background: ${p.theme.colors.accent}1A;
+      }
+    `}
+
+  /* CONTAINED (default) */
+  ${p =>
+    (!p.variant || p.variant === 'contained') &&
+    css`
+      background: ${p.theme.colors.accent};
+      border: none;
+      color: #fff; /* white text on accent background */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      &:hover:not(:disabled) {
+        transform: scale(1.05);
+        filter: brightness(0.9);
+        box-shadow: 0 4px 8px #dddddd;
+      }
+    `}
 `;
 
-export const ChartContainer = styled.div`
-  height: 400px;
-`;
+export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | 'text' }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-export const LoadingSpinner = styled.div`
-  border: 4px solid ${props => props.theme.colors.background};
-  border-top: 4px solid ${props => props.theme.colors.primary};
+  /* center horizontally */
+  margin: 0 auto;
+
+  /* make it a circle */
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 2rem auto;
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-
-export const ErrorMessage = styled.div`
-  color: ${props => props.theme.colors.accent};
-  margin-top: 1rem;
-  font-weight: 600;
-`;
-
-export const ProgressOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-export const ProgressContainer = styled.div`
-  background-color: ${props => props.theme.colors.background};
-  padding: 2rem;
-  border-radius: ${props => props.theme.borderRadius.medium};
-  box-shadow: ${props => props.theme.shadows.large};
-  text-align: center;
-`;
-
-export const ProgressText = styled.p`
-  font-size: 1.2rem;
-  color: ${props => props.theme.colors.text};
-  margin-bottom: 1rem;
-`;
-
-export const ChartTypeButton = styled(Button)`
-  padding: 0.5rem 1.5rem;
-  font-size: 0.9rem;
-  background-color: ${props => props.theme.colors.primary};
-  margin-right: auto;
-  border-radius: 4px;
-  min-width: 50px;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.primary};
-  }
-`;
-
-export const IconButton = styled.button`
-  background: none;
-  border: none;
   cursor: pointer;
-  color: ${props => props.theme.colors.accent};
-  font-size: 18px;
+  transition: all 0.2s ease-in-out;
+  font-size: 1.125rem; /* ~18px */
+  line-height: 1;
 
-  &:hover {
-    transform: scale(1.1);
-    color: rgb(60, 91, 125);
-  }
-`;
+  /* default text color */
+  color: ${p => p.theme.colors.accent};
 
-export const DeleteIconButton = styled(IconButton)`
-  color: rgb(188, 107, 49);
-
-  &:hover {
-    color: rgb(180, 0, 0);
-  }
-`;
-
-export const OutlinedIconButton = styled.button`
-  position: relative;
-  background: none;
-  border: 2px solid rgb(80, 111, 145);
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 8px 12px;
-  margin-right: 12px;
-  color: rgb(80, 111, 145);
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  svg {
-    color: rgb(80, 111, 145);
-    font-size: 16px;
+  /* disabled */
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
-  &:hover {
-    background: rgb(80, 111, 145);
-    color: white;
+  /* TEXT */
+  ${p =>
+    p.variant === 'text' &&
+    css`
+      background: transparent;
+      border: none;
 
-    svg {
-      color: white;
-    }
-  }
+      &:hover:not(:disabled) {
+        transform: scale(1.05);
+        background: ${p.theme.colors.accent}1A; /* ~10% alpha */
+      }
+    `}
 
-  &:hover::after {
-    bottom: -35px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    white-space: nowrap;
-  }
+  /* OUTLINED */
+  ${p =>
+    p.variant === 'outlined' &&
+    css`
+      background: transparent;
+      border: 2px solid ${p.theme.colors.accent};
+
+      &:hover:not(:disabled) {
+        transform: scale(1.05);
+        background: ${p.theme.colors.accent}33; /* 20% alpha */
+      }
+    `}
+
+  /* CONTAINED (default) */
+  ${p =>
+    (!p.variant || p.variant === 'contained') &&
+    css`
+      background: ${p.theme.colors.accent};
+      border: none;
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        transform: scale(1.05);
+        filter: brightness(0.9);
+      }
+    `}
 `;
 
-export const Chip = styled.span`
-  background-color: ${props => props.theme.colors.accent};
-  color: ${props => props.theme.colors.background};
-  padding: 4px 8px 6px 8px;
-  border-radius: 10px;
-  font-size: 16px;
-  margin: 2px;
-  display: inline-block;
-`;
-
-export const Checkbox = styled.input.attrs({type: 'checkbox'})`
-  margin-right: 10px;
-  transform: scale(1.5) translateY(1px);
-  accent-color: ${props => props.theme.colors.accent};
-`;
-
-export const FlexWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-`;
-
-// Styled Components for Dialog
+// Dialog
 export const DialogOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -307,297 +215,180 @@ export const DialogOverlay = styled.div`
   height: 100%;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  z-index: 900;
-`;
-
-interface DialogContainerProps {
-  width?: string;
-}
-
-export const DialogContainer = styled.div<DialogContainerProps>`
-  width: ${props => props.width || '380px'};
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 10px 20px 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  z-index: 901;
-`;
-
-export const DialogForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-export const DialogTitle = styled.h2`
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: rgb(80, 111, 145);
-  text-align: center;
-`;
-
-export const DialogInput = styled.input`
-  width: 100%;
-  margin-bottom: 15px;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-`;
-
-interface DialogButtonProps {
-  variant?: 'contained';
-}
-
-export const DialogButton = styled.button<DialogButtonProps>`
-  background-color: ${props => props.variant === 'contained' ? 'rgb(80,111,145)' : props.theme.colors.secondary};
-  color: ${props => props.variant === 'contained' ? "white" : props.theme.colors.primary};
-  border: none;
-  padding: 12px 24px;
-  font-weight: 500;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-  align-self: flex-end;
-  margin-top: auto;
-
-  &:hover {
-    background-color: ${props => props.variant === 'contained' ? 'rgb(60,91,125)' : props.theme.colors.lightGrey};
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-`;
-
-export const DialogButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-`;
-
-// Styled Components for List
-export const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0 0 20px;
-`;
-
-export const ListItem = styled.li`
-  display: flex;
-  align-items: center;
-  padding: 8px 0;
-  gap: 10px;
-`;
-
-export const ListItemText = styled.span`
-  font-size: 16px;
-`;
-
-// Styled Components for Table
-export const TableContainer = styled.div`
-  min-width: 500px;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-export const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-interface TableHeaderProps {
-  clickable?: boolean;
-  align?: string;
-}
-
-export const TableHeader = styled.th<TableHeaderProps>`
-  background-color: ${(props) => props.theme.colors.accent};
-  cursor: ${(props) => (props.clickable ? 'pointer' : 'default')};
-
-  > h1 {
-    justify-content: ${(props) => props.align || 'center'};
-    display: flex;
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-
-    > svg {
-      margin-right: 3px;
-    }
-  }
-`;
-
-export const TableCell = styled.td`
-  padding: 10px;
-  border-bottom: 1px solid ${props => props.theme.colors.lightGrey};
-  text-align: ${(props) => props.align || 'center'};
-`;
-
-// Styled Components for Autocomplete
-export const AutocompleteWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-`;
-
-export const AutocompleteInput = styled.input`
-  flex-grow: 1;
-  padding: 0.5rem;
-  border-radius: 10px;
-  font-size: 1rem;
-  border: 1px solid ${props => props.theme.colors.primary};
-
-  &:focus {
-    //outline: none;
-    outline-color: ${props => props.theme.colors.accent};
-      //border-color: ${props => props.theme.colors.accent};
-  }
-`;
-
-export const AutocompleteList = styled.ul`
-  position: absolute;
-  top: 110%;
-  left: 40px;
-  right: 0; /* leave space for the + button */
-  background: #fff;
-  border: 1px solid #ccc;
-  border-top: none;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 150px;
-  overflow-y: auto;
-  z-index: 10;
-`;
-
-export const AutocompleteItem = styled.li`
-  padding: 0.5rem;
-  cursor: pointer;
-
-  &:hover {
-    background: #f2f2f2;
-  }
-`;
-
-export const PlusButton = styled.button`
-  margin-left: 0.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-`;
-
-// Iframe
-export const IframeContainer = styled.div`
-  width: 1000px;
-  height: 530px;
-  position: relative;
-  overflow: hidden;
-`;
-
-export const IframeOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 945px;
-  height: 100%;
-  background-color: transparent;
-`;
-
-// Custom Select
-export const SelectContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-export const SelectHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-`;
-
-export const SelectList = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 150px;
-  overflow-y: auto;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-top: none;
   z-index: 1000;
 `;
 
-export const SelectListItem = styled.li`
-  padding: 0.5rem;
-  cursor: pointer;
-
-  &:hover {
-    background: #e6e6e6; /* Custom hover background */
-  }
+export const DialogContainer = styled.div`
+  background: #fff;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 `;
 
-// Page content menu
-export const TabNavHolder = styled.div`
-  padding-top: 20px;
+export const DialogHeader = styled.div`
   display: flex;
-  flex: 1;
-  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
 `;
 
-export const TabNavPanel = styled.div`
-  width: 180px;
-  background-color: white;
-  padding: 20px 0 0 20px;
-  height: 100%;
+export const DialogTitle = styled.h2`
+  margin: 0;
+  font-size: 1.25rem;
+  color: #4b6b8e;
 `;
 
-interface TabNavButtonProps {
-  active: boolean;
-}
-
-export const TabNavButton = styled.button<TabNavButtonProps>`
-  display: block;
-  width: 100%;
-  padding: 12px 0 12px 12px;
-  margin-bottom: 12px;
-  text-align: right;
-  background-color: transparent;
-  color: ${props => (props.active ? 'rgb(80,111,145)' : '#333')};
+export const DialogCloseButton = styled.button`
+  background: transparent;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: color 0.3s;
-  font-weight: ${props => (props.active ? 'bold' : 'normal')};
   font-size: 1.1rem;
-
-  &:hover {
-    color: rgb(80, 111, 145);
-  }
+  cursor: pointer;
+  color: #555;
+  &:hover { color: #000; }
 `;
 
-export const TabContent = styled.div`
-  flex: 1;
+export const DialogActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  //overflow-x: hidden;  // common in many dialog styles */
+`;
+
+// Form
+
+export const Form = styled.form`
+  padding: 16px 24px;
+`;
+
+export const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+`;
+
+export const Field = styled.div`
   display: flex;
   flex-direction: column;
-  overflow-y: 'hidden';
+  gap: 4px;
 `;
 
+export const FullWidthField = styled(Field)`
+  grid-column: span 2;
+`;
+
+export const Label = styled.label`
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5e7c98;
+  transition: color 0.15s ease-in-out;
+`;
+
+export const Input = styled.input`
+  /* ---------- shared look ---------- */
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #dce3f1;
+  color: #213953;
+  transition: border-color 0.15s ease-in-out,
+  color 0.15s ease-in-out,
+  box-shadow 0.15s ease-in-out,
+  background-color 0.15s ease-in-out;
+  height: 36px;
+  position: relative; /* anchor for absolute icon */
+
+  /* ---------- date‑only tweaks ---------- */
+
+  &[type='date'] {
+    text-align: right; /* put the numbers on the right */
+    padding-left: 38px; /* room for icon on the left */
+    padding-right: 10px;
+
+    /* move the native calendar indicator */
+
+    &::-webkit-calendar-picker-indicator {
+      position: absolute;
+      left: 10px; /* push to the left edge */
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #5a67d8;
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+
+  &:focus:invalid {
+    border-color: #c63f32;
+    box-shadow: 0 0 0 2px rgba(197, 63, 50, 0.2);
+  }
+`;
+
+export const Select = styled.select`
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #dce3f1;
+  background: #ffffff;
+  color: #213953;
+  height: 36px;
+  appearance: none;
+  transition: border-color 0.15s ease-in-out,
+              color 0.15s ease-in-out,
+              box-shadow 0.15s ease-in-out,
+              background-color 0.15s ease-in-out;
+
+  &:hover:not(:disabled) {
+    border-color: #b0bcd9;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #5a67d8;
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+
+  &:invalid {
+    border-color: #e53e3e;
+  }
+
+  /* ---------- keep look unchanged when disabled ---------- */
+  &:disabled {
+    border-color: #dce3f1;          /* same border */
+    background: #ffffff;            /* same background */
+    color: #213953;                 /* same font colour */
+    -webkit-text-fill-color: #213953; /* Safari override */
+    opacity: 1;                     /* cancel browser greying */
+  }
+`;
+
+export const TextArea = styled.textarea`
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #dce3f1;
+  color: #213953;
+  font-family: sans-serif;
+  min-height: 100px;
+  resize: vertical;
+  transition: border-color 0.15s ease-in-out,
+              color 0.15s ease-in-out,
+              box-shadow 0.15s ease-in-out,
+              background-color 0.15s ease-in-out;
+
+  &:focus {
+    outline: none;
+    border-color: #5a67d8;
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+`;
+
+// Empty State
 export const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
@@ -610,8 +401,7 @@ export const EmptyState = styled.div`
 export const EmptyStateIcon = styled.div`
   width: 64px;
   height: 64px;
-  background-color: #f3f4f6;
-  border-radius: 50%;
+  color: #d3dbe4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,4 +421,64 @@ export const EmptyStateText = styled.p`
   font-size: 16px;
   color: #6b7280;
   margin: 0;
+`;
+
+// Table
+export const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+`;
+
+export const TableHeader = styled.th`
+  text-align: right;
+  padding: 12px;
+  border-bottom: 1px solid #e1e4e8;
+  color: #2d5a83;
+`;
+
+export const TableBody = styled.td`
+  padding: 12px;
+  border-bottom: 1px solid #e1e4e8;
+  vertical-align: middle;
+  color: #4e778e;
+`;
+
+// Cards
+export const Card = styled.div`
+  background: white;
+  border: 2px solid rgb(197, 214, 228);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: right;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+export const CardName = styled.h2`
+  font-size: 22px;
+  color: ${props => props.theme.colors.primary};
+  margin-bottom: 12px;
+  font-weight: 500;
+`;
+
+export const CardInfo = styled.p`
+  font-size: 16px;
+  color: #4a4a4a;
+  margin: 8px 0;
+`;
+
+export const CardGrid = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
 `;

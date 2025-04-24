@@ -1,0 +1,219 @@
+import React from "react";
+import styled from 'styled-components';
+import { FaTrash, FaUpload, FaDownload, FaRedoAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
+
+export interface FileAreaDocument {
+  fileName: string | null;
+  fileType: string;
+  fileId?: string;
+  state: 'uploaded' | 'missing';
+}
+
+// Container for the entire file area
+const FileAreaContainer = styled.div`
+  grid-column: span 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #fff;
+  padding-bottom: 20px; /* Add space at the bottom after scrolling */
+`;
+
+// Individual file item: receives `disabled` and `state`
+const FileItemContainer = styled.div<{ disabled: boolean; state: 'uploaded' | 'missing' }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: ${p =>
+    p.state === 'missing' ? '#ffe5e5'
+    : p.disabled     ? '#f0f4f8'
+                     : '#fafafa'};
+  border: 1px solid ${p => p.state === 'missing' ? '#f5c6cb' : '#e1e8f0'};
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, transform 0.1s;
+
+  &:hover {
+    background-color: ${p =>
+      p.state === 'missing' ? '#ffdddd'
+      : p.disabled     ? '#f0f4f8'
+                       : '#f5f7fa'};
+    transform: ${p => p.disabled ? 'none' : 'scale(1.01)'};
+  }
+`;
+
+// Badge showing file type
+const FileTypeBadge = styled.span<{ state: 'uploaded' | 'missing' }>`
+  background-color: ${p => p.state === 'missing' ? '#f5c6cb' : '#e1e8f0'};
+  color: ${p => p.state === 'missing' ? '#721c24' : '#495057'};
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: inline-block;
+`;
+
+// Name of the file, with dark red for missing
+const FileName = styled.span<{ state: 'uploaded' | 'missing' }>`
+  font-size: 14px;
+  color: ${p => p.state === 'missing' ? '#672525' : '#33475b'};
+  word-break: break-all;
+`;
+
+// Container for action icons
+const Actions = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+// Unified button; accepts an optional `danger` prop
+const ActionButton = styled.button<{ disabled: boolean; danger?: boolean }>`
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
+  padding: 4px;
+  transition: color 0.2s;
+  color: ${p =>
+    p.disabled       ? '#a0adc0'
+    : p.danger       ? '#a00'
+                    : '#5c95d3'};
+
+  &:hover {
+    color: ${p =>
+      p.disabled       ? '#a0adc0'
+      : p.danger       ? '#800'
+                      : '#3d76b1'};
+  }
+`;
+
+// Single FileItem component
+const FileItem: React.FC<{
+  fileId: string;
+  fileName: string;
+  fileType: string;
+  state: 'uploaded' | 'missing';
+  disabled: boolean;
+  onUpload?: (fileType: string, file: File) => void;
+  onDownload?: (fileId: string, fileName: string) => void;
+  onDelete?: (fileId: string) => void;
+}> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete }) => {
+
+  const handleUpload = async () => {
+    if (disabled || !onUpload) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        const file = target.files[0];
+        await onUpload(fileType, file);
+      }
+    };
+    input.click();
+  };
+
+  const handleDownload = () => {
+    if (!onDownload || !fileId) return;
+    onDownload(fileId, fileName);
+  };
+
+  const handleDelete = () => {
+    if (disabled || !onDelete || !fileId) return;
+    onDelete(fileId);
+  };
+
+  return (
+    <FileItemContainer disabled={disabled} state={state}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div>
+          <FileTypeBadge state={state}>{fileType}</FileTypeBadge>
+        </div>
+        <FileName state={state}>
+          {state === 'uploaded' ? fileName : 'No file uploaded'}
+        </FileName>
+      </div>
+
+      <Actions>
+        {state === 'uploaded' ? (
+          <>
+            <ActionButton
+              onClick={handleDownload}
+              disabled={false}
+              danger={false}
+              aria-label="Download"
+              title="Download file"
+            >
+              <FaDownload />
+            </ActionButton>
+            <ActionButton
+              onClick={handleUpload}
+              disabled={disabled}
+              aria-label="Re-upload"
+              title="Re-upload file"
+            >
+              <FaRedoAlt />
+            </ActionButton>
+            <ActionButton
+              danger
+              onClick={handleDelete}
+              disabled={disabled}
+              aria-label="Delete"
+              title="Delete file"
+            >
+              <FaTrash />
+            </ActionButton>
+          </>
+        ) : (
+          <ActionButton
+            onClick={handleUpload}
+            disabled={disabled}
+            aria-label="Upload"
+            title="Upload file"
+          >
+            <FaUpload />
+          </ActionButton>
+        )}
+      </Actions>
+    </FileItemContainer>
+  );
+};
+
+// Main FileArea component
+const FileArea: React.FC<{ 
+  files: FileAreaDocument[]; 
+  disabled: boolean;
+  onUpload?: (fileType: string, file: File) => void;
+  onDownload?: (fileId: string, fileName: string) => void;
+  onDelete?: (fileId: string) => void;
+}> = ({ 
+  files, 
+  disabled, 
+  onUpload, 
+  onDownload, 
+  onDelete 
+}) => (
+  <FileAreaContainer>
+    {files.map((file, idx) => (
+      <FileItem
+        key={idx}
+        fileId={file.fileId || ''}
+        fileName={file.fileName || ''}
+        fileType={file.fileType}
+        state={file.state}
+        disabled={disabled}
+        onUpload={onUpload}
+        onDownload={onDownload}
+        onDelete={onDelete}
+      />
+    ))}
+  </FileAreaContainer>
+);
+
+export default FileArea;

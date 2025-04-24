@@ -4,7 +4,7 @@ const theme: DefaultTheme = {
   colors: {
     primary: 'rgb(80,111,145)',  
     secondary: '#F5F7FA', 
-    accent: 'rgb(80,111,145)',  // This is where the green color is coming from
+    accent: 'rgb(101,131,165)',  // This is where the green color is coming from
     text: '#333333', 
     background: '#FFFFFF', 
     lightGrey: '#E1E5EA',

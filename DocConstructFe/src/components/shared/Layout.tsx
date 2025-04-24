@@ -2,21 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styled from 'styled-components';
-import { 
-  FaClipboardList, 
+import {
   FaBuilding, 
-  FaUserTie, 
-  FaFileAlt, 
-  FaUniversity,
-  FaSignOutAlt,
+  FaUserTie,
   FaBars
 } from 'react-icons/fa';
-import { 
-  TabNavHolder, 
-  TabNavPanel, 
-  TabNavButton, 
-  TabContent 
-} from '../../styles/SharedStyles';
 
 const LayoutContainer = styled.div`
   display: flex;
@@ -37,16 +27,9 @@ const Sidebar = styled.div<{ isCollapsed: boolean }>`
   transition: width 0.3s ease;
 `;
 
-const SidebarHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-`;
-
 const MainContent = styled.div`
   flex: 1;
-  overflow: hidden;
+  padding: 10px 40px 0;
 `;
 
 const MenuItemText = styled.span<{ isCollapsed: boolean }>`
@@ -57,7 +40,7 @@ const MenuItemText = styled.span<{ isCollapsed: boolean }>`
   white-space: nowrap;
 `;
 
-const MenuItem = styled.div`
+const MenuItem = styled.div<{ isCollapsed: boolean }>`
   display: flex;
   align-items: center;
   font-size: 16px;
@@ -79,7 +62,7 @@ const MenuItem = styled.div`
   }
 `;
 
-const ActiveMenuItem = styled(MenuItem)`
+const ActiveMenuItem = styled(MenuItem)<{ isCollapsed: boolean }>`
   background-color: ${props => props.theme.colors.secondary};
   color: ${props => props.theme.colors.primary};
   font-weight: bold;
@@ -91,29 +74,8 @@ const ActiveMenuItem = styled(MenuItem)`
     left: 0;
     top: 0;
     bottom: 0;
-    width: 5px;
+    width: ${props => props.isCollapsed ? '0' : '5px'};
     background-color: ${props => props.theme.colors.primary};
-  }
-`;
-
-const LogoutButton = styled.div`
-  margin-top: auto;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  color: ${props => props.theme.colors.primary};
-  cursor: pointer;
-  transition: ${props => props.theme.transitions.default};
-  direction: rtl;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.secondary};
-  }
-
-  svg {
-    margin-left: 10px;
-    font-size: 20px;
   }
 `;
 
@@ -142,10 +104,6 @@ const SidebarNav = styled.nav`
   margin-top: 20px;
 `;
 
-const SidebarFooter = styled.div`
-  margin-top: auto;
-`;
-
 interface MenuItemProps {
   href: string;
   icon: React.ReactNode;
@@ -159,7 +117,7 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({ href, icon, text, isActive
   
   return (
     <Link href={href} passHref>
-      <ItemComponent>
+      <ItemComponent isCollapsed={isCollapsed}>
         {icon}
         <MenuItemText isCollapsed={isCollapsed}>{text}</MenuItemText>
       </ItemComponent>
@@ -183,10 +141,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
   }, [isCollapsed]);
 
-  const handleLogout = () => {
-    router.push('/login');
-  };
-
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
@@ -200,7 +154,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <FaBars />
             </ToggleButton>
           </ToggleButtonHolder>
-          
           <SidebarNav>
             <MenuItemComponent 
               href="/projects" 
@@ -218,13 +171,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             />
           </SidebarNav>
         </div>
-        
-        <SidebarFooter>
-          <LogoutButton onClick={handleLogout}>
-            <FaSignOutAlt />
-            <MenuItemText isCollapsed={isCollapsed}>התנתק</MenuItemText>
-          </LogoutButton>
-        </SidebarFooter>
       </Sidebar>
       <MainContent>
         {children}

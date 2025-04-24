@@ -1,3 +1,4 @@
+import json
 import logging
 
 import werkzeug
@@ -29,7 +30,7 @@ class ApiError(Exception):
 class InternalServerError(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Internal server error',
+            msg='Something went wrong',
             code='internal_server_error'
         )
 
@@ -54,31 +55,16 @@ class HttpException(ApiError):
         return self.m_http_code
 
 
-class RequestParametersError(ApiError):
-    def __init__(self, fields_names_messages_dict):
+class ValidationError(ApiError):
+    def __init__(self, params: dict):
         super().__init__(
-            msg="Invalid parameters",
-            code="invalid_params",
-            params={'fields_errors': fields_names_messages_dict}
+            msg='Validation error',
+            code='validation_error',
+            params=params if params else None
         )
 
-    def allocate_error_msg(self, fields_names_messages_dict):
-        final_res = {}
-        for field_name, val in fields_names_messages_dict.items():
-            if isinstance(val, str):
-                final_res[field_name] = {'message': val}
-            else:
-                final_res[field_name] = self.allocate_error_msg(val)
-        return final_res
-
-
-class InvalidAttachedJson(ApiError):
-    def __init__(self, error: str):
-        super().__init__(
-            msg='Invalid attached JSON file: {error}',
-            code='invalid_attached_json',
-            params={"error": error}
-        )
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
 
 
 def handle_error(error: Exception):
@@ -98,13 +84,88 @@ def handle_error(error: Exception):
     return error_response
 
 
-# Survey errors
+# Project errors
 
-class SurveyDoesNotExist(ApiError):
+class ProjectDoesNotExist(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Survey does not exist',
-            code='survey_does_not_exist'
+            msg='Project not found',
+            code='project_does_not_exist'
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
+
+class ProjectAlreadyExists(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Project already exists',
+            code='project_already_exists'
+        )
+
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
+
+
+class ProfessionalDoesNotExist(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Professional not found',
+            code='professional_does_not_exist'
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
+
+class ProfessionalAlreadyExists(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Professional already exists',
+            code='professional_already_exists'
+        )
+
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
+
+class ProfessionalAlreadyInProject(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Professional already in project',
+            code='professional_already_in_project'
+        )
+
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
+
+class ProfessionalNotInProject(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Professional is not associated with this project',
+            code='professional_not_in_project'
+        )
+
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
+
+
+class ProfessionalDocumentNotFound(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Document not found or not associated with this professional',
+            code='professional_document_not_found'
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
+
+class ProjectDocumentNotFound(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='Document not found or not associated with this project',
+            code='project_document_not_found'
         )
 
     def http_code(self):
