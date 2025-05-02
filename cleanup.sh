@@ -16,5 +16,12 @@ docker builder prune -af
 docker rmi $(docker images -f "dangling=true" -q)
 
 # Clean up local system
-sudo apt-get clean
-sudo apt-get autoremove -y 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS cleanup
+    brew cleanup
+    brew autoremove
+else
+    # Linux cleanup
+    sudo apt-get clean
+    sudo apt-get autoremove -y
+fi

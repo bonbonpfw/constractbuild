@@ -1,14 +1,16 @@
 import os
 import tempfile
+import mimetypes
 
 from flask import send_file, request, jsonify
 
 from app.errors import ValidationError
-from DocConstructBe.app.api import (
+from app.api import (
     ProjectManager, ProfessionalManager
 )
 from app.response import SuccessResponse
-from DocConstructBe.app.api_schema import API_ENDPOINTS, Endpoints
+from app.api_schema import API_ENDPOINTS, Endpoints
+
 
 
 def validate_request(endpoint):
@@ -30,6 +32,8 @@ def validate_request(endpoint):
     if request.is_json:
         data = request.get_json()
         print('JSON data:', data)
+        if 'status_code' in data:
+            del data['status_code']
     elif request.method in ['GET', 'DELETE']:
         data = request.args.to_dict()
         print('GET data:', data)
@@ -237,6 +241,7 @@ def init_routes(app):
                 'license_expiration_date': professional.license_expiration_date.isoformat(),
                 'professional_type': professional.professional_type,
                 'status': professional.status,
+                'license_file_path': professional.license_file_path,
                 'documents': [{
                     'id': doc.id,
                     'name': doc.name,
@@ -250,6 +255,8 @@ def init_routes(app):
     @app.route('/api/professional', methods=['POST'])
     def create_professional():
         data = validate_request(endpoint=Endpoints.CREATE_PROFESSIONAL)
+        
+        # Create the professional
         professional = ProfessionalManager.create(
             name=data['name'],
             national_id=data['national_id'],
@@ -258,26 +265,27 @@ def init_routes(app):
             address=data['address'],
             license_number=data['license_number'],
             license_expiration_date=data['license_expiration_date'],
-            professional_type=data['professional_type'].value
+            professional_type=data['professional_type'].value,
+            # license_file_path is now optional and will be handled as a document
+            license_file_path=data.get('license_file_path')
         )
+        
         return SuccessResponse({'id': professional.id}).generate_response()
 
     @app.route('/api/professional/import', methods=['POST'])
     def import_professional_data():
         data = validate_request(endpoint=Endpoints.IMPORT_PROFESSIONAL_FILE)
         file = data.get('file')
-        # TODO: Implement the file extraction logic
-        hardcoded_data = {
-            'name': 'John Doe',
-            'national_id': '123456789',
-            'email': 'john.doe@example.com',
-            'phone': '+972 (50) 123-4567',
-            'address': '123 Main St, Anytown, Israel',
-            'license_number': 'LIC-12345',
-            'license_expiration_date': '2025-12-31',
-            'professional_type': 'Contractor'
-        }
-        return SuccessResponse(hardcoded_data).generate_response()
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, file.filename)
+        file.save(temp_path)
+        
+        # Extract data from the license file
+        # Note: license_file_path is included for backward compatibility
+        # but license files are now handled as LICENSE document type
+        license_data = ProfessionalManager().extract_professional_data(temp_path)
+        
+        return SuccessResponse(license_data).generate_response()
 
     @app.route('/api/professional', methods=['PUT'])
     def update_professional():
@@ -358,3 +366,4 @@ def init_routes(app):
         return SuccessResponse({
             'document_types': ProfessionalManager().get_document_types()
         }).generate_response()
+    

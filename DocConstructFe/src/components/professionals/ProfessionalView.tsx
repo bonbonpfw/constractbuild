@@ -8,7 +8,7 @@ import {
   uploadProfessionalDocument,
   downloadProfessionalDocument,
   deleteProfessionalDocument,
-  getProfessionalDocumentTypes
+  getProfessionalDocumentTypes,
 } from '../../api';
 import {
   Professional,
@@ -35,7 +35,18 @@ import EmptyStatePlaceholder from "../shared/EmptyState";
 import useDeleteProfessional from "./useDeleteProfessional";
 import DeletionDialog from "../shared/DeletionDialog";
 import {toast} from "react-toastify";
-import FileArea, {FileAreaDocument} from "../shared/FileArea";
+import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
+
+// Use the direct API URL from environment variables if available
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001/api';
+
+// --- Linter Workaround --- 
+const FaArrowLeftAny = FaArrowLeft as any;
+const FaEditAny = FaEdit as any;
+const FaTrashAny = FaTrash as any;
+const FaCheckAny = FaCheck as any;
+const FaTimesAny = FaTimes as any;
+// --- End Workaround --- 
 
 const ProfessionalView: React.FC = () => {
   const router = useRouter();
@@ -49,10 +60,12 @@ const ProfessionalView: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [documents, setDocuments] = useState<ProfessionalDocument[]>([]);
+  const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   const {isDeleteDialogOpen, handleDelete, handleConfirmDelete, handleCancelDelete} = useDeleteProfessional(id);
 
-  // Convert ProfessionalDocument[] to FileAreaDocument[]
+  // Add licenses to the filesData conversion logic
   const filesData: FileAreaDocument[] = [];
 
   // Group documents by type
@@ -133,6 +146,30 @@ const ProfessionalView: React.FC = () => {
     }
   };
 
+  const handleFilePreview = async (fileId: string, fileName: string) => {
+    try {
+      // Get the file from backend
+      const blob = await downloadProfessionalDocument(id, fileId);
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Set the preview state
+      setPreviewFileUrl(url);
+      setPreviewFileName(fileName);
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, 'Failed to preview file');
+    }
+  };
+
+  const closePreview = () => {
+    if (previewFileUrl) {
+      window.URL.revokeObjectURL(previewFileUrl);
+    }
+    setPreviewFileUrl(null);
+    setPreviewFileName(null);
+  };
+
   useEffect(() => {
     if (!id) return;
     loadProfessional();
@@ -206,10 +243,10 @@ const ProfessionalView: React.FC = () => {
           {!isEditing ? (
             <>
               <IconButton onClick={() => router.back()} title="Back">
-                <FaArrowLeft />
+                <FaArrowLeftAny />
               </IconButton>
               <IconButton onClick={startEditing} title="Edit">
-                <FaEdit />
+                <FaEditAny />
               </IconButton>
               <IconButton
                 onClick={(e) => {
@@ -218,7 +255,7 @@ const ProfessionalView: React.FC = () => {
                 }}
                 title="Delete"
               >
-               <FaTrash />
+               <FaTrashAny />
               </IconButton>
             </>
           ) : (
@@ -228,14 +265,14 @@ const ProfessionalView: React.FC = () => {
                 title="Save"
                 disabled={saving}
               >
-                <FaCheck />
+                <FaCheckAny />
               </IconButton>
               <IconButton
                 onClick={cancelEditing}
                 title="Cancel"
                 disabled={saving}
               >
-                <FaTimes />
+                <FaTimesAny />
               </IconButton>
             </>
           )}
@@ -362,9 +399,19 @@ const ProfessionalView: React.FC = () => {
                 onUpload={handleFileUpload}
                 onDownload={handleFileDownload}
                 onDelete={handleFileDelete}
+                onPreview={handleFilePreview}
               />
             </div>
           </div>
+        )}
+        
+        {/* File Preview Modal */}
+        {previewFileUrl && previewFileName && (
+          <FilePreview
+            fileUrl={previewFileUrl}
+            fileName={previewFileName}
+            onClose={closePreview}
+          />
         )}
       </PageContent>
       <DeletionDialog

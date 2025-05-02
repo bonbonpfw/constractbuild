@@ -1,7 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
 import { FaTrash, FaUpload, FaDownload, FaRedoAlt } from "react-icons/fa";
-import { toast } from "react-toastify";
 
 export interface FileAreaDocument {
   fileName: string | null;

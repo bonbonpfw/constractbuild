@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from DocConstructBe.data_model.models import ProjectStatus, ProfessionalDocumentType, ProfessionalType, ProfessionalStatus, ProjectDocumentType
+from data_model.models import ProjectStatus, ProfessionalDocumentType, ProfessionalType, ProfessionalStatus, ProjectDocumentType
 
 
 # Project Schemas
@@ -95,6 +95,7 @@ class ProfessionalCreateSchema(Schema):
     license_number = fields.Str(required=True)
     license_expiration_date = fields.Date(required=True)
     professional_type = fields.Enum(ProfessionalType, by_value=True, required=True)
+    license_file_path = fields.Str(required=True)
 
 
 class ProfessionalUpdateSchema(Schema):
@@ -107,7 +108,7 @@ class ProfessionalUpdateSchema(Schema):
     license_number = fields.Str()
     license_expiration_date = fields.Date()
     professional_type = fields.Enum(ProfessionalType, by_value=True)
-    status = fields.Enum(ProfessionalStatus, by_value=True)
+   # status = fields.Enum(ProfessionalStatus, by_value=True)
 
 
 class ProfessionalDeleteSchema(Schema):

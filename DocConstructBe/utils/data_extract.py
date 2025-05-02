@@ -1,26 +1,42 @@
 import logging
 import re
-
-
-
+from datetime import datetime
+     
 class LicenseData:
     def __init__(self):
         self.profession_type = None
         self.name = None
         self.id_number = None
         self.license_number = None
-        self.expiration_date = None
+        self.license_expiration_date = None
         self.address = None
-     
+        self.email = None
+        self.phone = None
         
     def __str__(self):
         return (f"Profession: {self.profession_type}\n"
                 f"Name: {self.name}\n"
-                f"ID Number: {self.id_number}\n"
+                f"national_id: {self.id_number}\n"
                 f"License Number: {self.license_number}\n"
-                f"Expiration Date: {self.expiration_date}\n"
+                f"Expiration Date: {self.license_expiration_date}\n"
                 f"Address: {self.address}\n"
                 )
+                
+    def __dict__(self):
+        return {
+            
+            'name': self.name,
+            'address': self.address,
+            'phone': self.phone,
+            'email': self.email,
+            'professional_type': self.profession_type,
+            'national_id': self.id_number,
+            'license_number': self.license_number,
+            'license_expiration_date': self.license_expiration_date,
+           
+            
+            
+        }
 
 
 
@@ -56,7 +72,7 @@ class LicenseExtract:
         return self.license_config['proffessional_type_pattern']
     
     def __str__(self):
-        return f"Professional: {self.profession}, Department: {self.department}, Name: {self.name}, ID: {self.id_number}, License: {self.license_number}, Expiration: {self.expiration_date}"
+        return f"Professional: {self.profession}, Department: {self.department}, Name: {self.name}, ID: {self.id_number}, License: {self.license_number}, Expiration: {self.license_expiration_date}"
 
 class ExtractProfessional:
     def __init__(self, text: bytes):
@@ -87,7 +103,8 @@ class ExtractProfessional:
         date_match = re.search(self.license_extract.date_pattern, text)
         if date_match:
             date = date_match.group(1) if len(date_match.groups()) > 0 else date_match.group()
-            self.license_data.expiration_date = date
+            date = datetime.strptime(date, '%d/%m/%Y')
+            self.license_data.license_expiration_date = date
             return date
         else:
             logging.error(f"לא ניתן למצוא תאריך תפוגה בטקסט: ...")

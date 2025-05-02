@@ -36,10 +36,21 @@ class ProjectDocumentType(Enum):
 
 
 class ProfessionalType(Enum):
-    ENGINEER = 'Engineer'
-    ARCHITECT = 'Architect'
-    LAND_SURVEYOR = 'Land surveyor'
-    OTHER = 'Other'
+    ENGINEER = 'מהנדס'
+    ARCHITECT = 'אדריכל'
+    PESTICIDAL = 'מדביר'
+    OTHER = 'אחר'
+
+    @staticmethod
+    def map_to_professional_type(professional_type: str):
+        if 'מהנדס' in professional_type:
+            return ProfessionalType.ENGINEER.value
+        elif 'מדביר' in professional_type:
+            return ProfessionalType.PESTICIDAL.value
+        elif 'אדריכל' in professional_type:
+            return ProfessionalType.ARCHITECT.value
+        else:
+            return ProfessionalType.OTHER.value
 
 
 class ProfessionalStatus(Enum):
@@ -50,7 +61,6 @@ class ProfessionalStatus(Enum):
 
 class ProfessionalDocumentType(Enum):
     LICENSE = 'license'
-    INSURANCE = 'insurance'
 
 
 class DocumentStatus(Enum):
@@ -122,6 +132,7 @@ class Professional(Base):
     license_expiration_date = Column(Date, nullable=False)
     professional_type = Column(String, nullable=False)
     status = Column(String, nullable=False)
+    license_file_path = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=False)
 

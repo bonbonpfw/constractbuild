@@ -60,7 +60,13 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
     setImporting(true);
     try {
       const importedData = await importProfessionalData(file);
-      setFormData(importedData);
+      // Convert ISO date string to YYYY-MM-DD format for input
+      const formattedData = {
+        ...importedData,
+        license_expiration_date: importedData.license_expiration_date ? 
+          new Date(importedData.license_expiration_date).toISOString().split('T')[0] : ''
+      };
+      setFormData(formattedData);
     } catch (error) {
       errorHandler(error as ErrorResponseData, 'Failed to import professional data');
     } finally {

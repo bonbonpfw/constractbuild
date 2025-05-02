@@ -2,11 +2,13 @@ import datetime
 from datetime import date
 import os
 import shutil
-from DocConstructBe.config.sys_config import DOCUMENTS_FOLDER, get_config
+from config.sys_config import DOCUMENTS_FOLDER, get_config
+from utils.data_extract import ExtractProfessional
+from utils.doc_to_bin import process_pdf_image_to_binary, process_image_to_binary
 
 from app.errors import ProjectDoesNotExist, ProjectAlreadyExists, ProfessionalDoesNotExist, ProfessionalAlreadyExists, \
     ProfessionalAlreadyInProject, ProfessionalNotInProject, ProfessionalDocumentNotFound, ProjectDocumentNotFound
-from DocConstructBe.data_model.models import (
+from data_model.models import (
     Project, Professional,
     ProjectProfessional, ProjectDocument, ProfessionalDocument,
     ProjectStatus, ProfessionalStatus, ProfessionalType, ProfessionalDocumentType, ProjectDocumentType
@@ -40,7 +42,7 @@ class ProjectManager:
             case_id=case_id,
             description=description,
             due_date=due_date,
-            status=status,
+            status=status.value if isinstance(status, ProjectStatus) else status,
             status_due_date=status_due_date,
         )
         project.created_at = project.updated_at = date.today()
@@ -190,7 +192,7 @@ class ProfessionalManager:
 
     @staticmethod
     def create(name: str, national_id: str, email: str, phone: str, address: str, license_number: str,
-               license_expiration_date: date, professional_type: str) -> Professional:
+               license_expiration_date: date, professional_type: str, license_file_path: str = None) -> Professional:
         existing_professional = db_session.query(Professional).filter(
             (Professional.name == name) |
             (Professional.national_id == national_id) |
@@ -210,15 +212,29 @@ class ProfessionalManager:
             license_expiration_date=license_expiration_date,
             professional_type=professional_type,
             status=ProfessionalStatus.ACTIVE.value,
+            license_file_path=license_file_path if license_file_path else '',
             created_at=date.today(),
             updated_at=date.today()
         )
+
         db_session.add(professional)
         db_session.commit()
+        
+        # If license_file_path is provided, add it as a document
+        if license_file_path:
+            # Get an instance of ProfessionalManager to use instance methods
+            professional_manager = ProfessionalManager()
+            professional_manager.add_document(
+                file_path=license_file_path,
+                professional_id=str(professional.id),
+                document_type=ProfessionalDocumentType.LICENSE.value,
+                document_name=f"License_{os.path.basename(license_file_path)}"
+            )
+            
         return professional
 
     def update(self, professional_id: str, name: str, national_id: str, email: str, phone: str, license_number: str,
-               address: str, license_expiration_date: date, professional_type: str, status: str) -> Professional:
+               address: str, license_expiration_date: date, professional_type: str, status: str, license_file_path: str = None) -> Professional:
         professional = self.get_by_id(professional_id=professional_id)
         professional.name = name
         professional.national_id = national_id
@@ -231,6 +247,17 @@ class ProfessionalManager:
         professional.status = status
         professional.updated_at = date.today()
         db_session.commit()
+        
+        # If license_file_path is provided, add it as a document
+        if license_file_path:
+            # Get an instance of ProfessionalManager to use instance methods
+            professional_manager = ProfessionalManager()
+            professional_manager.add_document(
+                file_path=license_file_path,
+                professional_id=str(professional.id),
+                document_type=ProfessionalDocumentType.LICENSE.value,
+                document_name=f"License_{license_number}"
+            )
         return professional
 
     def delete(self, professional_id: str) -> None:
@@ -301,3 +328,14 @@ class ProfessionalManager:
     @staticmethod
     def get_document_types() -> list[str]:
         return [document_type.value for document_type in ProfessionalDocumentType]
+    
+    @staticmethod
+    def extract_professional_data(file_path: str) -> dict:
+        binary_data = process_pdf_image_to_binary(file_path)
+        extract_professional = ExtractProfessional(binary_data)
+        license_data = extract_professional.extract_text()
+        # Convert LicenseData object to dict before accessing
+        license_dict = license_data.__dict__()
+        license_dict['professional_type'] = ProfessionalType.map_to_professional_type(license_dict['professional_type'])
+        license_dict['license_file_path'] = file_path
+        return license_dict
