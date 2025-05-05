@@ -21,6 +21,7 @@ import {createProject} from "../../api";
 
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   status: ProjectStatus.PRE_PERMIT,
+  professionals: []
 };
 
 const ProjectCreationDialog: React.FC<{
