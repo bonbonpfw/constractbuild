@@ -31,7 +31,7 @@ def create_professionals():
             "address": "789 Pine Rd, Nowhere, USA",
             "license_number": "SURV78901",
             "license_expiration_date": date.today() + timedelta(days=545),
-            "professional_type": ProfessionalType.LAND_SURVEYOR.value
+            "professional_type": ProfessionalType.ENGINEER.value
         },
         {
             "name": "Emily Wilson",
