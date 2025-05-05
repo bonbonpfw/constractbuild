@@ -1,6 +1,6 @@
 import React from "react";
 import styled from 'styled-components';
-import { FaTrash, FaUpload, FaDownload, FaRedoAlt, FaEye } from "react-icons/fa";
+import { FaTrash, FaUpload, FaDownload, FaRedoAlt, FaEye, FaEnvelope } from "react-icons/fa";
 import {
   DialogOverlay,
   DialogContainer,
@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogCloseButton
 } from '../../styles/SharedStyles';
+import { toast } from 'react-toastify';
 
 export interface FileAreaDocument {
   fileName: string | null;
@@ -123,6 +124,42 @@ export const FilePreview: React.FC<{
   </DialogOverlay>
 );
 
+// Email Dialog for sending file to signer
+const EmailDialog: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSend: (email: string) => void;
+  fileName: string;
+}> = ({ isOpen, onClose, onSend, fileName }) => {
+  const [email, setEmail] = React.useState('');
+  if (!isOpen) return null;
+  return (
+    <DialogOverlay onClick={onClose}>
+      <DialogContainer onClick={e => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Send "{fileName}" to signer</DialogTitle>
+          <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
+        </DialogHeader>
+        <div style={{ padding: 24 }}>
+          <label style={{ fontWeight: 500, fontSize: 16 }}>Signer Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Enter email"
+            style={{ width: '100%', margin: '12px 0 24px 0', padding: 8, fontSize: 16, borderRadius: 4, border: '1px solid #ccc' }}
+            autoFocus
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <button type="button" onClick={onClose} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#eee', color: '#333', fontWeight: 500, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={() => { onSend(email); setEmail(''); }} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#5c95d3', color: '#fff', fontWeight: 500, cursor: 'pointer' }}>Send</button>
+          </div>
+        </div>
+      </DialogContainer>
+    </DialogOverlay>
+  );
+};
+
 // Single FileItem component
 const FileItem: React.FC<{
   fileId: string;
@@ -135,6 +172,7 @@ const FileItem: React.FC<{
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
 }> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete, onPreview }) => {
+  const [showEmailDialog, setShowEmailDialog] = React.useState(false);
 
   const handleUpload = async () => {
     if (disabled || !onUpload) return;
@@ -205,6 +243,14 @@ const FileItem: React.FC<{
               <FaRedoAlt />
             </ActionButton>
             <ActionButton
+              onClick={() => setShowEmailDialog(true)}
+              disabled={false}
+              aria-label="Send to signer by email"
+              title="Send to signer by email"
+            >
+              <FaEnvelope />
+            </ActionButton>
+            <ActionButton
               danger
               onClick={handleDelete}
               disabled={disabled}
@@ -213,6 +259,15 @@ const FileItem: React.FC<{
             >
               <FaTrash />
             </ActionButton>
+            <EmailDialog
+              isOpen={showEmailDialog}
+              onClose={() => setShowEmailDialog(false)}
+              onSend={email => {
+                setShowEmailDialog(false);
+                toast.success(`File sent to ${email} (simulated)`);
+              }}
+              fileName={fileName}
+            />
           </>
         ) : (
           <ActionButton
