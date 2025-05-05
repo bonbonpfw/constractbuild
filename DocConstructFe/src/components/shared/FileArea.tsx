@@ -160,6 +160,46 @@ const EmailDialog: React.FC<{
   );
 };
 
+// Upload Mode Dialog for choosing Auto fill or Manual
+const UploadModeDialog: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (mode: 'auto' | 'manual') => void;
+}> = ({ isOpen, onClose, onConfirm }) => {
+  const [mode, setMode] = React.useState<'auto' | 'manual'>('auto');
+  React.useEffect(() => { if (isOpen) setMode('auto'); }, [isOpen]);
+  if (!isOpen) return null;
+  return (
+    <DialogOverlay>
+      <DialogContainer onClick={e => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Select Upload Mode</DialogTitle>
+          <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
+        </DialogHeader>
+        <div style={{ padding: 24 }}>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontWeight: 500, fontSize: 16, marginBottom: 12 }}>How do you want to fill the document?</label>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 24 }}>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
+                <input type="radio" name="upload-mode" value="auto" checked={mode === 'auto'} onChange={() => setMode('auto')} style={{ marginRight: 8 }} />
+                Auto fill
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
+                <input type="radio" name="upload-mode" value="manual" checked={mode === 'manual'} onChange={() => setMode('manual')} style={{ marginRight: 8 }} />
+                Manual
+              </label>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <button type="button" onClick={onClose} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#eee', color: '#333', fontWeight: 500, cursor: 'pointer' }}>Cancel</button>
+            <button type="button" onClick={() => onConfirm(mode)} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#5c95d3', color: '#fff', fontWeight: 500, cursor: 'pointer' }}>Continue</button>
+          </div>
+        </div>
+      </DialogContainer>
+    </DialogOverlay>
+  );
+};
+
 // Single FileItem component
 const FileItem: React.FC<{
   fileId: string;
@@ -171,19 +211,19 @@ const FileItem: React.FC<{
   onDownload?: (fileId: string, fileName: string) => void;
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
-}> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete, onPreview }) => {
+  onRequestUpload: (fileType: string, file: File) => void;
+}> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete, onPreview, onRequestUpload }) => {
   const [showEmailDialog, setShowEmailDialog] = React.useState(false);
 
   const handleUpload = async () => {
-    if (disabled || !onUpload) return;
-
+    if (disabled) return;
     const input = document.createElement('input');
     input.type = 'file';
     input.onchange = async (e) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files.length > 0) {
         const file = target.files[0];
-        await onUpload(fileType, file);
+        onRequestUpload(fileType, file);
       }
     };
     input.click();
@@ -299,23 +339,51 @@ const FileArea: React.FC<{
   onDownload, 
   onDelete, 
   onPreview 
-}) => (
-  <FileAreaContainer>
-    {files.map((file, idx) => (
-      <FileItem
-        key={idx}
-        fileId={file.fileId || ''}
-        fileName={file.fileName || ''}
-        fileType={file.fileType}
-        state={file.state}
-        disabled={disabled}
-        onUpload={onUpload}
-        onDownload={onDownload}
-        onDelete={onDelete}
-        onPreview={onPreview}
+}) => {
+  const [showUploadModeDialog, setShowUploadModeDialog] = React.useState(false);
+  const [pendingFile, setPendingFile] = React.useState<File | null>(null);
+  const [pendingFileType, setPendingFileType] = React.useState<string | null>(null);
+
+  const handleRequestUpload = (fileType: string, file: File) => {
+    setPendingFile(file);
+    setPendingFileType(fileType);
+    setShowUploadModeDialog(true);
+  };
+
+  const handleConfirmUploadMode = (mode: 'auto' | 'manual') => {
+    setShowUploadModeDialog(false);
+    if (pendingFile && pendingFileType && onUpload) {
+      // For demo
+      onUpload(pendingFileType, pendingFile);
+    }
+    setPendingFile(null);
+    setPendingFileType(null);
+  };
+
+  return (
+    <FileAreaContainer>
+      {files.map((file, idx) => (
+        <FileItem
+          key={idx}
+          fileId={file.fileId || ''}
+          fileName={file.fileName || ''}
+          fileType={file.fileType}
+          state={file.state}
+          disabled={disabled}
+          onUpload={onUpload}
+          onDownload={onDownload}
+          onDelete={onDelete}
+          onPreview={onPreview}
+          onRequestUpload={handleRequestUpload}
+        />
+      ))}
+      <UploadModeDialog
+        isOpen={showUploadModeDialog}
+        onClose={() => { setShowUploadModeDialog(false); setPendingFile(null); setPendingFileType(null); }}
+        onConfirm={handleConfirmUploadMode}
       />
-    ))}
-  </FileAreaContainer>
-);
+    </FileAreaContainer>
+  );
+};
 
 export default FileArea;
