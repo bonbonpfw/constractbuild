@@ -1,6 +1,13 @@
 import React from "react";
 import styled from 'styled-components';
-import { FaTrash, FaUpload, FaDownload, FaRedoAlt } from "react-icons/fa";
+import { FaTrash, FaUpload, FaDownload, FaRedoAlt, FaEye } from "react-icons/fa";
+import {
+  DialogOverlay,
+  DialogContainer,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseButton
+} from '../../styles/SharedStyles';
 
 export interface FileAreaDocument {
   fileName: string | null;
@@ -91,6 +98,31 @@ const ActionButton = styled.button<{ disabled: boolean; danger?: boolean }>`
   }
 `;
 
+// PDF Preview Dialog
+export const FilePreview: React.FC<{
+  fileUrl: string;
+  fileName: string;
+  onClose: () => void;
+}> = ({ fileUrl, fileName, onClose }) => (
+  <DialogOverlay onClick={onClose}>
+    <DialogContainer onClick={e => e.stopPropagation()}>
+      <DialogHeader>
+        <DialogTitle>Preview: {fileName}</DialogTitle>
+        <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
+      </DialogHeader>
+      <div style={{ padding: 16, minHeight: 500 }}>
+        <iframe
+          src={fileUrl}
+          title={fileName}
+          width="100%"
+          height="500px"
+          style={{ border: 'none' }}
+        />
+      </div>
+    </DialogContainer>
+  </DialogOverlay>
+);
+
 // Single FileItem component
 const FileItem: React.FC<{
   fileId: string;
@@ -101,7 +133,8 @@ const FileItem: React.FC<{
   onUpload?: (fileType: string, file: File) => void;
   onDownload?: (fileId: string, fileName: string) => void;
   onDelete?: (fileId: string) => void;
-}> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete }) => {
+  onPreview?: (fileId: string, fileName: string) => void;
+}> = ({ fileId, fileName, fileType, state, disabled, onUpload, onDownload, onDelete, onPreview }) => {
 
   const handleUpload = async () => {
     if (disabled || !onUpload) return;
@@ -128,6 +161,8 @@ const FileItem: React.FC<{
     onDelete(fileId);
   };
 
+  const isPdf = fileName && fileName.toLowerCase().endsWith('.pdf');
+
   return (
     <FileItemContainer disabled={disabled} state={state}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -142,6 +177,16 @@ const FileItem: React.FC<{
       <Actions>
         {state === 'uploaded' ? (
           <>
+            {isPdf && onPreview && (
+              <ActionButton
+                onClick={() => onPreview(fileId, fileName)}
+                disabled={false}
+                aria-label="Preview"
+                title="Preview PDF"
+              >
+                <FaEye />
+              </ActionButton>
+            )}
             <ActionButton
               onClick={handleDownload}
               disabled={false}
@@ -191,12 +236,14 @@ const FileArea: React.FC<{
   onUpload?: (fileType: string, file: File) => void;
   onDownload?: (fileId: string, fileName: string) => void;
   onDelete?: (fileId: string) => void;
+  onPreview?: (fileId: string, fileName: string) => void;
 }> = ({ 
   files, 
   disabled, 
   onUpload, 
   onDownload, 
-  onDelete 
+  onDelete, 
+  onPreview 
 }) => (
   <FileAreaContainer>
     {files.map((file, idx) => (
@@ -210,6 +257,7 @@ const FileArea: React.FC<{
         onUpload={onUpload}
         onDownload={onDownload}
         onDelete={onDelete}
+        onPreview={onPreview}
       />
     ))}
   </FileAreaContainer>

@@ -38,7 +38,7 @@ import EmptyStatePlaceholder from "../shared/EmptyState";
 import useDeleteProject from "./useDeleteProject";
 import DeletionDialog from "../shared/DeletionDialog";
 import {toast} from "react-toastify";
-import FileArea, {FileAreaDocument} from "../shared/FileArea";
+import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 
@@ -85,6 +85,9 @@ const ProjectView: React.FC = () => {
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+
+  const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -389,6 +392,25 @@ const ProjectView: React.FC = () => {
     }
   };
 
+  const handleFilePreview = async (fileId: string, fileName: string) => {
+    try {
+      const blob = await downloadProjectDocument(id, fileId);
+      const url = window.URL.createObjectURL(blob);
+      setPreviewFileUrl(url);
+      setPreviewFileName(fileName);
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, 'Failed to preview file');
+    }
+  };
+
+  const closePreview = () => {
+    if (previewFileUrl) {
+      window.URL.revokeObjectURL(previewFileUrl);
+    }
+    setPreviewFileUrl(null);
+    setPreviewFileName(null);
+  };
+
   return (
     <PageContainer>
       <TopPanel>
@@ -579,6 +601,7 @@ const ProjectView: React.FC = () => {
                 onUpload={handleFileUpload}
                 onDownload={handleFileDownload}
                 onDelete={handleFileDelete}
+                onPreview={handleFilePreview}
               />
             </div>
           </div>
@@ -604,6 +627,15 @@ const ProjectView: React.FC = () => {
             projectId={id}
             onClose={handleProfessionalAdded}
             existingProfessionalIds={professionals.map(p => p.id)}
+          />
+        )}
+
+        {/* File Preview Modal */}
+        {previewFileUrl && previewFileName && (
+          <FilePreview
+            fileUrl={previewFileUrl}
+            fileName={previewFileName}
+            onClose={closePreview}
           />
         )}
       </PageContent>
