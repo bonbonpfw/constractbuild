@@ -1,9 +1,8 @@
-
-import pdf2image 
+import pdf2image
 import PyPDF2
 import pytesseract
 from PIL import Image
-from pdfminer.high_level import extract_text
+
 
 def process_image_to_binary(image_path: str) -> str:
     """
