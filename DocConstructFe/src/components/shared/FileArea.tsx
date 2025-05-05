@@ -6,7 +6,9 @@ import {
   DialogContainer,
   DialogHeader,
   DialogTitle,
-  DialogCloseButton
+  DialogCloseButton,
+  DialogActions,
+  Button
 } from '../../styles/SharedStyles';
 import { toast } from 'react-toastify';
 
@@ -150,10 +152,10 @@ const EmailDialog: React.FC<{
             style={{ width: '100%', margin: '12px 0 24px 0', padding: 8, fontSize: 16, borderRadius: 4, border: '1px solid #ccc' }}
             autoFocus
           />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-            <button type="button" onClick={onClose} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#eee', color: '#333', fontWeight: 500, cursor: 'pointer' }}>Cancel</button>
-            <button type="button" onClick={() => { onSend(email); setEmail(''); }} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#5c95d3', color: '#fff', fontWeight: 500, cursor: 'pointer' }}>Send</button>
-          </div>
+          <DialogActions style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <Button variant="text" onClick={onClose}>Cancel</Button>
+            <Button variant="contained" onClick={() => { onSend(email); setEmail(''); }}>Send</Button>
+          </DialogActions>
         </div>
       </DialogContainer>
     </DialogOverlay>
@@ -190,10 +192,10 @@ const UploadModeDialog: React.FC<{
               </label>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-            <button type="button" onClick={onClose} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#eee', color: '#333', fontWeight: 500, cursor: 'pointer' }}>Cancel</button>
-            <button type="button" onClick={() => onConfirm(mode)} style={{ padding: '8px 18px', borderRadius: 4, border: 'none', background: '#5c95d3', color: '#fff', fontWeight: 500, cursor: 'pointer' }}>Continue</button>
-          </div>
+          <DialogActions style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <Button variant="text" onClick={onClose}>Cancel</Button>
+            <Button variant="contained" onClick={() => onConfirm(mode)}>Continue</Button>
+          </DialogActions>
         </div>
       </DialogContainer>
     </DialogOverlay>
