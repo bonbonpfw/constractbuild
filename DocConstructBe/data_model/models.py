@@ -1,8 +1,6 @@
 from datetime import date, datetime
 import re
-from data_model.enum import ProjectStatus, ProjectDocumentType, ProfessionalType, ProfessionalStatus, ProfessionalDocumentType, DocumentStatus, enum_to_value
 from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime
-from sqlalchemy import Enum
 from sqlalchemy.orm import relationship
 from database.base_model import Base
 from database.database import engine

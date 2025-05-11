@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.enum import DocumentStatus, ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProfessionalStatus, ProjectStatus
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus
 
 # Project Schemas
 

@@ -1,4 +1,5 @@
-from data_model.models import ProjectDocumentType, ProfessionalType, Project, Professional, ProjectProfessional, PermitOwner
+from data_model.enum import ProjectDocumentType
+from data_model.models import Professional, PermitOwner
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -7,7 +8,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from datetime import datetime
 import io
 import yaml
-from config.sys_config import DOCUMENTS_FOLDER,PROF_DOC_CONFIG,TTF_PATH
+from config.sys_config import DOCUMENTS_FOLDER, PROF_DOC_CONFIG, TTF_PATH
 import os
 """
 Document Mapping Module
@@ -29,7 +30,8 @@ class DocumentMap:
 
 
 class DocumentFiller:
-    def __init__(self, document_type: ProjectDocumentType, professionals: list[Professional], permit_owner: PermitOwner, src_pdf_path: str):
+    def __init__(self, document_type: ProjectDocumentType, professionals: list[Professional],
+                 permit_owner: PermitOwner, src_pdf_path: str):
         self.document_positions = DocumentMap.DOCUMENT_FIELD_COORDINATE_MAP.get(document_type.name, {})
         self.permit_owner = permit_owner
         self.professionals = professionals

@@ -8,17 +8,37 @@ from config.sys_config import DOCUMENTS_FOLDER
 from utils.data_extract import ExtractProfessional
 from utils.doc_to_bin import process_pdf_image_to_binary,process_image_to_binary
 from doc_map.doc_map import DocumentMap
-from app.errors import ProjectDoesNotExist, ProjectAlreadyExists, ProfessionalDoesNotExist, ProfessionalAlreadyExists, \
-    ProfessionalAlreadyInProject, ProfessionalNotInProject, ProfessionalDocumentNotFound, ProjectDocumentNotFound
+from app.errors import (
+    ProjectDoesNotExist,
+    ProjectAlreadyExists,
+    ProfessionalDoesNotExist,
+    ProfessionalAlreadyExists,
+    ProfessionalAlreadyInProject,
+    ProfessionalNotInProject,
+    ProfessionalDocumentNotFound,
+    ProjectDocumentNotFound
+)
 from data_model.models import (
-    Project, Professional,
-    ProjectProfessional, ProjectDocument, ProfessionalDocument,
+    Project,
+    Professional,
+    ProjectProfessional,
+    ProjectDocument,
+    ProfessionalDocument,
     PermitOwner, 
 )
 from database.database import db_session
-from data_model.enum import ProjectStatus, ProfessionalStatus, ProfessionalType, ProfessionalDocumentType, ProjectDocumentType, enum_to_value, DocumentStatus
+from data_model.enum import (
+    ProjectStatus,
+    ProfessionalStatus,
+    ProfessionalType,
+    ProfessionalDocumentType,
+    ProjectDocumentType,
+    enum_to_value,
+    DocumentStatus
+)
 from doc_map.doc_map import DocumentFiller
 from app.errors import InvalidFileFormat
+
 
 class ProjectManager:
     @staticmethod
@@ -199,6 +219,7 @@ class ProjectManager:
             raise ProjectDoesNotExist()
         return project.permit_owner
 
+
 class ProjectDocumentManager:
 
     @staticmethod
@@ -224,6 +245,7 @@ class ProjectDocumentManager:
         filled_pdf_path = document_filler.fill_document()
         return filled_pdf_path
 
+
 class ProfessionalManager:
     @staticmethod
     def get_types() -> list[str]:
@@ -246,7 +268,7 @@ class ProfessionalManager:
 
     @staticmethod
     def create(name: str, national_id: str, email: str, phone: str, address: str, license_number: str,
-               license_expiration_date: date, professional_type: str,status:str, license_file_path: str = None) -> Professional:
+               license_expiration_date: date, professional_type: str, license_file_path: str = None) -> Professional:
         existing_professional = db_session.query(Professional).filter(
             (Professional.name == name) |
             (Professional.national_id == national_id) |
@@ -265,7 +287,7 @@ class ProfessionalManager:
             license_number=license_number,
             license_expiration_date=license_expiration_date,
             professional_type=professional_type,
-            status=status,
+            status=ProfessionalManager.get_professional_status(license_expiration_date).value,
             license_file_path=license_file_path if license_file_path else '',
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now()
@@ -288,7 +310,7 @@ class ProfessionalManager:
         return professional
 
     def update(self, professional_id: str, name: str, national_id: str, email: str, phone: str, license_number: str,
-               address: str, license_expiration_date: date, professional_type: ProfessionalType, status: ProfessionalStatus, license_file_path: str = None) -> Professional:
+               address: str, license_expiration_date: date, professional_type: str, license_file_path: str = None) -> Professional:
         professional = self.get_by_id(professional_id=professional_id)
         professional.name = name
         professional.national_id = national_id
@@ -411,6 +433,7 @@ class ProfessionalManager:
     def get_professional_type_by_value(professional_type_value: str) -> ProfessionalType:
         return ProfessionalType.map_to_value(professional_type_value)
 
+
 def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
     doc_professionals_types = ProjectDocumentManager.get_document_professionals_types(document_type)
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
@@ -419,6 +442,7 @@ def is_document_professional_related(project_id: str, document_type: ProjectDocu
         if doc_professional_type not in project_prof_types:
             return False
     return True
+
 
 def save_file_to_temp(file):
     tmpdir = tempfile.mkdtemp()

@@ -1,7 +1,8 @@
 import logging
 import re
 from datetime import datetime
-     
+
+
 class LicenseData:
     def __init__(self):
         self.profession_type = None
@@ -14,17 +15,17 @@ class LicenseData:
         self.phone = None
         
     def __str__(self):
-        return (f"Profession: {self.profession_type}\n"
-                f"Name: {self.name}\n"
-                f"national_id: {self.id_number}\n"
-                f"License Number: {self.license_number}\n"
-                f"Expiration Date: {self.license_expiration_date}\n"
-                f"Address: {self.address}\n"
-                )
+        return (
+            f"Profession: {self.profession_type}\n"
+            f"Name: {self.name}\n"
+            f"national_id: {self.id_number}\n"
+            f"License Number: {self.license_number}\n"
+            f"Expiration Date: {self.license_expiration_date}\n"
+            f"Address: {self.address}\n"
+        )
                 
     def __dict__(self):
         return {
-            
             'name': self.name,
             'address': self.address,
             'phone': self.phone,
@@ -33,11 +34,7 @@ class LicenseData:
             'national_id': self.id_number,
             'license_number': self.license_number,
             'license_expiration_date': self.license_expiration_date,
-           
-            
-            
         }
-
 
 
 class LicenseExtract:
@@ -61,8 +58,7 @@ class LicenseExtract:
     @property
     def name_pattern(self):
         return self.license_config['name_pattern']
-  
-    
+
     @property
     def license_pattern(self):
         return self.license_config['license_pattern']
@@ -72,7 +68,14 @@ class LicenseExtract:
         return self.license_config['proffessional_type_pattern']
     
     def __str__(self):
-        return f"Professional: {self.profession}, Department: {self.department}, Name: {self.name}, ID: {self.id_number}, License: {self.license_number}, Expiration: {self.license_expiration_date}"
+        return (
+            f"Professional: {self.profession}, "
+            f"Department: {self.department}, "
+            f"Name: {self.name}, "
+            f"ID: {self.id_number}, "
+            f"License: {self.license_number}, "
+            f"Expiration: {self.license_expiration_date}"
+        )
 
 class ExtractProfessional:
     def __init__(self, text: bytes):

@@ -1,12 +1,15 @@
 import os
 import tempfile
-import mimetypes
 
-from flask import send_file, request, jsonify
+from flask import send_file, request
 
 from app.errors import ValidationError
 from app.api import (
-    ProjectManager, ProfessionalManager, ProjectDocumentManager, is_document_professional_related, save_file_to_temp
+    ProjectManager,
+    ProfessionalManager,
+    ProjectDocumentManager,
+    is_document_professional_related,
+    save_file_to_temp
 )
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
@@ -198,7 +201,12 @@ def init_routes(app):
         file_path = save_file_to_temp(data.get('file'))
         permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
         professionals = ProjectManager.get_project_professionals(project_id=project_id)
-        filled_pdf = ProjectDocumentManager().autofill_document(document_type,professionals,permit_owner,file_path)
+        filled_pdf = ProjectDocumentManager().autofill_document(
+            document_type=document_type,
+            professionals=professionals,
+            permit_owner=permit_owner,
+            src_pdf_path=file_path
+        )
         
         project_document = ProjectManager().add_document(
             file_path=filled_pdf if filled_pdf else file_path,
