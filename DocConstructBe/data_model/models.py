@@ -19,6 +19,7 @@ class PermitOwner(Base):
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
   
     def __init__(self, name: str, address: str, phone: str, email: str = None, signature_file_path: str = None):
+        super().__init__()
         self.name = name
         self.address = address
         self.phone = phone
@@ -54,7 +55,7 @@ class Project(Base):
 
     documents = relationship("ProjectDocument", backref="project", cascade="all,delete")
     professionals = relationship("ProjectProfessional", backref="project", cascade="all,delete")
-    permit_owner = relationship("PermitOwner", backref="projects", cascade="all,delete")
+    permit_owner = relationship("PermitOwner", backref="projects")
 
 
     def __init__(self, name: str, permit_owner: PermitOwner,request_number: str,permit_number: str=None,
