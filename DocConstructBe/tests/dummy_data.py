@@ -130,7 +130,6 @@ def create_professionals():
             created_professionals.append(professional)
             print(f"Created professional: {professional.name} (ID: {professional.id})")
         except Exception as e:
-            db_session.rollback()
             print(f"Error creating professional {prof_data['name']}: {str(e)}")
 
 
@@ -149,19 +148,11 @@ def create_permit_owners():
             print(f"Created permit owner: {owner.name} (ID: {owner.id})")
         except Exception as e:
             print(f"Error creating permit owner {owner_data['name']}: {str(e)}")
-            db_session.rollback()
-
 
 
 def create_projects():
-    # get permit owners
+    # Get permit owners
     permit_owners = db_session.query(PermitOwner).all()
-    permit_owners_ids = [owner.id for owner in permit_owners]
-    if len(permit_owners) < 2:
-        print("Not enough permit owners in the database!")
-
-    print(permit_owners_ids)
-
     # Create projects
     created_projects = []
     for idx, proj_data in enumerate(PROJECTS):
@@ -177,7 +168,6 @@ def create_projects():
             print(f"Created project: {project.name} (ID: {project.id})")
         except Exception as e:
             print(f"Error creating project {proj_data['name']}: {str(e)}")
-            db_session.rollback()
             raise e
 
 
@@ -188,7 +178,6 @@ def delete_all():
     projects = project_manager.get_all()
     professionals = professional_manager.get_all()
     for project in projects:
-        print(f"Deleting project: {project.name} (ID: {project.id}), {project.permit_owner_id})")
         try:
             project_manager.delete(project.id)
             print(f"Deleted project: {project.name} (ID: {project.id})")
