@@ -176,13 +176,10 @@ class ProjectManager:
         return document
 
     @staticmethod
-    def get_project_professionals(project_id: str) -> list[ProjectProfessional]:
-        professionals =  db_session.query(ProjectProfessional).filter(ProjectProfessional.project_id == project_id).all()
-        professionals_list = []
-        for professional in professionals:
-            professional_obj = db_session.query(Professional).filter(Professional.id == professional.professional_id).first()
-            professionals_list.append(professional_obj)
-        return professionals_list
+    def get_project_professionals(project_id: str) -> list[Professional]:
+        return db_session.query(Professional).join(
+            ProjectProfessional, Professional.id == ProjectProfessional.professional_id
+        ).filter(ProjectProfessional.project_id == project_id).all()
     
     @staticmethod
     def remove_document(project_id: str, document_id: str) -> None:
