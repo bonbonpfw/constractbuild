@@ -145,9 +145,9 @@ class ExtractProfessional:
     def _extract_type(self, text: str):
         type_match = re.search(self.license_extract.proffessional_type_pattern, text)
         if type_match:
-            type = type_match.group(1) if len(type_match.groups()) > 0 else type_match.group()
-            self.license_data.profession_type = type
-            return type
+            prof_type = type_match.group(1) if len(type_match.groups()) > 0 else type_match.group()
+            self.license_data.profession_type = prof_type
+            return prof_type
         else:
             logging.error(f"לא ניתן למצוא תחום פעילות בטקסט: ...")
             return None
