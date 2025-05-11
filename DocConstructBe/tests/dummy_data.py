@@ -149,7 +149,6 @@ def create_permit_owners():
         except Exception as e:
             print(f"Error creating permit owner {owner_data['name']}: {str(e)}")
 
-
 def create_projects():
     # Get permit owners
     permit_owners = db_session.query(PermitOwner).all()
@@ -169,6 +168,21 @@ def create_projects():
         except Exception as e:
             print(f"Error creating project {proj_data['name']}: {str(e)}")
             raise e
+
+
+def attach_professionals_to_projects():
+    projects = ProjectManager().get_all()
+    professionals = ProfessionalManager.get_all()
+    if len(professionals) < 3:
+        print("Not enough professionals to attach!")
+        return
+    for project in projects:
+        for professional in professionals[:3]:
+            try:
+                ProjectManager().attach_professional(str(project.id), str(professional.id))
+                print(f"Attached professional {professional.name} to project {project.name}")
+            except Exception as e:
+                print(f"Error attaching professional {professional.name} to project {project.name}: {str(e)}")
 
 
 def delete_all():
@@ -197,3 +211,4 @@ if __name__ == "__main__":
     create_professionals()
     create_permit_owners()
     create_projects()
+    attach_professionals_to_projects()
