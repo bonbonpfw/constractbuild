@@ -297,7 +297,6 @@ def init_routes(app):
     @app.route('/api/professional', methods=['POST'])
     def create_professional():
         data = validate_request(endpoint=Endpoints.CREATE_PROFESSIONAL)
-        status = ProfessionalManager.get_professional_status(data.get('license_expiration_date'))
         # Create the professional
         professional = ProfessionalManager.create(
             name=data.get('name'),
@@ -308,8 +307,6 @@ def init_routes(app):
             license_number=data.get('license_number'),
             license_expiration_date=data.get('license_expiration_date'),
             professional_type=enum_to_value(data.get('professional_type')),
-            status=status.name,
-            # license_file_path is now optional and will be handled as a document
             license_file_path=data.get('license_file_path')
         )
         
@@ -343,7 +340,6 @@ def init_routes(app):
             license_number=data.get('license_number'),
             license_expiration_date=data.get('license_expiration_date'),
             professional_type=enum_to_value(data.get('professional_type')),
-            status=enum_to_value(data.get('status'))
         )
         return SuccessResponse().generate_response()
 
