@@ -79,40 +79,35 @@ def create_projects():
     projects = [
         {
             "name": "Downtown Office Building",
-            "address": "100 Main St, Metropolis, USA",
-            "case_id": "PRJ-2023-001",
+            "request_number": "PRJ-2023-001",
             "description": "New 10-story office building in downtown area",
             "due_date": date.today() + timedelta(days=180),
             "status": ProjectStatus.PRE_PERMIT.value
         },
         {
             "name": "Riverside Apartments",
-            "address": "200 River Rd, Metropolis, USA",
-            "case_id": "PRJ-2023-002",
+            "request_number": "PRJ-2023-002",
             "description": "Luxury apartment complex with 50 units",
             "due_date": date.today() + timedelta(days=365),
             "status": ProjectStatus.PRE_PERMIT.value
         },
         {
             "name": "Community Center Renovation",
-            "address": "300 Park Ave, Metropolis, USA",
-            "case_id": "PRJ-2023-003",
+            "request_number": "PRJ-2023-003",
             "description": "Renovation of existing community center",
             "due_date": date.today() + timedelta(days=120),
             "status": ProjectStatus.POST_PERMIT.value
         },
         {
             "name": "Highland Shopping Mall",
-            "address": "400 Highland Blvd, Metropolis, USA",
-            "case_id": "PRJ-2023-004",
+            "request_number": "PRJ-2023-004",
             "description": "New shopping mall with 30 retail spaces",
             "due_date": date.today() + timedelta(days=545),
             "status": ProjectStatus.PRE_PERMIT.value
         },
         {
             "name": "Sunset Heights Residential Development",
-            "address": "500 Sunset Dr, Metropolis, USA",
-            "case_id": "PRJ-2023-005",
+            "request_number": "PRJ-2023-005",
             "description": "Residential development with 100 single-family homes",
             "due_date": date.today() + timedelta(days=730),
             "status": ProjectStatus.FINAL.value
@@ -125,8 +120,7 @@ def create_projects():
         try:
             project = ProjectManager.create(
                 name=proj_data["name"],
-                address=proj_data["address"],
-                case_id=proj_data["case_id"],
+                request_number=proj_data["request_number"],
                 description=proj_data["description"],
                 due_date=proj_data["due_date"],
                 status=proj_data["status"]

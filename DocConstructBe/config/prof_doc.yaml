@@ -1,0 +1,82 @@
+DOCUMENT_FIELD_COORDINATE_MAP:
+  TRASH_INSPECTION:
+    1:  
+      name: [380, 424]
+      id: [240, 424] 
+      license_number: [100, 424]
+      phone: [435, 405]
+      address: [390, 385]
+      mail: [250, 405]
+      prof_name_for_signed: [130, 190]
+      date_for_signed: [140, 172]
+
+  ADAPTER_AGREEMENT:
+    1:
+      name: [300, 400]
+      id: [80, 400]
+      phone: [450, 365]
+      license_number: [480, 382]
+      address: [330, 350]
+      mail: [250, 365]
+      date: [80, 265]
+      permit_owner: [340, 420]
+      permit_number_for_signed: [80, 290]
+    2:
+      name: [300, 600]
+      id: [82000, 600]
+      phone: [300, 580]
+      address: [300, 560]
+      mail: [230, 580]
+      signed_name: [80, 300]
+      date_for_signed: [80, 290]
+
+  START_WORK_REQUEST:
+    1:
+      name: [380, 424]
+      id: [100, 424]
+      phone: [435, 405]
+      address: [380, 385]
+      mail: [220, 405]
+
+  EXECUTION_LICENSE:
+    1:
+      name: [380, 424]
+      id: [100, 424]
+      phone: [435, 405]
+      address: [380, 385]
+      mail: [220, 405]
+
+  EXECUTION_INSPECTION:
+    1:
+      name: [150, 250]
+      id: [350, 250]
+      phone: [550, 250]
+      address: [250, 350]
+
+  PESTICIDAL_OWNER:
+    1:
+      name: [380, 424]
+      id: [100, 424]
+      phone: [435, 405]
+      address: [380, 385]
+      mail: [220, 405]
+
+
+DOCUMENT_PROFESSIONAL_MAP:
+  TRASH_INSPECTION:
+    - SUPERVISOR_ENGINEER
+
+  ADAPTER_AGREEMENT:
+    - ENGINEER
+
+  START_WORK_REQUEST:
+    - ENGINEER
+
+  EXECUTION_LICENSE:
+    - ENGINEER
+
+  EXECUTION_INSPECTION:
+    - ENGINEER
+
+  PESTICIDAL_OWNER:
+    - PESTICIDAL

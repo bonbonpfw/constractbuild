@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Professional, Project, ProjectCreationFormData} from "./types";
+import {Professional, Project, ProjectCreationFormData, DocumentState} from "./types";
 import {ProfessionalCreationFormData} from "./components/professionals/ProfessionalCreationDialog";
 
 // Use the direct API URL from environment variables if available
@@ -226,13 +226,17 @@ export const uploadProjectDocument = async (
   projectId: string,
   documentType: string,
   documentName: string,
-  file: File
+  file: File,
+  status: string = DocumentState.UPLOADED
 ) => {
   const formData = new FormData();
   formData.append('project_id', projectId);
   formData.append('document_type', documentType);
   formData.append('document_name', documentName);
   formData.append('file', file);
+  
+  // Send the status directly from the DocumentState enum
+  formData.append('status', status);
 
   const response = await axios.post(
     `${API_URL}/project/document`,

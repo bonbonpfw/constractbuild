@@ -14,10 +14,12 @@ APP_PATH = os.getenv('APP_PATH')
 
 DOCUMENTS_FOLDER = os.path.join(APP_PATH, "documents")
 
-CONFIG = os.path.join( "config.yaml")
-CONFIG_FALLBACK = os.path.join(APP_CODE, "config", "config.yaml")
+CONFIG = os.path.join(APP_CODE, "config")
+TTF_PATH = os.path.join(CONFIG, "Alef-Regular.ttf")
 
+CONFIG_FALLBACK = os.path.join(CONFIG,"config.yaml")
 
+PROF_DOC_CONFIG = os.path.join(CONFIG, "prof_doc.yaml")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

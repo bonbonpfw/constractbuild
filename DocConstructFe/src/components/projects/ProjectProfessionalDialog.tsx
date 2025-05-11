@@ -76,7 +76,7 @@ const ProjectProfessionalDialog: React.FC<ProjectProfessionalDialogProps> = ({
         onClose();
       }
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to add professional to project');
+      errorHandler(error as ErrorResponseData, 'הוספת בעל מקצוע לפרויקט נכשלה');
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ const ProjectProfessionalDialog: React.FC<ProjectProfessionalDialogProps> = ({
     <DialogOverlay onClick={onClose}>
       <DialogContainer onClick={e => e.stopPropagation()}>
         <DialogHeader>
-          <DialogTitle>Add Professional to Project</DialogTitle>
+          <DialogTitle>הוסף בעלי מקצוע לפרויקט</DialogTitle>
           <DialogCloseButton onClick={onClose}>
             <FaTimes />
           </DialogCloseButton>
@@ -120,7 +120,7 @@ const ProjectProfessionalDialog: React.FC<ProjectProfessionalDialogProps> = ({
                   type="submit" 
                   disabled={loading || professionals.length === 0}
                 >
-                  {loading ? 'Adding...' : 'Add Professional'}
+                  {loading ? 'מוסיף...' : 'הוסף בעל מקצוע'}
                 </Button>
               </DialogActions>
             </>

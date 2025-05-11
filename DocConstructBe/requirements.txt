@@ -32,3 +32,4 @@ PyPDF2
 pytesseract
 Pillow
 pdfminer.six
+reportlab

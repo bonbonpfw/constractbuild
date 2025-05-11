@@ -1,20 +1,24 @@
 import datetime
-from datetime import date
+from datetime import date, timedelta
 import os
 import shutil
-from config.sys_config import DOCUMENTS_FOLDER, get_config
+import tempfile
+import mimetypes
+from config.sys_config import DOCUMENTS_FOLDER
 from utils.data_extract import ExtractProfessional
-from utils.doc_to_bin import process_pdf_image_to_binary, process_image_to_binary
-
+from utils.doc_to_bin import process_pdf_image_to_binary,process_image_to_binary
+from doc_map.doc_map import DocumentMap
 from app.errors import ProjectDoesNotExist, ProjectAlreadyExists, ProfessionalDoesNotExist, ProfessionalAlreadyExists, \
     ProfessionalAlreadyInProject, ProfessionalNotInProject, ProfessionalDocumentNotFound, ProjectDocumentNotFound
 from data_model.models import (
     Project, Professional,
     ProjectProfessional, ProjectDocument, ProfessionalDocument,
-    ProjectStatus, ProfessionalStatus, ProfessionalType, ProfessionalDocumentType, ProjectDocumentType
+    PermitOwner, 
 )
 from database.database import db_session
-
+from data_model.enum import ProjectStatus, ProfessionalStatus, ProfessionalType, ProfessionalDocumentType, ProjectDocumentType, enum_to_value, DocumentStatus
+from doc_map.doc_map import DocumentFiller
+from app.errors import InvalidFileFormat
 
 class ProjectManager:
     @staticmethod
@@ -29,38 +33,39 @@ class ProjectManager:
         return project
 
     @staticmethod
-    def create(name: str, address: str, case_id: str, status: str, description: str = None, due_date: date = None,
+    def create(name: str,  request_number: str, status: ProjectStatus, description: str = None, permit_owner: PermitOwner = None,
                status_due_date: date = None) -> Project:
         existing_project = db_session.query(Project).filter(
-            (Project.name == name) | (Project.case_id == case_id)
+            (Project.name == name) | (Project.request_number == request_number)
         ).first()
         if existing_project:
             raise ProjectAlreadyExists()
         project = Project(
             name=name,
-            address=address,
-            case_id=case_id,
+            request_number=request_number,
             description=description,
-            due_date=due_date,
-            status=status.value if isinstance(status, ProjectStatus) else status,
+            permit_owner=permit_owner,
+            status=enum_to_value(status),
             status_due_date=status_due_date,
         )
-        project.created_at = project.updated_at = date.today()
+        project.created_at = project.updated_at = datetime.datetime.now()
         db_session.add(project)
         db_session.commit()
         return project
 
-    def update(self, project_id: str, name: str, address: str, case_id: str, status: str, description: str = None,
-               due_date: date = None,  status_due_date: date = None) -> Project:
+    def update(self, project_id: str, name: str, status: ProjectStatus, description: str = None,permit_owner: PermitOwner = None,
+               status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None, engineering_coordinator_number: str = None, firefighting_number: str = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
-        project.address = address
-        project.case_id = case_id
         project.description = description
-        project.due_date = due_date
-        project.status = status
+        project.permit_owner = permit_owner
+        project.request_number = request_number
+        project.construction_supervision_number = construction_supervision_number
+        project.engineering_coordinator_number = engineering_coordinator_number
+        project.firefighting_number = firefighting_number
+        project.status = enum_to_value(status)
         project.status_due_date = status_due_date
-        project.updated_at = date.today()
+        project.updated_at = datetime.datetime.now()
         db_session.commit()
         return project
 
@@ -116,7 +121,7 @@ class ProjectManager:
         return document
 
     def add_document(self, file_path: str, project_id: str, document_type: str,
-                     document_name: str) -> ProjectDocument:
+                     document_name: str, document_status: DocumentStatus) -> ProjectDocument:
         self.get_by_id(project_id=project_id)
         # Create projects documents directory if it doesn't exist
         projects_dir = os.path.join(DOCUMENTS_FOLDER, 'projects')
@@ -132,19 +137,33 @@ class ProjectManager:
         # Copy the file to the destination
         if os.path.exists(file_path):
             shutil.copy2(file_path, dest_path)
+
+        try:
+          status = document_status.value if hasattr(document_status, 'value') else document_status
+        except KeyError:
+            raise ValueError(f"Invalid document status: {document_status}")
         # Create document record in database
         document = ProjectDocument(
             project_id=project_id,
-            document_type=document_type,
+            document_type=enum_to_value(document_type),
             name=document_name,
             file_path=dest_path,
-            status='Uploaded',
+            status=status,
             created_at=datetime.datetime.now(),
         )
         db_session.add(document)
         db_session.commit()
         return document
 
+    @staticmethod
+    def get_project_professionals(project_id: str) -> list[ProjectProfessional]:
+        professionals =  db_session.query(ProjectProfessional).filter(ProjectProfessional.project_id == project_id).all()
+        professionals_list = []
+        for professional in professionals:
+            professional_obj = db_session.query(Professional).filter(Professional.id == professional.professional_id).first()
+            professionals_list.append(professional_obj)
+        return professionals_list
+    
     @staticmethod
     def remove_document(project_id: str, document_id: str) -> None:
         document = db_session.query(ProjectDocument).filter(
@@ -168,7 +187,42 @@ class ProjectManager:
     @staticmethod
     def get_document_types() -> list[str]:
         return [document_type.value for document_type in ProjectDocumentType]
+    
+    @staticmethod
+    def get_document_statuses() -> list[str]:
+        return [status.value for status in DocumentStatus]
+    
+    @staticmethod
+    def get_permit_owner(project_id: str) -> PermitOwner:
+        project = db_session.query(Project).filter(Project.id == project_id).join(PermitOwner).first()
+        if not project:
+            raise ProjectDoesNotExist()
+        return project.permit_owner
 
+class ProjectDocumentManager:
+
+    @staticmethod
+    def get_document_project_professionals(project_id: str, document_type: ProjectDocumentType):
+        professionals = []
+        doc_professionals = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
+        doc_professionals_types = [professional.value for professional in doc_professionals]
+        project_professionals = db_session.query(ProjectProfessional).filter(ProjectProfessional.project_id == project_id).all()
+        for project_professional in project_professionals:
+            professional = db_session.query(Professional).filter(Professional.id == project_professional.professional_id).first()
+            if professional.professional_type in doc_professionals_types:
+                professionals.append(professional)
+        return professionals
+    
+    @staticmethod
+    def get_document_professionals_types(document_type: ProjectDocumentType):
+        doc_professionals_types = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
+        return doc_professionals_types
+    
+    @staticmethod
+    def autofill_document(document_type: ProjectDocumentType,professionals: list[Professional],permit_owner: PermitOwner,src_pdf_path: str):
+        document_filler = DocumentFiller(document_type=document_type,professionals=professionals,permit_owner=permit_owner,src_pdf_path=src_pdf_path)
+        filled_pdf_path = document_filler.fill_document()
+        return filled_pdf_path
 
 class ProfessionalManager:
     @staticmethod
@@ -192,7 +246,7 @@ class ProfessionalManager:
 
     @staticmethod
     def create(name: str, national_id: str, email: str, phone: str, address: str, license_number: str,
-               license_expiration_date: date, professional_type: str, license_file_path: str = None) -> Professional:
+               license_expiration_date: date, professional_type: str,status:str, license_file_path: str = None) -> Professional:
         existing_professional = db_session.query(Professional).filter(
             (Professional.name == name) |
             (Professional.national_id == national_id) |
@@ -211,10 +265,10 @@ class ProfessionalManager:
             license_number=license_number,
             license_expiration_date=license_expiration_date,
             professional_type=professional_type,
-            status=ProfessionalStatus.ACTIVE.value,
+            status=status,
             license_file_path=license_file_path if license_file_path else '',
-            created_at=date.today(),
-            updated_at=date.today()
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now()
         )
 
         db_session.add(professional)
@@ -227,14 +281,14 @@ class ProfessionalManager:
             professional_manager.add_document(
                 file_path=license_file_path,
                 professional_id=str(professional.id),
-                document_type=ProfessionalDocumentType.LICENSE.value,
+                document_type=enum_to_value(ProfessionalDocumentType.LICENSE),
                 document_name=f"License_{os.path.basename(license_file_path)}"
             )
             
         return professional
 
     def update(self, professional_id: str, name: str, national_id: str, email: str, phone: str, license_number: str,
-               address: str, license_expiration_date: date, professional_type: str, status: str, license_file_path: str = None) -> Professional:
+               address: str, license_expiration_date: date, professional_type: ProfessionalType, status: ProfessionalStatus, license_file_path: str = None) -> Professional:
         professional = self.get_by_id(professional_id=professional_id)
         professional.name = name
         professional.national_id = national_id
@@ -244,10 +298,10 @@ class ProfessionalManager:
         professional.address = address
         professional.license_expiration_date = license_expiration_date
         professional.professional_type = professional_type
-        professional.status = status
+        professional.status = ProfessionalManager.get_professional_status(license_expiration_date).value
         professional.updated_at = date.today()
         db_session.commit()
-        
+       
         # If license_file_path is provided, add it as a document
         if license_file_path:
             # Get an instance of ProfessionalManager to use instance methods
@@ -255,7 +309,7 @@ class ProfessionalManager:
             professional_manager.add_document(
                 file_path=license_file_path,
                 professional_id=str(professional.id),
-                document_type=ProfessionalDocumentType.LICENSE.value,
+                document_type=enum_to_value(ProfessionalDocumentType.LICENSE),
                 document_name=f"License_{license_number}"
             )
         return professional
@@ -298,7 +352,7 @@ class ProfessionalManager:
             document_type=document_type,
             name=document_name,
             file_path=dest_path,
-            status='Uploaded',
+            status=enum_to_value(DocumentStatus.UPLOADED),
             created_at=datetime.datetime.now(),
         )
         db_session.add(document)
@@ -331,11 +385,43 @@ class ProfessionalManager:
     
     @staticmethod
     def extract_professional_data(file_path: str) -> dict:
-        binary_data = process_pdf_image_to_binary(file_path)
+        if mimetypes.guess_type(file_path)[0] == 'application/pdf':
+            binary_data = process_pdf_image_to_binary(file_path)
+        elif mimetypes.guess_type(file_path)[0] == 'image/jpeg' or mimetypes.guess_type(file_path)[0] == 'image/png':
+            binary_data = process_image_to_binary(file_path)
+        else:
+            raise InvalidFileFormat(mimetypes.guess_type(file_path)[0])
         extract_professional = ExtractProfessional(binary_data)
         license_data = extract_professional.extract_text()
         # Convert LicenseData object to dict before accessing
         license_dict = license_data.__dict__()
-        license_dict['professional_type'] = ProfessionalType.map_to_professional_type(license_dict['professional_type'])
+        license_dict['professional_type'] = ProfessionalType.map_to_value(license_dict['professional_type'])
         license_dict['license_file_path'] = file_path
         return license_dict
+    
+    @staticmethod
+    def get_professional_status(license_expiration_date: date) -> ProfessionalStatus:
+        if license_expiration_date < date.today():
+            return ProfessionalStatus.EXPIRED
+        elif license_expiration_date < date.today() + timedelta(days=30):
+            return ProfessionalStatus.WARNING
+        else:
+            return ProfessionalStatus.ACTIVE
+    @staticmethod
+    def get_professional_type_by_value(professional_type_value: str) -> ProfessionalType:
+        return ProfessionalType.map_to_value(professional_type_value)
+
+def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
+    doc_professionals_types = ProjectDocumentManager.get_document_professionals_types(document_type)
+    project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+    project_prof_types = [ProfessionalManager.get_professional_type_by_value(p_professional.professional_type).name for p_professional in project_professionals]
+    for doc_professional_type in doc_professionals_types:
+        if doc_professional_type not in project_prof_types:
+            return False
+    return True
+
+def save_file_to_temp(file):
+    tmpdir = tempfile.mkdtemp()
+    file_path = os.path.join(tmpdir, file.filename)
+    file.save(file_path)
+    return file_path

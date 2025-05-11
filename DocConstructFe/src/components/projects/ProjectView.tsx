@@ -2,7 +2,8 @@ import React, {useEffect, useRef, useState} from "react";
 import {useRouter} from "next/router";
 import Link from "next/link";
 import {
-  Button, Field,
+  Button,
+  Field,
   FormGrid,
   FullWidthField,
   IconButton,
@@ -21,7 +22,7 @@ import {
   TopPanelTitle,
   TopPanelTitleHolder
 } from "../../styles/SharedStyles";
-import {Professional, Project, ProjectDocument} from "../../types";
+import {Professional, Project, ProjectDocument, DocumentState} from "../../types";
 import {
   getProjectById,
   getProjectStatuses,
@@ -33,7 +34,7 @@ import {
   getProjectDocumentTypes
 } from "../../api";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
-import {FaArrowLeft, FaCheck, FaEdit, FaPlus, FaTimes, FaTrash} from "react-icons/fa";
+import * as FaIcons from "react-icons/fa";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import useDeleteProject from "./useDeleteProject";
 import DeletionDialog from "../shared/DeletionDialog";
@@ -42,19 +43,214 @@ import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 
+// Modern status badge with Apple-style design
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
   background: ${({ status }) =>
-    status === 'Active' ? '#e6ffed' :
-    status === 'Inactive' ? '#ffeef0' :
-    '#fffbdd'};
+    status === 'Active' ? '#e3f6ec' :
+    status === 'Inactive' ? '#ffecef' :
+    '#fff7e0'};
   color: ${({ status }) =>
-    status === 'Active' ? '#22863a' :
-    status === 'Inactive' ? '#cb2431' :
-    '#735c0f'};
+    status === 'Active' ? '#1d8450' :
+    status === 'Inactive' ? '#e1273d' :
+    '#b0851f'};
+`;
+
+// Main content layout
+const MainLayout = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto;
+  grid-template-areas: "project documents";
+  gap: 16px;
+  width: 100%;
+  overflow: visible;
+`;
+
+// Project details panel
+const ProjectPanel = styled.div`
+  grid-area: project;
+  padding: 0 12px;
+`;
+
+// Documents panel
+const DocumentsPanel = styled.div`
+  grid-area: documents;
+  width: 380px;
+  padding: 0 12px;
+  border-right: 1px solid #eaeaea;
+  overflow-y: visible;
+`;
+
+// Tab container
+const TabContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+`;
+
+// Tab button
+const TabButton = styled.button<{ active: boolean }>`
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: ${p => p.active ? '700' : '600'};
+  color: ${p => p.active ? '#0071e3' : '#666'};
+  border-bottom: 2px solid ${p => p.active ? '#0071e3' : 'transparent'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #0071e3;
+  }
+`;
+
+// Tab content
+const TabContent = styled.div`
+  padding: 0;
+`;
+
+// Section card component with Apple-style design
+const Card = styled.div`
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  padding: 16px;
+  margin-bottom: 16px;
+`;
+
+// Section titles
+const SectionTitle = styled.h2`
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+// Container for action buttons in document area
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
+// Compact form grid
+const CompactFormGrid = styled(FormGrid)`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+`;
+
+// Compact field
+const CompactField = styled(Field)`
+  margin-bottom: 8px;
+`;
+
+// Compact label
+const CompactLabel = styled(Label)`
+  margin-bottom: 4px;
+  font-size: 14px;
+`;
+
+// Compact table
+const CompactTable = styled(Table)`
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  
+  th {
+    background-color: #f5f5f7;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    text-align: right;
+  }
+  
+  td {
+    padding: 8px 12px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+  
+  tr:hover td {
+    background-color: #f9f9fb;
+  }
+`;
+
+// Compact button
+const CompactButton = styled(Button)`
+  padding: 6px 12px;
+  font-size: 13px;
+  height: auto;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #0071e3;
+  
+  &:hover {
+    background-color: #0262c2;
+  }
+`;
+
+// Compact icon only button
+const IconOnlyButton = styled(IconButton)`
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+`;
+
+// Fix import for ProfessionalsGrid and ProfessionalCard components
+const ProfessionalsGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+`;
+
+// More compact professional card
+const ProfessionalCard = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 230px;
+  max-width: 280px;
+  
+  &:hover {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ProfessionalInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const ProfessionalName = styled.a`
+  color: #0071e3;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+`;
+
+const ProfessionalType = styled.span`
+  font-size: 12px;
+  color: #666;
 `;
 
 const ProjectView: React.FC = () => {
@@ -89,6 +285,9 @@ const ProjectView: React.FC = () => {
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
+  // Add tab state
+  const [activeTab, setActiveTab] = useState<'details' | 'professionals'>('details');
+
   const loadData = async () => {
     try {
       const [proj, statuses, docTypes] = await Promise.all([
@@ -99,7 +298,7 @@ const ProjectView: React.FC = () => {
       setFormData(proj);
       originalData.current = proj;
       setStatuses(statuses);
-      setDocumentTypes(docTypes);
+      setDocumentTypes([...docTypes]); 
 
       // Extract professionals data directly from the project
       setIsLoadingProfessionals(true);
@@ -146,7 +345,11 @@ const ProjectView: React.FC = () => {
       }
     } catch (error) {
       const errorData = error as ErrorResponseData;
-      if (errorData.response.data.error_code === 'project_does_not_exist') {
+      // Add proper checks to avoid "Cannot read properties of undefined"
+      if (errorData && 
+          errorData.response && 
+          errorData.response.data && 
+          errorData.response.data.error_code === 'project_does_not_exist') {
         router.push('/projects');
       } else {
          errorHandler(error as ErrorResponseData, 'Failed to load project');
@@ -251,7 +454,7 @@ const ProjectView: React.FC = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData(prev =>
@@ -333,7 +536,7 @@ const ProjectView: React.FC = () => {
     filesData.push({
       fileId: doc.id,
       fileName: doc.name,
-      state: 'uploaded',
+      state: DocumentState.UPLOADED,
       fileType: type
     });
   });
@@ -345,7 +548,7 @@ const ProjectView: React.FC = () => {
       filesData.push({
         fileId: '',
         fileName: null,
-        state: 'missing',
+        state: DocumentState.MISSING,
         fileType: type
       });
     }
@@ -355,11 +558,20 @@ const ProjectView: React.FC = () => {
     if (!id || !file) return;
 
     try {
-      const fileName = file.name;
-      await uploadProjectDocument(id, fileType, fileName, file);
+      const formData = new FormData();
+      formData.append('project_id', id);
+      formData.append('document_type', fileType);
+      formData.append('document_name', file.name);
+      formData.append('file', file);
+      formData.append('status', DocumentState.UPLOADED);
+
+      console.log(`Uploading file: ${file.name}, type: ${fileType}, size: ${file.size} bytes, status: ${DocumentState.UPLOADED}`);
+      
+      await uploadProjectDocument(id, fileType, file.name, file, DocumentState.UPLOADED);
       await loadData();
       toast.success(`${fileType} uploaded successfully`);
     } catch (error) {
+      console.error("File upload error details:", error);
       errorHandler(error as ErrorResponseData, `Failed to upload ${fileType}`);
     }
   };
@@ -411,6 +623,54 @@ const ProjectView: React.FC = () => {
     setPreviewFileName(null);
   };
 
+  const handleUploadGeneralFile = async (file: File) => {
+    if (!id || !file) return;
+
+    try {
+      const fileName = file.name;
+      console.log(`Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.UPLOADED}`);
+      await uploadProjectDocument(id, 'General', fileName, file, DocumentState.UPLOADED);
+      await loadData();
+      toast.success('File uploaded successfully');
+    } catch (error) {
+      console.error("File upload error:", error); 
+      errorHandler(error as ErrorResponseData, 'Failed to upload file');
+    }
+  };
+
+  const handleDownloadAllFiles = async () => {
+    // Get all uploaded documents
+    const uploadedDocs = documents.filter(doc => doc.id);
+    
+    if (uploadedDocs.length === 0) {
+      toast.info('No files to download');
+      return;
+    }
+    
+    // Download each file
+    for (const doc of uploadedDocs) {
+      try {
+        await handleFileDownload(doc.id, doc.name);
+      } catch (error) {
+        errorHandler(error as ErrorResponseData, `Failed to download ${doc.name}`);
+      }
+    }
+    
+    toast.success(`Downloading ${uploadedDocs.length} files`);
+  };
+
+  const handleEmailAllFiles = () => {
+    // Would implement email functionality here
+    // This would typically open a dialog to enter email address
+    toast.info('Email all files feature would be implemented here');
+  };
+
+  // Render icons directly
+  const renderIcon = (iconType: any, size = 14) => {
+    const IconComponent = iconType;
+    return <IconComponent size={size} />;
+  };
+
   return (
     <PageContainer>
       <TopPanel>
@@ -423,194 +683,251 @@ const ProjectView: React.FC = () => {
         <TopPanelGroup>
           {!isEditing ? (
             <>
-              <IconButton onClick={() => router.back()} title="Back">
-                <FaArrowLeft />
-              </IconButton>
-              <IconButton onClick={startEditing} title="Edit">
-                <FaEdit />
-              </IconButton>
-              <IconButton
+              <IconOnlyButton onClick={() => router.back()} title="Back">
+                {renderIcon(FaIcons.FaArrowLeft)}
+              </IconOnlyButton>
+              <IconOnlyButton onClick={startEditing} title="Edit">
+                {renderIcon(FaIcons.FaEdit)}
+              </IconOnlyButton>
+              <IconOnlyButton
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete();
                 }}
                 title="Delete"
               >
-               <FaTrash />
-              </IconButton>
+                {renderIcon(FaIcons.FaTrash)}
+              </IconOnlyButton>
             </>
           ) : (
             <>
-              <IconButton
+              <IconOnlyButton
                 onClick={saveChanges}
                 title="Save"
                 disabled={saving}
               >
-                <FaCheck />
-              </IconButton>
-              <IconButton
+                {renderIcon(FaIcons.FaCheck)}
+              </IconOnlyButton>
+              <IconOnlyButton
                 onClick={cancelEditing}
                 title="Cancel"
                 disabled={saving}
               >
-                <FaTimes />
-              </IconButton>
+                {renderIcon(FaIcons.FaTimes)}
+              </IconOnlyButton>
             </>
           )}
         </TopPanelGroup>
       </TopPanel>
-      <PageContent>
+      <PageContent style={{ padding: '16px 0 0 0' }}>
         {!formData ? (
           <EmptyStatePlaceholder msg="Project not found" />
         ) : (
-          <div style={{ display: 'flex', width: '100%', gap: '30px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {/* Form fields on the left */}
-            <FormGrid style={{ flex: '1', minWidth: '420px', minHeight: 'fit-content', paddingBottom: '20px', marginBottom: '20px' }}>
-              <Label style={{ gridColumn: 'span 2', fontSize: 25, textAlign: 'center', margin: '10px 0 20px 0', display: 'block' }}>General</Label>
-              <FullWidthField>
-                <Label>Name</Label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </FullWidthField>
-              <Field>
-                <Label>Case ID</Label>
-                <Input
-                  name="case_id"
-                  value={formData.case_id}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <Field>
-                <Label>Status</Label>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                >
-                  {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
-                </Select>
-              </Field>
-              <FullWidthField>
-                <Label>Description</Label>
-                <TextArea
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  disabled={!isEditing}
-                />
-              </FullWidthField>
-              <FullWidthField>
-                <Label>Address</Label>
-                <Input
-                  name="address"
-                  value={formData.address || ''}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </FullWidthField>
-              <Field>
-                <Label>Due Date</Label>
-                <Input
-                  name="due_date"
-                  type="date"
-                  value={formData.due_date || ''}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <Field>
-                <Label>Status Due Date</Label>
-                <Input
-                  name="status_due_date"
-                  type="date"
-                  value={formData.status_due_date || ''}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-
-              {/* Professionals section */}
-              <FullWidthField style={{ marginTop: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <Label style={{ fontSize: '20px', margin: 0 }}>Professionals</Label>
-                  <Button 
-                    onClick={handleAddProfessional} 
-                    disabled={!isEditing}
-                    style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+          <MainLayout>
+            {/* Project Panel with Tabs */}
+            <ProjectPanel>
+              <Card>
+                <TabContainer>
+                  <TabButton 
+                    active={activeTab === 'details'} 
+                    onClick={() => setActiveTab('details')}
                   >
-                    <FaPlus /> Add Professional
-                  </Button>
-                </div>
-
-                {isLoadingProfessionals ? (
-                  <p>Loading professionals...</p>
-                ) : professionals.length === 0 ? (
-                  <p>No professionals attached to this project</p>
-                ) : (
-                  <Table>
-                    <thead>
-                      <tr>
-                        <TableHeader>Name</TableHeader>
-                        <TableHeader>Occupation</TableHeader>
-                        <TableHeader>Status</TableHeader>
-                        <TableHeader></TableHeader>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {professionals.map(professional => (
-                        <tr key={professional.id}>
-                          <TableBody>
-                            <Link href={`/professionals/${professional.id}`} passHref>
-                              <a style={{ color: '#51789f', textDecoration: 'none', cursor: 'pointer' }}>
-                                {professional.name}
-                              </a>
-                            </Link>
-                          </TableBody>
-                          <TableBody>{professional.professional_type}</TableBody>
-                          <TableBody>
-                            <StatusBadge status={professional.status}>{professional.status}</StatusBadge>
-                          </TableBody>
-                          <TableBody>
-                            <IconButton 
-                              onClick={() => handleRemoveProfessional(professional)} 
-                              title="Remove professional"
-                              disabled={!isEditing}
-                            >
-                              <FaTrash />
-                            </IconButton>
-                          </TableBody>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
+                    פרטי הפרויקט
+                  </TabButton>
+                  <TabButton 
+                    active={activeTab === 'professionals'} 
+                    onClick={() => setActiveTab('professionals')}
+                  >
+                    בעלי מקצוע
+                  </TabButton>
+                </TabContainer>
+                
+                {activeTab === 'details' && (
+                  <TabContent>
+                    <CompactFormGrid>
+                      <FullWidthField>
+                        <CompactLabel>שם הפרויקט</CompactLabel>
+                        <Input
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </FullWidthField>
+                      <CompactField>
+                        <CompactLabel>מספר בקשה</CompactLabel>
+                        <Input
+                          name="request_number"
+                          value={formData.request_number}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר היתר</CompactLabel>
+                        <Input
+                          name="permit_number"
+                          value={formData.permit_number}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיק טיפול</CompactLabel>
+                        <Input
+                          name="construction_supervision_number"
+                          value={formData.construction_supervision_number}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיאום הנדסי</CompactLabel>
+                        <Input
+                          name="engineering_coordinator_number"
+                          value={formData.engineering_coordinator_number}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיק כיבוי</CompactLabel>
+                        <Input
+                          name="firefighting_number"
+                          value={formData.firefighting_number}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>סטטוס הפרויקט</CompactLabel>
+                        <Select
+                          name="status"
+                          value={formData.status}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        >
+                          {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
+                        </Select>
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>בעל ההיתר</CompactLabel>
+                        <Input
+                          name="permit_owner"
+                          type="text"
+                          value={formData.permit_owner || ''}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>תאריך סיום</CompactLabel>
+                        <Input
+                          name="status_due_date"
+                          type="date"
+                          value={formData.status_due_date || ''}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                        />
+                      </CompactField>
+                      <FullWidthField>
+                        <CompactLabel>תיאור הפרויקט</CompactLabel>
+                        <TextArea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
+                        />
+                      </FullWidthField>
+                    </CompactFormGrid>
+                  </TabContent>
                 )}
-              </FullWidthField>
-            </FormGrid>
+                
+                {activeTab === 'professionals' && (
+                  <TabContent>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                      <CompactButton 
+                        onClick={handleAddProfessional} 
+                        disabled={!isEditing}
+                      >
+                        {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
+                      </CompactButton>
+                    </div>
+                    
+                    {isLoadingProfessionals ? (
+                      <p style={{ fontSize: '13px', color: '#666' }}>טוען בעלי מקצוע...</p>
+                    ) : professionals.length === 0 ? (
+                      <div style={{ 
+                        padding: '16px 12px', 
+                        textAlign: 'center', 
+                        backgroundColor: '#f9f9fb',
+                        borderRadius: '8px',
+                        color: '#666',
+                        fontSize: '13px'
+                      }}>
+                        אין בעלי מקצוע מצורפים לפרויקט
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {professionals.map(professional => (
+                          <ProfessionalCard key={professional.id}>
+                            <ProfessionalInfo>
+                              <Link href={`/professionals/${professional.id}`} passHref>
+                                <ProfessionalName>
+                                  {professional.name}
+                                </ProfessionalName>
+                              </Link>
+                              <ProfessionalType>{professional.professional_type}</ProfessionalType>
+                              <StatusBadge status={professional.status}>{professional.status}</StatusBadge>
+                            </ProfessionalInfo>
+                            <IconOnlyButton 
+                              onClick={() => handleRemoveProfessional(professional)} 
+                              title="הסר בעל מקצוע"
+                              disabled={!isEditing}
+                              style={{ margin: '0', width: '24px', height: '24px', fontSize: '12px' }}
+                            >
+                              {renderIcon(FaIcons.FaTrash, 12)}
+                            </IconOnlyButton>
+                          </ProfessionalCard>
+                        ))}
+                      </div>
+                    )}
+                  </TabContent>
+                )}
+              </Card>
+            </ProjectPanel>
 
-            {/* Documents area on the right */}
-            <div style={{ flex: '0 0 500px', minWidth: '300px', marginBottom: '20px' }}>
-              <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 40px 0', display: 'block' }}>Documents</Label>
-              <FileArea
-                files={filesData}
-                disabled={!isEditing}
-                onUpload={handleFileUpload}
-                onDownload={handleFileDownload}
-                onDelete={handleFileDelete}
-                onPreview={handleFilePreview}
-              />
-            </div>
-          </div>
+            {/* Documents Panel */}
+            <DocumentsPanel>
+              <Card style={{ height: 'auto' }}>
+                <FileArea
+                  files={filesData}
+                  disabled={!isEditing}
+                  onUpload={handleFileUpload}
+                  onDownload={handleFileDownload}
+                  onDelete={handleFileDelete}
+                  onPreview={handleFilePreview}
+                  onUploadGeneral={handleUploadGeneralFile}
+                />
+              </Card>
+            </DocumentsPanel>
+          </MainLayout>
         )}
         <DeletionDialog
           isOpen={isDeleteDialogOpen}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
-          message={`Are you sure you want to delete project ${formData?.name}?`}
+          message={`האם אתה בטוח שברצונך למחוק את הפרויקט ${formData?.name}?`}
         />
 
         {/* Dialog for removing a professional from the project */}
@@ -618,7 +935,7 @@ const ProjectView: React.FC = () => {
           isOpen={!!professionalToRemove}
           onConfirm={confirmRemoveProfessional}
           onCancel={cancelRemoveProfessional}
-          message={`Are you sure you want to remove ${professionalToRemove?.name} from this project?`}
+          message={`האם אתה בטוח שברצונך להסיר את ${professionalToRemove?.name} מפרויקט זה?`}
         />
 
         {/* Dialog for adding a professional to the project */}

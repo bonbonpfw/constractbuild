@@ -183,6 +183,10 @@ const ProfessionalView: React.FC = () => {
         getProfessionalStatuses(),
         getProfessionalDocumentTypes()
       ]);
+      if (prof.status) {
+        // Convert uppercase API status to title case
+        prof.status = prof.status.charAt(0) + prof.status.slice(1).toLowerCase();
+      }
       setFormData(prof);
       originalData.current = prof;
       setTypes(types);
@@ -226,6 +230,7 @@ const ProfessionalView: React.FC = () => {
     } catch (error) {
       errorHandler(error as ErrorResponseData, 'Failed to save changes');
     } finally {
+      await loadProfessional();
       setSaving(false);
     }
   };

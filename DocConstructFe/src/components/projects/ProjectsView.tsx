@@ -52,9 +52,9 @@ const Projects: React.FC = () => {
   const getStatusLabel = (status?: string) => {
     switch (status) {
       case ProjectStatus.PRE_PERMIT:
-        return 'טיוטה';
+        return 'קדם היתר';
       case ProjectStatus.POST_PERMIT:
-        return 'מאושר';
+        return 'אחרי היתר';
       case ProjectStatus.FINAL:
         return 'הושלם';
       default:
@@ -67,7 +67,7 @@ const Projects: React.FC = () => {
       <TopPanel>
         <TopPanelLogo/>
         <TopPanelTitleHolder>
-          <TopPanelTitle>Projects</TopPanelTitle>
+          <TopPanelTitle>ניהול פרויקטים ליזמים</TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
           <IconButton onClick={() => setShowProjectCreationDialog(true)}>
@@ -89,8 +89,8 @@ const Projects: React.FC = () => {
                   {getStatusLabel(project.status)}
                 </StatusBadge>
                 <CardName><b>{project.name}</b></CardName>
-                <CardInfo><b>כתובת: {project.address}</b></CardInfo>
-                <CardInfo><b>תאריך יעד: {formatDate(project.due_date)}</b></CardInfo>
+                <CardInfo><b>בעל ההיתר: {project.permit_owner}</b></CardInfo>
+                <CardInfo><b>תאריך יעד: {formatDate(project.status_due_date)}</b></CardInfo>
               </Card>
             ))}
           </CardGrid>

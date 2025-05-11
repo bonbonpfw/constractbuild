@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime, timezone
+from enum import Enum
 
 import flask
 
@@ -15,6 +16,8 @@ class ApiJsonResponseEncoder(json.JSONEncoder):
             return o.replace(tzinfo=timezone.utc).isoformat()
         if isinstance(o, date):
             return o.isoformat()
+        if isinstance(o, Enum):
+            return o.value
         return json.JSONEncoder.default(self, o)
 
 

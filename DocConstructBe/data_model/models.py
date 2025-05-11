@@ -1,104 +1,68 @@
 from datetime import date, datetime
 import re
-from enum import Enum
-
+from data_model.enum import ProjectStatus, ProjectDocumentType, ProfessionalType, ProfessionalStatus, ProfessionalDocumentType, DocumentStatus, enum_to_value
 from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime
+from sqlalchemy import Enum
 from sqlalchemy.orm import relationship
 from database.base_model import Base
 from database.database import engine
 from database.database import UUID_F
 
 
-class ProjectStatus(Enum):
-    PRE_PERMIT = 'Pre permit'
-    POST_PERMIT = 'Post permit'
-    FINAL = 'Final'
+class PermitOwner(Base):
+    __tablename__ = 'permit_owners'
+    id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    signature_file_path = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+  
+    def __init__(self, name: str, address: str, phone: str, email: str = None, signature_file_path: str = None):
+        self.name = name
+        self.address = address
+        self.phone = phone
+        self.email = email
+        self.signature_file_path = signature_file_path
 
-
-class ProjectDocumentType(Enum):
-    DRAWING = 'construction drawing'
-    REPORT = 'report'
-    LICENSE = 'construction license'
-    PERMIT = 'building permit'
-    SAFETY_CERTIFICATE = 'safety compliance certificate'
-    INSPECTION_REPORT = 'inspection report'
-    MATERIAL_SPECIFICATION = 'material specification document'
-    CONTRACT = 'contract agreement'
-    INSURANCE = 'insurance certificate'
-    RISK_ASSESSMENT = 'risk assessment document'
-    ENVIRONMENTAL_IMPACT = 'environmental impact report'
-    SITE_PLAN = 'site plan'
-    SOIL_REPORT = 'soil investigation report'
-    STRUCTURAL_CALCULATION = 'structural calculation report'
-    WORK_SCHEDULE = 'work schedule'
-    CHANGE_ORDER = 'change order document'
-    FINAL_ACCEPTANCE = 'final acceptance certificate'
-
-
-class ProfessionalType(Enum):
-    ENGINEER = 'מהנדס'
-    ARCHITECT = 'אדריכל'
-    PESTICIDAL = 'מדביר'
-    OTHER = 'אחר'
-
-    @staticmethod
-    def map_to_professional_type(professional_type: str):
-        if 'מהנדס' in professional_type:
-            return ProfessionalType.ENGINEER.value
-        elif 'מדביר' in professional_type:
-            return ProfessionalType.PESTICIDAL.value
-        elif 'אדריכל' in professional_type:
-            return ProfessionalType.ARCHITECT.value
-        else:
-            return ProfessionalType.OTHER.value
-
-
-class ProfessionalStatus(Enum):
-    ACTIVE = 'Active'
-    INACTIVE = 'Inactive'
-    PENDING = 'Pending'
-
-
-class ProfessionalDocumentType(Enum):
-    LICENSE = 'license'
-
-
-class DocumentStatus(Enum):
-    PENDING = 'Pending'
-    SIGNED = 'Signed'
-    DELIVERED = 'Delivered'
-    UPLOADED = 'Uploaded'
-    MISSING = 'Missing'
-
-
-# Models
+    def __repr__(self):
+        return f"<PermitOwner(name='{self.name}', address='{self.address}', phone='{self.phone}', email='{self.email}')>"
 
 
 class Project(Base):
     __tablename__ = 'projects'
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
+    permit_owner_id = Column(UUID_F(), ForeignKey('permit_owners.id'), nullable=False)
     name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
-    case_id = Column(String, nullable=False)
-
+    request_number = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, nullable=True)
     status_due_date = Column(Date, nullable=True)
-    due_date = Column(Date, nullable=True)
     docs_path = Column(String, nullable=True)
+    permit_number = Column(String, nullable=True)
+    construction_supervision_number = Column(String, nullable=True)
+    engineering_coordinator_number = Column(String, nullable=True)
+    firefighting_number = Column(String, nullable=True)
 
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    
     __table_args__ = (
-        UniqueConstraint('case_id', name='uix_case_id'),
+        UniqueConstraint('request_number', name='uix_request_number'),
     )
 
     documents = relationship("ProjectDocument", backref="project", cascade="all,delete")
     professionals = relationship("ProjectProfessional", backref="project", cascade="all,delete")
+    permit_owner = relationship("PermitOwner", backref="projects", cascade="all,delete")
 
-    def __init__(self, name: str, due_date: date, docs_path: str = None, status: str = None,
-                 status_due_date: date = None, address: str = None, case_id: str = None,
+
+    def __init__(self, name: str, permit_owner: PermitOwner,request_number: str,permit_number: str=None,
+                 construction_supervision_number: str=None,engineering_coordinator_number: str=None,
+                 firefighting_number: str=None,docs_path: str = None, status: str = None,
+                 status_due_date: date = None,
                  description: str = None, **kwargs):
 
         if not name.strip():
@@ -106,18 +70,21 @@ class Project(Base):
 
         super().__init__(
            name=name.strip(),
-           due_date=due_date,
+           permit_owner=permit_owner,
            docs_path=docs_path.strip() if docs_path else None,
            status=status,
            status_due_date=status_due_date,
-           address=address,
-           case_id=case_id,
+           request_number=request_number,
+           permit_number=permit_number,
+           construction_supervision_number=construction_supervision_number,
+           engineering_coordinator_number=engineering_coordinator_number,
+           firefighting_number=firefighting_number,
            description=description,
            **kwargs
         )
 
     def __repr__(self):
-        return f"<Project(name='{self.name}', case_id='{self.case_id}', status='{self.status}')>"
+        return f"<Project(name='{self.name}', request_number='{self.request_number}', status='{self.status}', permit_owner='{self.permit_owner.name}')>"
 
 
 class Professional(Base):
@@ -133,13 +100,8 @@ class Professional(Base):
     professional_type = Column(String, nullable=False)
     status = Column(String, nullable=False)
     license_file_path = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint('license_number', name='uix_license_number'),
-        UniqueConstraint('email', name='uix_email'),
-    )
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     documents = relationship("ProfessionalDocument", backref="professional", cascade="all,delete")
     projects = relationship("ProjectProfessional", backref="professional", cascade="all,delete")
@@ -150,6 +112,13 @@ class Professional(Base):
             raise ValueError("Invalid email format")
         if not self._validate_phone(self.phone):
             raise ValueError("Invalid phone number format")
+        if not self._validate_national_id(self.national_id):
+            raise ValueError("Invalid national ID format")
+
+    @staticmethod
+    def _validate_national_id(national_id):
+        pattern = r'^\d{5,10}$'  # בדיקה בסיסית – רק ספרות באורך 5 עד 10
+        return re.match(pattern, national_id) is not None
 
     @staticmethod
     def _validate_email(email):
@@ -170,7 +139,7 @@ class ProjectProfessional(Base):
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
     project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
     professional_id = Column(UUID_F(), ForeignKey('professionals.id'), nullable=False)
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     __table_args__ = (
         UniqueConstraint('project_id', 'professional_id', name='uix_project_professional'),
@@ -188,7 +157,7 @@ class ProjectDocument(Base):
     name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     status = Column(String, nullable=False)
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return f"<ProjectDocument(project_id='{self.project_id}', id='{self.id}'')>"
@@ -202,7 +171,7 @@ class ProfessionalDocument(Base):
     name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     status = Column(String, nullable=False)
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return f"<ProfessionalDocument(professional_id='{self.professional_id}', id='{self.id}'')>"

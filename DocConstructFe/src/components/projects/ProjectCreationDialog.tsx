@@ -57,7 +57,7 @@ const ProjectCreationDialog: React.FC<{
         <Form onSubmit={handleSubmit}>
           <FormGrid>
             <FullWidthField>
-              <Label>Project Name *</Label>
+              <Label>שם הפרויקט *</Label>
               <Input
                 type="text"
                 value={formData.name}
@@ -66,40 +66,33 @@ const ProjectCreationDialog: React.FC<{
               />
             </FullWidthField>
             <FullWidthField>
-              <Label>Case ID *</Label>
+              <Label>בעל ההיתר *</Label>
               <Input
                 type="text"
-                value={formData.case_id}
-                onChange={e => setFormData({ ...formData, case_id: e.target.value })}
+                value={formData.permit_owner}
+                onChange={e => setFormData({ ...formData, permit_owner: e.target.value })}
                 required
               />
             </FullWidthField>
             <FullWidthField>
-              <Label>Address *</Label>
+              <Label>מספר בקשה *</Label>
               <Input
                 type="text"
-                value={formData.address}
-                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                value={formData.request_number}
+                onChange={e => setFormData({ ...formData, request_number: e.target.value })}
                 required
               />
             </FullWidthField>
             <FullWidthField>
-              <Label>Description</Label>
+              <Label>תיאור הפרויקט</Label>
               <TextArea
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
             </FullWidthField>
+            
             <FullWidthField>
-              <Label>Due Date</Label>
-              <Input
-                type="date"
-                value={formData.due_date}
-                onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-              />
-            </FullWidthField>
-            <FullWidthField>
-              <Label>Status</Label>
+              <Label>סטטוס הפרויקט</Label>
               <Select
                 value={formData.status}
                 onChange={e => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
@@ -110,7 +103,7 @@ const ProjectCreationDialog: React.FC<{
               </Select>
             </FullWidthField>
             <FullWidthField>
-              <Label>Status Due Date</Label>
+              <Label>תאריך סיום הסטטוס</Label>
               <Input
                 type="date"
                 value={formData.status_due_date}
@@ -123,7 +116,7 @@ const ProjectCreationDialog: React.FC<{
               ביטול
             </Button>
             <Button type="submit" variant="contained" disabled={loading}>
-              צור פרויק
+              אישור
             </Button>
           </DialogActions>
         </Form>

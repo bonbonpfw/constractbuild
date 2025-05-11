@@ -31,12 +31,14 @@ const StatusBadge = styled.span<{ status: string }>`
   font-size: 16px;
   background: ${({ status }) =>
     status === ProfessionalStatus.ACTIVE ? '#e6ffed' :
-    status === ProfessionalStatus.INACTIVE ? '#ffeef0' :
-    '#fffbdd'};
+    status === ProfessionalStatus.WARNING ? '#fffbdd' :
+    status === ProfessionalStatus.EXPIRED ? '#ffeef0' :
+    '#ffeef0'};
   color: ${({ status }) =>
     status === ProfessionalStatus.ACTIVE ? '#22863a' :
-    status === ProfessionalStatus.INACTIVE ? '#cb2431' :
-    '#735c0f'};
+    status === ProfessionalStatus.WARNING ? '#735c0f' :
+    status === ProfessionalStatus.EXPIRED ? '#cb2431' :
+    '#cb2431'};
 `;
 
 const Row: React.FC<{
@@ -99,7 +101,7 @@ const ProfessionalsView: React.FC = () => {
       <TopPanel>
         <TopPanelLogo />
         <TopPanelTitleHolder>
-          <TopPanelTitle>Professionals</TopPanelTitle>
+          <TopPanelTitle>בעלי מקצוע</TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
           <IconButton onClick={() => setShowAdd(true)}><FaPlus /></IconButton>

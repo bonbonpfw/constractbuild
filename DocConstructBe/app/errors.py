@@ -54,6 +54,13 @@ class HttpException(ApiError):
     def http_code(self):
         return self.m_http_code
 
+class InvalidFileFormat(ApiError):
+    def __init__(self,format:str):
+        super().__init__(
+            msg=f'Invalid file format: {format}',
+            code='invalid_file_format'
+        )
+
 
 class ValidationError(ApiError):
     def __init__(self, params: dict):

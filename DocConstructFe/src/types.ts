@@ -3,8 +3,8 @@
 // Professional Types
 export enum ProfessionalStatus {
   ACTIVE = 'Active',
-  INACTIVE = 'Inactive',
-  PENDING = 'Pending'
+  WARNING = 'Warning',
+  EXPIRED = 'Expired'
 }
 
 export interface ProfessionalType {
@@ -56,13 +56,24 @@ export enum ProjectStatus {
   FINAL = 'Final'
 }
 
+export enum DocumentState {
+  PENDING = 'Pending',
+  SIGNED = 'Signed',
+  DELIVERED = 'Delivered',
+  MISSING = 'Missing',
+  UPLOADED = 'Uploaded'
+}
+
 export interface Project {
   id: string;
-  name?: string;
-  description?: string;
-  address?: string;
-  case_id?: string;
-  due_date?: string;
+  name: string;
+  request_number: string;
+  permit_number: string;
+  construction_supervision_number: string;
+  engineering_coordinator_number: string;
+  firefighting_number: string;
+  description: string;
+  permit_owner: string;
   status_due_date?: string;
   status?: string;
   professionals: Professional[];

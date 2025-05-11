@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.models import ProjectStatus, ProfessionalDocumentType, ProfessionalType, ProfessionalStatus, ProjectDocumentType
-
+from data_model.enum import DocumentStatus, ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProfessionalStatus, ProjectStatus
 
 # Project Schemas
 
@@ -15,25 +14,36 @@ class ProjectGetByIdSchema(Schema):
 
 class ProjectCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1))
-    case_id = fields.Str(required=True)
-    address = fields.Str(required=True)
+    request_number = fields.Str(required=True)
+    permit_number = fields.Str(required=False)
+    construction_supervision_number = fields.Str(required=False)
+    engineering_coordinator_number = fields.Str(required=False)
+    firefighting_number = fields.Str(required=False)
     description = fields.Str(required=False)
-    due_date = fields.Date(required=False)
+    permit_owner = fields.Str(required=True)
     status = fields.Enum(ProjectStatus, by_value=True, required=False)
     status_due_date = fields.Date(required=False)
     docs_path = fields.Str(required=False)
+    professionals = fields.List(fields.UUID(), required=False)
 
 
-class ProjectUpdateSchema(Schema):
+class ProjectUpdateSchema (Schema):
     id = fields.UUID(required=True)
-    name = fields.Str(required=True, validate=validate.Length(min=1))
-    description = fields.Str(required=False)
-    address = fields.Str(required=False)
-    case_id = fields.Str(required=False)
-    due_date = fields.Date(required=False)
+    name = fields.Str(required=False, validate=validate.Length(min=1))
+    request_number = fields.Str(required=False,allow_none=True) 
+    permit_number = fields.Str(required=False,allow_none=True)
+    permit_owner = fields.Str(required=False,allow_none=True)
+    construction_supervision_number = fields.Str(required=False,allow_none=True)
+    engineering_coordinator_number = fields.Str(required=False,allow_none=True)
+    firefighting_number = fields.Str(required=False,allow_none=True)
+    description = fields.Str(required=False,allow_none=True)
+    permit_owner_phone = fields.Str(required=False,allow_none=True)
+    permit_owner_email = fields.Str(required=False,allow_none=True)
+    permit_owner_address = fields.Str(required=False,allow_none=True)
+    permit_owner_name = fields.Str(required=False,allow_none=True)
     status = fields.Enum(ProjectStatus, by_value=True, required=False)
     status_due_date = fields.Date(required=False, allow_none=True)
-    docs_path = fields.Str(required=False)
+    docs_path = fields.Str(required=False,allow_none=True)
 
 
 class ProjectDeleteSchema(Schema):
@@ -61,10 +71,11 @@ class ProjectDocumentDownloadSchema(Schema):
 
 class ProjectDocumentUploadSchema(Schema):
     project_id = fields.UUID(required=True)
-    document_type = fields.Enum(ProjectDocumentType, by_value=True, required=True)
+    document_type = fields.Enum(ProjectDocumentType, by_value=True, required=False)
     document_name = fields.Str(required=True)
-    file = fields.Raw(required=True)
+    status = fields.Str(required=True)
 
+    file = fields.Raw(required=True)
 
 class ProjectDocumentRemoveSchema(Schema):
     project_id = fields.UUID(required=True)
@@ -100,14 +111,16 @@ class ProfessionalCreateSchema(Schema):
 
 class ProfessionalUpdateSchema(Schema):
     id = fields.UUID(required=True)
-    name = fields.Str()
-    national_id = fields.Str()
-    email = fields.Email()
-    phone = fields.Str(validate=validate.Length(min=9, max=15))
-    address = fields.Str()
-    license_number = fields.Str()
-    license_expiration_date = fields.Date()
-    professional_type = fields.Enum(ProfessionalType, by_value=True)
+    name = fields.Str(required=False)
+    national_id = fields.Str(required=False)
+    email = fields.Email(required=False)
+    phone = fields.Str(required=False, validate=validate.Length(min=9, max=15))
+    address = fields.Str(required=False)
+    license_number = fields.Str(required=False)
+    license_expiration_date = fields.Date(required=False)
+    professional_type = fields.Enum(ProfessionalType, by_value=True, required=False)
+    license_file_path = fields.Str(required=False)
+    status = fields.Str(required=False)
    # status = fields.Enum(ProfessionalStatus, by_value=True)
 
 
@@ -237,7 +250,7 @@ API_ENDPOINTS = {
     },
     Endpoints.GET_PROJECT_DOCUMENT_TYPES: {
         'method': 'GET',
-        'schema': ProjectDocumentTypesSchema,
+        # 'schema': ProjectDocumentTypesSchema,
         'description': 'Get all project document types'
     },
     Endpoints.GET_PROFESSIONALS: {
