@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, UTC
 import re
 from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
@@ -15,8 +15,8 @@ class PermitOwner(Base):
     phone = Column(String, nullable=False)
     email = Column(String, nullable=True)
     signature_file_path = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
   
     def __init__(self, name: str, address: str, phone: str, email: str = None, signature_file_path: str = None):
         self.name = name
@@ -44,8 +44,8 @@ class Project(Base):
     engineering_coordinator_number = Column(String, nullable=True)
     firefighting_number = Column(String, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
 
     
     __table_args__ = (
@@ -98,8 +98,8 @@ class Professional(Base):
     professional_type = Column(String, nullable=False)
     status = Column(String, nullable=False)
     license_file_path = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
 
     documents = relationship("ProfessionalDocument", backref="professional", cascade="all,delete")
     projects = relationship("ProjectProfessional", backref="professional", cascade="all,delete")
@@ -137,7 +137,7 @@ class ProjectProfessional(Base):
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
     project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
     professional_id = Column(UUID_F(), ForeignKey('professionals.id'), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
 
     __table_args__ = (
         UniqueConstraint('project_id', 'professional_id', name='uix_project_professional'),
@@ -155,7 +155,7 @@ class ProjectDocument(Base):
     name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     status = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
 
     def __repr__(self):
         return f"<ProjectDocument(project_id='{self.project_id}', id='{self.id}'')>"
@@ -169,7 +169,7 @@ class ProfessionalDocument(Base):
     name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     status = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
 
     def __repr__(self):
         return f"<ProfessionalDocument(professional_id='{self.professional_id}', id='{self.id}'')>"
