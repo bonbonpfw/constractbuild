@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { getProjects } from '../../api';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
 import {
   TopPanel,
   TopPanelLogo,
@@ -11,7 +11,7 @@ import {
   PageContent,
   IconButton, TopPanelTitleHolder, TopPanelTitle, CardGrid, Card, CardName, CardInfo
 } from '../../styles/SharedStyles';
-import { Project, ProjectStatus } from "../../types";
+import { Project, ProjectStatus, ProfessionalStatus } from "../../types";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import ProjectCreationDialog from "./ProjectCreationDialog";
@@ -62,6 +62,25 @@ const Projects: React.FC = () => {
     }
   };
 
+  // Function to check if any professional in the project has Warning or Expired status
+  const hasWarningOrExpiredProfessionals = (project: Project) => {
+    // If the backend directly provides warning/expired flags
+    const projectAny = project as any;
+    if (projectAny.is_warning !== undefined || projectAny.is_expired !== undefined) {
+      return Boolean(projectAny.is_warning) || Boolean(projectAny.is_expired);
+    }
+    
+    // Otherwise check professional statuses
+    if (!project.professionals || project.professionals.length === 0) {
+      return false;
+    }
+    
+    return project.professionals.some(professional => 
+      professional.status === ProfessionalStatus.WARNING || 
+      professional.status === ProfessionalStatus.EXPIRED
+    );
+  };
+
   return (
     <PageContainer>
       <TopPanel>
@@ -88,6 +107,11 @@ const Projects: React.FC = () => {
                 <StatusBadge status={project.status || 'draft'}>
                   {getStatusLabel(project.status)}
                 </StatusBadge>
+                {hasWarningOrExpiredProfessionals(project) && (
+                  <WarningBadge title="יש בעלי מקצוע עם רישיון שפג תוקף או בסטטוס אזהרה">
+                    <FaExclamationTriangle />
+                  </WarningBadge>
+                )}
                 <CardName><b>{project.name}</b></CardName>
                 <CardInfo><b>בעל ההיתר: {project.permit_owner}</b></CardInfo>
                 <CardInfo><b>תאריך יעד: {formatDate(project.status_due_date)}</b></CardInfo>
@@ -152,4 +176,16 @@ const StatusBadge = styled.div<{ status: string }>`
         return '#e0e0e0';
     }
   }};
+`;
+
+const WarningBadge = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 18px;
+  color: #f57c00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
 `;

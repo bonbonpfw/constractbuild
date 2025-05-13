@@ -13,7 +13,7 @@ from app.api import (
 )
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
-from data_model.enum import enum_to_value, DocumentStatus
+from data_model.enum import enum_to_value, ProjectDocumentType
 from data_model.models import PermitOwner
 
 def validate_request(endpoint):
@@ -49,7 +49,15 @@ def validate_request(endpoint):
 
     errors = schema.validate(data)
     if errors:
-        raise ValidationError(params={"error": errors})
+        # Create a more detailed error message that includes the field names
+        detailed_errors = {}
+        for field, error_msgs in errors.items():
+            if isinstance(error_msgs, list):
+                detailed_errors[field] = f"Field '{field}': {', '.join(error_msgs)}"
+            else:
+                detailed_errors[field] = f"Field '{field}': {error_msgs}"
+        
+        raise ValidationError(params={"validation_errors": detailed_errors})
 
     return schema.load(data)
 
@@ -195,21 +203,28 @@ def init_routes(app):
         project_id = str(data.get('project_id'))
         document_type = data.get('document_type')
         document_status = data.get('status')
-       
-        if not is_document_professional_related(project_id=project_id, document_type=document_type):
-            raise ValidationError(params={"error": f"Professional  {document_type} not related to project {project_id}"})
+        is_autofill = data.get('is_autofill',True)
+        if document_type == ProjectDocumentType.GENERAL:
+            is_autofill = False
+        
         file_path = save_file_to_temp(data.get('file'))
-        permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
-        professionals = ProjectManager.get_project_professionals(project_id=project_id)
-        filled_pdf = ProjectDocumentManager().autofill_document(
-            document_type=document_type,
-            professionals=professionals,
-            permit_owner=permit_owner,
-            src_pdf_path=file_path
-        )
+        if is_autofill:
+            if not is_document_professional_related(project_id=project_id, document_type=document_type):
+                raise ValidationError(params={"error": f"Professional  {document_type.value} not related to project {project_id}"})
+            permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
+            project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+            document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
+            filled_pdf = ProjectDocumentManager.autofill_document(
+                document_type=document_type,
+                professionals=document_professionals,
+                permit_owner=permit_owner,
+                src_pdf_path=file_path
+            )
+        else:
+            filled_pdf = file_path
         
         project_document = ProjectManager().add_document(
-            file_path=filled_pdf if filled_pdf else file_path,
+            file_path=filled_pdf,
             project_id=project_id,
             document_type=document_type,
             document_name=data.get('document_name'),

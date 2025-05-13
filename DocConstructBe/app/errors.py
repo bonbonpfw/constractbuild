@@ -64,6 +64,12 @@ class InvalidFileFormat(ApiError):
 
 class ValidationError(ApiError):
     def __init__(self, params: dict):
+        # Print validation error details explicitly for debugging
+        if 'validation_errors' in params:
+            print("ValidationError details:")
+            for field, error in params['validation_errors'].items():
+                print(f"  {field}: {error}")
+                
         super().__init__(
             msg='Validation error',
             code='validation_error',
@@ -76,7 +82,16 @@ class ValidationError(ApiError):
 
 def handle_error(error: Exception):
     logging.error(f"Error occurred: {type(error)}")
-    if isinstance(error, ApiError):
+    if isinstance(error, ValidationError):
+        # For validation errors, make sure to log the details
+        if hasattr(error, 'error_attributes') and error.error_attributes.get('error_params'):
+            validation_errors = error.error_attributes.get('error_params').get('validation_errors', {})
+            if validation_errors:
+                logging.error("Validation errors details:")
+                for field, msg in validation_errors.items():
+                    logging.error(f"  {field}: {msg}")
+        error_response = ErrorResponse(api_error=error).generate_response()
+    elif isinstance(error, ApiError):
         error_response = ErrorResponse(api_error=error).generate_response()
     elif isinstance(error, werkzeug.exceptions.HTTPException):
         error: werkzeug.exceptions.HTTPException

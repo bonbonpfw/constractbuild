@@ -237,6 +237,17 @@ class ProjectDocumentManager:
         return doc_professionals_types
     
     @staticmethod
+    def get_document_professionals(document_type: ProjectDocumentType,professionals: list[Professional]):
+        doc_professionals_types = ProjectDocumentManager.get_document_professionals_types(document_type)
+        document_professionals = []
+        for professional in professionals:
+            prof_type_value = ProfessionalManager.get_professional_type_by_value(professional.professional_type)
+            if prof_type_value.name in doc_professionals_types:
+                document_professionals.append(professional)
+        return document_professionals
+    
+    
+    @staticmethod
     def autofill_document(document_type: ProjectDocumentType,professionals: list[Professional],permit_owner: PermitOwner,src_pdf_path: str):
         document_filler = DocumentFiller(document_type=document_type,professionals=professionals,permit_owner=permit_owner,src_pdf_path=src_pdf_path)
         filled_pdf_path = document_filler.fill_document()
@@ -426,6 +437,7 @@ class ProfessionalManager:
             return ProfessionalStatus.WARNING
         else:
             return ProfessionalStatus.ACTIVE
+        
     @staticmethod
     def get_professional_type_by_value(professional_type_value: str) -> ProfessionalType:
         return ProfessionalType.map_to_value(professional_type_value)

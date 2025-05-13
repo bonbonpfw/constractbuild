@@ -531,14 +531,26 @@ const ProjectView: React.FC = () => {
 
   // Add documents to filesData
   Object.entries(documentsByType).forEach(([type, docs]) => {
-    // Only add the most recent document of each type
-    const doc = docs[0]; // Assuming the first document is the most recent
-    filesData.push({
-      fileId: doc.id,
-      fileName: doc.name,
-      state: DocumentState.UPLOADED,
-      fileType: type
-    });
+    if (type === 'כללי') {
+      // Add all general files
+      docs.forEach(generalDoc => {
+        filesData.push({
+          fileId: generalDoc.id,
+          fileName: generalDoc.name,
+          state: DocumentState.UPLOADED,
+          fileType: type
+        });
+      });
+    } else {
+      // For other document types, only add the most recent document
+      const doc = docs[0]; // Assuming the first document is the most recent
+      filesData.push({
+        fileId: doc.id,
+        fileName: doc.name,
+        state: DocumentState.UPLOADED,
+        fileType: type
+      });
+    }
   });
 
   // Add missing document types
@@ -629,7 +641,7 @@ const ProjectView: React.FC = () => {
     try {
       const fileName = file.name;
       console.log(`Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.UPLOADED}`);
-      await uploadProjectDocument(id, 'General', fileName, file, DocumentState.UPLOADED);
+      await uploadProjectDocument(id, 'כללי', fileName, file, DocumentState.UPLOADED);
       await loadData();
       toast.success('File uploaded successfully');
     } catch (error) {

@@ -378,7 +378,7 @@ const FileItem: React.FC<{
   };
 
   const handleDownload = () => {
-    if (disabled || state === DocumentState.MISSING || !onDownload) return;
+    if (state === DocumentState.MISSING || !onDownload) return;
     onDownload(fileId, fileName || '');
   };
 
@@ -388,7 +388,7 @@ const FileItem: React.FC<{
   };
 
   const handlePreview = () => {
-    if (disabled || state === DocumentState.MISSING || !onPreview) return;
+    if (state === DocumentState.MISSING || !onPreview) return;
     onPreview(fileId, fileName || '');
   };
 
@@ -413,7 +413,7 @@ const FileItem: React.FC<{
               type="checkbox" 
               checked={selected} 
               onChange={handleCheckboxChange}
-              disabled={disabled}
+              disabled={false}
               style={{ marginRight: '4px' }}
             />
           )}
@@ -440,21 +440,21 @@ const FileItem: React.FC<{
           ) : (
             <>
               <ActionButton 
-                disabled={disabled} 
+                disabled={false}
                 onClick={handlePreview}
                 title="Preview"
               >
                 <FaEye />
               </ActionButton>
               <ActionButton 
-                disabled={disabled} 
+                disabled={false}
                 onClick={handleDownload}
                 title="Download"
               >
                 <FaDownload />
               </ActionButton>
               <ActionButton 
-                disabled={disabled} 
+                disabled={false}
                 onClick={() => setShowEmailDialog(true)}
                 title="Send email"
               >
@@ -504,10 +504,10 @@ const FileArea: React.FC<{
 }) => {
   const [activeTab, setActiveTab] = useState<'categorized' | 'general'>('categorized');
   const [categorizedFiles, setCategorizedFiles] = useState<FileAreaDocument[]>(
-    files.filter(file => file.fileType !== 'General')
+    files.filter(file =>  file.fileType !== 'כללי')
   );
   const [generalFiles, setGeneralFiles] = useState<FileAreaDocument[]>(
-    files.filter(file => file.fileType === 'General')
+    files.filter(file =>  file.fileType === 'כללי')
   );
   
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -518,8 +518,8 @@ const FileArea: React.FC<{
 
   // Update files when props change
   React.useEffect(() => {
-    setCategorizedFiles(files.filter(file => file.fileType !== 'General'));
-    setGeneralFiles(files.filter(file => file.fileType === 'General'));
+    setCategorizedFiles(files.filter(file =>  file.fileType !== 'כללי'));
+    setGeneralFiles(files.filter(file =>  file.fileType === 'כללי'));
   }, [files]);
 
   const handleRequestUpload = (fileType: string, file: File) => {
@@ -644,14 +644,14 @@ const FileArea: React.FC<{
               {selectedFiles.length > 0 && (
                 <BatchActions>
                   <ActionButton 
-                    disabled={disabled} 
+                    disabled={false}
                     onClick={handleBatchDownload}
                     title="Download selected"
                   >
                     <FaDownload />
                   </ActionButton>
                   <ActionButton 
-                    disabled={disabled} 
+                    disabled={false}
                     onClick={handleBatchEmail}
                     title="Email selected"
                   >
@@ -691,7 +691,32 @@ const FileArea: React.FC<{
         
         {activeTab === 'general' && (
           <>
-
+            {/* List of General Files */}
+            <FileListContainer>
+              {generalFiles.length === 0 ? (
+                <div style={{ padding: '20px 0', textAlign: 'center', color: '#888', fontSize: '14px' }}>
+                  אין מסמכים כלליים זמינים
+                </div>
+              ) : (
+                generalFiles.map((file, index) => (
+                  <FileItem
+                    key={`${file.fileType}-${index}`}
+                    fileId={file.fileId || ''}
+                    fileName={file.fileName || ''}
+                    fileType={file.fileType}
+                    state={file.state}
+                    disabled={disabled}
+                    onUpload={onUpload}
+                    onDownload={onDownload}
+                    onDelete={onDelete}
+                    onPreview={onPreview}
+                    onRequestUpload={handleRequestUpload}
+                    onSelect={handleSelectFile}
+                    selected={selectedFiles.includes(file.fileId || '')}
+                  />
+                ))
+              )}
+            </FileListContainer>
             
             {/* Upload Area for General Files */}
             {onUploadGeneral && (
