@@ -133,7 +133,20 @@ def init_routes(app):
     @app.route('/api/project', methods=['PUT'])
     def update_project():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT)
-        permit_owner = PermitOwner(data.get('permit_owner'),"aaaa","12345","a@a.com")
+        # Create or update permit owner with proper data
+        permit_owner_name = data.get('permit_owner', '')
+        permit_owner_address = data.get('permit_owner_address', 'aaaa')
+        permit_owner_phone = data.get('permit_owner_phone', '12345')
+        permit_owner_email = data.get('permit_owner_email', 'a@a.com')
+        
+        # Create the permit owner object with the provided data
+        permit_owner = PermitOwner(
+            name=permit_owner_name,
+            address=permit_owner_address,
+            phone=permit_owner_phone,
+            email=permit_owner_email
+        )
+        
         ProjectManager().update(
             project_id=str(data.get('id')),
             name=data.get('name'),
@@ -145,7 +158,6 @@ def init_routes(app):
             construction_supervision_number=data.get('construction_supervision_number'),
             engineering_coordinator_number=data.get('engineering_coordinator_number'),
             firefighting_number=data.get('firefighting_number'),
-   
         )
         return SuccessResponse().generate_response()
 

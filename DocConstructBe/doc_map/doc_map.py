@@ -94,5 +94,11 @@ class DocumentFiller:
                 can.drawString(*self.document_positions[page_number]["date_for_signed"], datetime.now().strftime("%d/%m/%Y"))
             if self.document_positions[page_number].get("permit_owner"):
                 can.drawString(*self.document_positions[page_number]["permit_owner"], self.permit_owner.name[::-1])
-            if self.document_positions[page_number].get("permit_number_for_signed"):
+            if self.document_positions[page_number].get("permit_owner_name_for_signed"):
+                can.drawString(*self.document_positions[page_number]["permit_owner_name_for_signed"], self.permit_owner.name[::-1])
+            if self.document_positions[page_number].get("permit_number_for_signed") and self.permit_owner.signature_file_path:
                 can.drawString(*self.document_positions[page_number]["permit_number_for_signed"], self.permit_owner.signature_file_path)
+            if self.document_positions[page_number].get("id_for_signed"):
+                can.drawString(*self.document_positions[page_number]["id_for_signed"], professional.national_id)
+            if self.document_positions[page_number].get("date_for_prof_signed"):
+                can.drawString(*self.document_positions[page_number]["date_for_prof_signed"], datetime.now().strftime("%d/%m/%Y"))

@@ -49,6 +49,14 @@ export interface ProjectDocument {
   created_at: string;
 }
 
+// Permit Owner Data
+export interface PermitOwnerData {
+  name: string;
+  address: string;
+  phone: string;
+  email?: string;
+}
+
 // Project Types
 export enum ProjectStatus {
   PRE_PERMIT = 'Pre permit',
@@ -74,6 +82,11 @@ export interface Project {
   firefighting_number: string;
   description: string;
   permit_owner: string;
+  permit_owner_name?: string;
+  permit_owner_address?: string;
+  permit_owner_phone?: string;
+  permit_owner_email?: string;
+  permit_owner_data?: PermitOwnerData;
   status_due_date?: string;
   status?: string;
   professionals: Professional[];

@@ -15,7 +15,7 @@ class ApiError(Exception):
     def __init__(self, msg, code, params=None):
         self.error_attributes = {
             ApiError.ERROR_CODE: code,
-            ApiError.MESSAGE: msg.format(**params) if params else msg
+            ApiError.MESSAGE: params.get('error') if params else msg
         }
         if params:
             self.error_attributes[ApiError.ERROR_PARAMS] = params

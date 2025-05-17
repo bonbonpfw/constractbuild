@@ -20,23 +20,26 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       mail: [250, 365]
       date: [80, 265]
       permit_owner: [340, 420]
-      permit_number_for_signed: [80, 290]
+      permit_owner_name_for_signed: [80, 290]
     2:
-      name: [300, 600]
-      id: [82000, 600]
-      phone: [300, 580]
-      address: [300, 560]
-      mail: [230, 580]
-      signed_name: [80, 300]
-      date_for_signed: [80, 290]
+      name: [-500, 400]
+      id: [660, 400]
+      phone: [500, 480]
+      address: [400, 460]
+      mail: [330, 480]
+      signed_name: [200, 300]
+      date_for_signed: [1180, 290]
 
   START_WORK_REQUEST:
     1:
-      name: [380, 424]
-      id: [100, 424]
-      phone: [435, 405]
-      address: [380, 385]
-      mail: [220, 405]
+      name: [372, 426]
+      id: [100, 426]
+      license_number: [365,410]
+      phone: [195, 410]
+      address: [220, 393]
+      mail: [385, 393]
+      prof_name_for_signed: [120, 145]
+      date_for_signed: [120, 120]
 
   EXECUTION_LICENSE:
     1:
@@ -55,11 +58,18 @@ DOCUMENT_FIELD_COORDINATE_MAP:
 
   PESTICIDAL_OWNER:
     1:
-      name: [380, 424]
-      id: [100, 424]
-      phone: [435, 405]
-      address: [380, 385]
-      mail: [220, 405]
+      name: [380, 630]
+      id: [100, 630]
+      phone: [235, 607]
+      address: [420, 607]
+      mail: [260, 582]
+      permit_owners: [260, 425]
+      date_for_signed: [425, 455]
+      prof_name_for_signed: [400, 393]
+      id_for_signed: [280, 393]
+      license_number: [120, 393]
+      
+      date_for_prof_signed: [210, 260]
 
 
 DOCUMENT_PROFESSIONAL_MAP:
@@ -67,16 +77,16 @@ DOCUMENT_PROFESSIONAL_MAP:
     - SUPERVISOR_ENGINEER
 
   ADAPTER_AGREEMENT:
-    - ENGINEER
+    - STRUCTURAL_ENGINEER
 
   START_WORK_REQUEST:
-    - ENGINEER
+    - CONSTRUCTION_INSPECTION_OFFICER
 
   EXECUTION_LICENSE:
-    - ENGINEER
+    - STRUCTURAL_ENGINEER
 
   EXECUTION_INSPECTION:
-    - ENGINEER
+    - GENERAL_CONTRACTOR
 
   PESTICIDAL_OWNER:
     - PESTICIDAL

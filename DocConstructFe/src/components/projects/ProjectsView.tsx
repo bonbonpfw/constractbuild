@@ -65,9 +65,8 @@ const Projects: React.FC = () => {
   // Function to check if any professional in the project has Warning or Expired status
   const hasWarningOrExpiredProfessionals = (project: Project) => {
     // If the backend directly provides warning/expired flags
-    const projectAny = project as any;
-    if (projectAny.is_warning !== undefined || projectAny.is_expired !== undefined) {
-      return Boolean(projectAny.is_warning) || Boolean(projectAny.is_expired);
+    if ('is_warning' in project || 'is_expired' in project) {
+      return project.is_warning || project.is_expired;
     }
     
     // Otherwise check professional statuses

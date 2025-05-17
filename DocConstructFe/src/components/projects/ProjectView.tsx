@@ -472,7 +472,25 @@ const ProjectView: React.FC = () => {
     if (!formData) return;
     setSaving(true);
     try {
-      await updateProject(formData);
+      // Extract permit owner fields from formData
+      const projectData = {...formData};
+      
+      // Create permit owner data structure - keep the format consistent with the backend
+      const permitOwnerData = {
+        name: formData.permit_owner_name || formData.permit_owner || '',
+        address: formData.permit_owner_address || '',
+        phone: formData.permit_owner_phone || '',
+        email: formData.permit_owner_email || ''
+      };
+      
+      // Add permit owner data to the project data
+      projectData.permit_owner_data = permitOwnerData;
+      
+      // Make sure permit_owner field is set to maintain backward compatibility
+      projectData.permit_owner = permitOwnerData.name;
+      
+      // Send updated data to the backend
+      await updateProject(projectData);
 
       // Fetch the updated project data
       try {
@@ -830,17 +848,6 @@ const ProjectView: React.FC = () => {
                         </Select>
                       </CompactField>
                       <CompactField>
-                        <CompactLabel>בעל ההיתר</CompactLabel>
-                        <Input
-                          name="permit_owner"
-                          type="text"
-                          value={formData.permit_owner || ''}
-                          onChange={handleChange}
-                          disabled={!isEditing}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
                         <CompactLabel>תאריך סיום</CompactLabel>
                         <Input
                           name="status_due_date"
@@ -860,6 +867,57 @@ const ProjectView: React.FC = () => {
                           disabled={!isEditing}
                           style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
                         />
+                      </FullWidthField>
+                      
+                      {/* Permit Owner Details in a single line */}
+                      <FullWidthField>
+                        <CompactLabel>בעל ההיתר</CompactLabel>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <Input
+                              name="permit_owner_name"
+                              placeholder="שם"
+                              value={formData.permit_owner_name || formData.permit_owner || ''}
+                              onChange={handleChange}
+                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
+                            />
+                            <Input
+                              name="permit_owner_address"
+                              placeholder="כתובת"
+                              value={formData.permit_owner_address || ''}
+                              onChange={handleChange}
+                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
+                            />
+                            <Input
+                              name="permit_owner_phone"
+                              placeholder="טלפון"
+                              value={formData.permit_owner_phone || ''}
+                              onChange={handleChange}
+                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
+                            />
+                            <Input
+                              name="permit_owner_email"
+                              placeholder="דוא״ל"
+                              value={formData.permit_owner_email || ''}
+                              onChange={handleChange}
+                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ 
+                            display: 'flex', 
+                            padding: '8px 12px',
+                            backgroundColor: '#f9f9fb',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            gap: '12px'
+                          }}>
+                            <div><strong>שם:</strong> {formData.permit_owner_name || formData.permit_owner || 'לא צוין'}</div>
+                            {formData.permit_owner_address && <div><strong>כתובת:</strong> {formData.permit_owner_address}</div>}
+                            {formData.permit_owner_phone && <div><strong>טלפון:</strong> {formData.permit_owner_phone}</div>}
+                            {formData.permit_owner_email && <div><strong>דוא״ל:</strong> {formData.permit_owner_email}</div>}
+                          </div>
+                        )}
                       </FullWidthField>
                     </CompactFormGrid>
                   </TabContent>

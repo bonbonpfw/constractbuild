@@ -34,10 +34,18 @@ export const createProject = async (data: ProjectCreationFormData): Promise<Proj
 };
 
 export const updateProject = async (data: Project): Promise<Project> => {
-  const { documents, professionals, ...rest } = data; // exclude 'documents'
+  const { documents, professionals, permit_owner_data, ...rest } = data; // exclude 'documents' and extract permit_owner_data
+  
+  // Prepare the data for the backend
+  const requestData = {
+    ...rest,
+    // If permit_owner_data exists, use its name as permit_owner
+    permit_owner: permit_owner_data ? permit_owner_data.name : rest.permit_owner || rest.permit_owner_name
+  };
+  
   const response = await axios.put(
     `${API_URL}/project`,
-    rest
+    requestData
   );
   return response.data;
 };
