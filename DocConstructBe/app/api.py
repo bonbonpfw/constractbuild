@@ -265,13 +265,17 @@ class ProfessionalManager:
 
     @staticmethod
     def get_all() -> list[Professional]:
-        return db_session.query(Professional).all()
+        professionals = db_session.query(Professional).all()
+        for professional in professionals:
+            professional.status = ProfessionalManager.get_professional_status(professional.license_expiration_date).value
+        return professionals
 
     @staticmethod
     def get_by_id(professional_id: str) -> Professional:
         professional = db_session.query(Professional).filter(Professional.id == professional_id).first()
         if not professional:
             raise ProfessionalDoesNotExist()
+        professional.status = ProfessionalManager.get_professional_status(professional.license_expiration_date).value
         return professional
 
     @staticmethod
