@@ -110,11 +110,11 @@ class Professional(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self._validate_email(self.email):
-            raise ValidationError(params={"validation_errors": {"email": "Invalid email format"}})
+            raise ValidationError(params={"validation_errors": {"email": "Email should be with @ and domain"}})
         if not self._validate_phone(self.phone):
-            raise ValidationError(params={"validation_errors": {"phone": "Invalid phone format"}})
+            raise ValidationError(params={"validation_errors": {"phone": "Phone number must be 9 to 15 digits, optionally starting with a '+1'"}})
         if not self._validate_national_id(self.national_id):
-            raise ValidationError(params={"validation_errors": {"national_id": "Invalid national ID format"}})
+            raise ValidationError(params={"validation_errors": {"national_id": "National ID must be 5 to 10 digits"}})
 
     @staticmethod
     def _validate_national_id(national_id):
