@@ -35,38 +35,6 @@ const FileAreaContent = styled.div`
   flex-direction: column;
 `;
 
-// Tabs for switching between categorized and general files
-const TabsContainer = styled.div`
-  display: flex;
-  border-bottom: 1px solid #eaeaea;
-  margin-bottom: 16px;
-`;
-
-const Tab = styled.button<{ active: boolean }>`
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid ${p => p.active ? '#0071e3' : 'transparent'};
-  color: ${p => p.active ? '#0071e3' : '#666'};
-  font-weight: ${p => p.active ? '600' : '400'};
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    color: #0071e3;
-  }
-`;
-
-// Section header with action buttons
-const SectionHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 0 16px;
-`;
-
 // Container for the file list - modified to remove scrolling
 const FileListContainer = styled.div`
   display: flex;
@@ -82,23 +50,23 @@ const BatchActions = styled.div`
 `;
 
 // Individual file item with Apple design influence
-const FileItemContainer = styled.div<{ disabled: boolean; state: 'uploaded' | 'missing' }>`
+const FileItemContainer = styled.div<{ disabled: boolean; state: DocumentState }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
   background-color: ${p =>
-    p.state === 'missing' ? '#fff8f8'
+    p.state === DocumentState.MISSING ? '#fff8f8'
     : p.disabled     ? '#f9f9f9'
                      : '#ffffff'};
-  border: 1px solid ${p => p.state === 'missing' ? '#ffdddd' : '#f0f0f0'};
+  border: 1px solid ${p => p.state === DocumentState.MISSING ? '#ffdddd' : '#f0f0f0'};
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   transition: all 0.2s ease;
 
   &:hover {
     background-color: ${p =>
-      p.state === 'missing' ? '#fff5f5'
+      p.state === DocumentState.MISSING ? '#fff5f5'
       : p.disabled     ? '#f9f9f9'
                        : '#f9f9f9'};
     transform: ${p => p.disabled ? 'none' : 'translateY(-1px)'};
@@ -502,25 +470,11 @@ const FileArea: React.FC<{
   onPreview,
   onUploadGeneral
 }) => {
-  const [activeTab, setActiveTab] = useState<'categorized' | 'general'>('categorized');
-  const [categorizedFiles, setCategorizedFiles] = useState<FileAreaDocument[]>(
-    files.filter(file =>  file.fileType !== 'כללי')
-  );
-  const [generalFiles, setGeneralFiles] = useState<FileAreaDocument[]>(
-    files.filter(file =>  file.fileType === 'כללי')
-  );
-  
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showUploadModeDialog, setShowUploadModeDialog] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ fileType: string; file: File } | null>(null);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-
-  // Update files when props change
-  React.useEffect(() => {
-    setCategorizedFiles(files.filter(file =>  file.fileType !== 'כללי'));
-    setGeneralFiles(files.filter(file =>  file.fileType === 'כללי'));
-  }, [files]);
 
   const handleRequestUpload = (fileType: string, file: File) => {
     setPendingUpload({ fileType, file });
@@ -622,122 +576,32 @@ const FileArea: React.FC<{
 
   return (
     <FileAreaContainer>
-      <TabsContainer>
-        <Tab 
-          active={activeTab === 'categorized'} 
-          onClick={() => setActiveTab('categorized')}
-        >
-         מסמכי תחילת עבודה
-        </Tab>
-        <Tab 
-          active={activeTab === 'general'} 
-          onClick={() => setActiveTab('general')}
-        >
-          מסמכים כלליים
-        </Tab>
-      </TabsContainer>
-      
       <FileAreaContent>
-        {activeTab === 'categorized' && (
-          <>
-            <SectionHeader>
-              {selectedFiles.length > 0 && (
-                <BatchActions>
-                  <ActionButton 
-                    disabled={false}
-                    onClick={handleBatchDownload}
-                    title="Download selected"
-                  >
-                    <FaDownload />
-                  </ActionButton>
-                  <ActionButton 
-                    disabled={false}
-                    onClick={handleBatchEmail}
-                    title="Email selected"
-                  >
-                    <FaEnvelope />
-                  </ActionButton>
-                </BatchActions>
-              )}
-            </SectionHeader>
-            
-            <FileListContainer>
-              {categorizedFiles.length === 0 ? (
-                <div style={{ padding: '20px 0', textAlign: 'center', color: '#888', fontSize: '14px' }}>
-                  אין מסמכים זמינים בקטגוריה זו
-                </div>
-              ) : (
-                categorizedFiles.map((file, index) => (
-                  <FileItem
-                    key={`${file.fileType}-${index}`}
-                    fileId={file.fileId || ''}
-                    fileName={file.fileName || ''}
-                    fileType={file.fileType}
-                    state={file.state}
-                    disabled={disabled}
-                    onUpload={onUpload}
-                    onDownload={onDownload}
-                    onDelete={onDelete}
-                    onPreview={onPreview}
-                    onRequestUpload={handleRequestUpload}
-                    onSelect={handleSelectFile}
-                    selected={selectedFiles.includes(file.fileId || '')}
-                  />
-                ))
-              )}
-            </FileListContainer>
-          </>
-        )}
-        
-        {activeTab === 'general' && (
-          <>
-            {/* List of General Files */}
-            <FileListContainer>
-              {generalFiles.length === 0 ? (
-                <div style={{ padding: '20px 0', textAlign: 'center', color: '#888', fontSize: '14px' }}>
-                  אין מסמכים כלליים זמינים
-                </div>
-              ) : (
-                generalFiles.map((file, index) => (
-                  <FileItem
-                    key={`${file.fileType}-${index}`}
-                    fileId={file.fileId || ''}
-                    fileName={file.fileName || ''}
-                    fileType={file.fileType}
-                    state={file.state}
-                    disabled={disabled}
-                    onUpload={onUpload}
-                    onDownload={onDownload}
-                    onDelete={onDelete}
-                    onPreview={onPreview}
-                    onRequestUpload={handleRequestUpload}
-                    onSelect={handleSelectFile}
-                    selected={selectedFiles.includes(file.fileId || '')}
-                  />
-                ))
-              )}
-            </FileListContainer>
-            
-            {/* Upload Area for General Files */}
-            {onUploadGeneral && (
-              <UploadArea 
-                isDragging={isDragging} 
+        <FileListContainer>
+          {files.length === 0 ? (
+            <div style={{ padding: '20px 0', textAlign: 'center', color: '#888', fontSize: '14px' }}>
+              אין מסמכים זמינים
+            </div>
+          ) : (
+            files.map((file, index) => (
+              <FileItem
+                key={`${file.fileType}-${index}`}
+                fileId={file.fileId || ''}
+                fileName={file.fileName || ''}
+                fileType={file.fileType}
+                state={file.state}
                 disabled={disabled}
-                onClick={handleGeneralUploadClick}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <UploadContent>
-                  <UploadIcon>
-                    <FaPlus />
-                  </UploadIcon>
-                  <UploadText>גרור קובץ לכאן או לחץ כדי להעלות</UploadText>
-                </UploadContent>
-              </UploadArea>
-            )}
-          </>
-        )}
+                onUpload={onUpload}
+                onDownload={onDownload}
+                onDelete={onDelete}
+                onPreview={onPreview}
+                onRequestUpload={handleRequestUpload}
+                onSelect={handleSelectFile}
+                selected={selectedFiles.includes(file.fileId || '')}
+              />
+            ))
+          )}
+        </FileListContainer>
       </FileAreaContent>
       
       {/* Email Dialog for batch operations */}

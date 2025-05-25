@@ -223,12 +223,12 @@ const ProfessionalCard = styled.div`
   justify-content: space-between;
   background: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   padding: 10px 12px;
   transition: all 0.2s ease;
   flex: 1;
   min-width: 230px;
-  max-width: 280px;
+  //max-width: 280px;
   
   &:hover {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
@@ -237,6 +237,7 @@ const ProfessionalCard = styled.div`
 
 const ProfessionalInfo = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
 `;
@@ -287,6 +288,9 @@ const ProjectView: React.FC = () => {
 
   // Add tab state
   const [activeTab, setActiveTab] = useState<'details' | 'professionals'>('details');
+
+  // In the DocumentsPanel, add tab state and tab buttons for document sections
+  const [activeDocTab, setActiveDocTab] = useState<'categorized' | 'general'>('categorized');
 
   const loadData = async () => {
     try {
@@ -868,57 +872,49 @@ const ProjectView: React.FC = () => {
                           style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
                         />
                       </FullWidthField>
-                      
-                      {/* Permit Owner Details in a single line */}
                       <FullWidthField>
                         <CompactLabel>בעל ההיתר</CompactLabel>
-                        {isEditing ? (
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <Input
-                              name="permit_owner_name"
-                              placeholder="שם"
-                              value={formData.permit_owner_name || formData.permit_owner || ''}
-                              onChange={handleChange}
-                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
-                            />
-                            <Input
-                              name="permit_owner_address"
-                              placeholder="כתובת"
-                              value={formData.permit_owner_address || ''}
-                              onChange={handleChange}
-                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
-                            />
-                            <Input
-                              name="permit_owner_phone"
-                              placeholder="טלפון"
-                              value={formData.permit_owner_phone || ''}
-                              onChange={handleChange}
-                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
-                            />
-                            <Input
-                              name="permit_owner_email"
-                              placeholder="דוא״ל"
-                              value={formData.permit_owner_email || ''}
-                              onChange={handleChange}
-                              style={{ borderRadius: '8px', padding: '8px 10px', height: '36px', flex: 1 }}
-                            />
-                          </div>
-                        ) : (
-                          <div style={{ 
-                            display: 'flex', 
-                            padding: '8px 12px',
-                            backgroundColor: '#f9f9fb',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            gap: '12px'
-                          }}>
-                            <div><strong>שם:</strong> {formData.permit_owner_name || formData.permit_owner || 'לא צוין'}</div>
-                            {formData.permit_owner_address && <div><strong>כתובת:</strong> {formData.permit_owner_address}</div>}
-                            {formData.permit_owner_phone && <div><strong>טלפון:</strong> {formData.permit_owner_phone}</div>}
-                            {formData.permit_owner_email && <div><strong>דוא״ל:</strong> {formData.permit_owner_email}</div>}
-                          </div>
-                        )}
                       </FullWidthField>
+                      <CompactField>
+                        <CompactLabel>שם</CompactLabel>
+                        <Input
+                          name="permit_owner_name"
+                          placeholder="שם"
+                          value={formData.permit_owner_name || formData.permit_owner || ''}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>כתובת</CompactLabel>
+                        <Input
+                          name="permit_owner_address"
+                          placeholder="כתובת"
+                          value={formData.permit_owner_address || ''}
+                          disabled={!isEditing}
+                          onChange={handleChange}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>טלפון</CompactLabel>
+                        <Input
+                          name="permit_owner_phone"
+                          placeholder="טלפון"
+                          value={formData.permit_owner_phone || ''}
+                          disabled={!isEditing}
+                          onChange={handleChange}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>דוא״ל</CompactLabel>
+                        <Input
+                          name="permit_owner_email"
+                          placeholder="דוא״ל"
+                          value={formData.permit_owner_email || ''}
+                          disabled={!isEditing}
+                          onChange={handleChange}
+                        />
+                      </CompactField>
                     </CompactFormGrid>
                   </TabContent>
                 )}
@@ -950,8 +946,8 @@ const ProjectView: React.FC = () => {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {professionals.map(professional => (
-                          <ProfessionalCard key={professional.id}>
-                            <ProfessionalInfo>
+                          <ProfessionalCard className='professional-card' key={professional.id}>
+                            <ProfessionalInfo className='professional-info'>
                               <Link href={`/professionals/${professional.id}`} passHref>
                                 <ProfessionalName>
                                   {professional.name}
@@ -980,8 +976,42 @@ const ProjectView: React.FC = () => {
             {/* Documents Panel */}
             <DocumentsPanel>
               <Card style={{ height: 'auto' }}>
+                <div style={{ display: 'flex', borderBottom: '1px solid #e0e0e0', marginBottom: 16 }}>
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '8px 16px',
+                      fontSize: 14,
+                      fontWeight: activeDocTab === 'categorized' ? 700 : 600,
+                      color: activeDocTab === 'categorized' ? '#0071e3' : '#666',
+                      borderBottom: `2px solid ${activeDocTab === 'categorized' ? '#0071e3' : 'transparent'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onClick={() => setActiveDocTab('categorized')}
+                  >
+                    מסמכי תחילת עבודה
+                  </button>
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '8px 16px',
+                      fontSize: 14,
+                      fontWeight: activeDocTab === 'general' ? 700 : 600,
+                      color: activeDocTab === 'general' ? '#0071e3' : '#666',
+                      borderBottom: `2px solid ${activeDocTab === 'general' ? '#0071e3' : 'transparent'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onClick={() => setActiveDocTab('general')}
+                  >
+                    מסמכים כלליים
+                  </button>
+                </div>
                 <FileArea
-                  files={filesData}
+                  files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : filesData.filter(f => f.fileType === 'כללי')}
                   disabled={!isEditing}
                   onUpload={handleFileUpload}
                   onDownload={handleFileDownload}
