@@ -89,6 +89,8 @@ export interface Project {
   permit_owner_data?: PermitOwnerData;
   status_due_date?: string;
   status?: string;
+  is_warning?: boolean;
+  is_expired?: boolean;
   professionals: Professional[];
   documents?: ProjectDocument[];
 }

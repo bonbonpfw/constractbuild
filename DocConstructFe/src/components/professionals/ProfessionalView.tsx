@@ -11,6 +11,7 @@ import {
   getProfessionalDocumentTypes,
 } from '../../api';
 import {
+  DocumentState,
   Professional,
   ProfessionalDocument
 } from '../../types';
@@ -84,7 +85,7 @@ const ProfessionalView: React.FC = () => {
     filesData.push({
       fileId: doc.id,
       fileName: doc.name,
-      state: 'uploaded',
+      state: DocumentState.UPLOADED,
       fileType: type
     });
   });
@@ -98,7 +99,7 @@ const ProfessionalView: React.FC = () => {
       filesData.push({
         fileId: '',
         fileName: null,
-        state: 'missing',
+        state: DocumentState.MISSING,
         fileType: type
       });
     }
@@ -195,7 +196,7 @@ const ProfessionalView: React.FC = () => {
       setDocuments(prof.documents || []);
     } catch (error) {
       const errorData = error as ErrorResponseData;
-      if (errorData.response.data.error_code === 'professional_does_not_exist') {
+      if (errorData?.response?.data?.error_code === 'professional_does_not_exist') {
         router.push('/professionals');
       } else {
          errorHandler(error as ErrorResponseData, 'Failed to load professional');

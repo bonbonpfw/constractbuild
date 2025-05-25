@@ -20,6 +20,14 @@ import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import {createProject} from "../../api";
 
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {
+  name: '',
+  construction_supervision_number: '',
+  permit_number: '',
+  request_number: '',
+  engineering_coordinator_number: '',
+  firefighting_number: '',
+  description: '',
+  permit_owner: '',
   status: ProjectStatus.PRE_PERMIT,
   professionals: []
 };
