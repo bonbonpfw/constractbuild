@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { Professional } from '../../types';
 import { createProfessional, importProfessionalData } from '../../api';
@@ -41,11 +41,23 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
   professionalTypes,
   onClose,
 }) => {
-  const [formData, setFormData] = useState<ProfessionalCreationFormData>(defaultProfessionalCreationFormData);
+  const [formData, setFormData] = useState<ProfessionalCreationFormData>({
+    ...defaultProfessionalCreationFormData,
+    professional_type: professionalTypes[0] || '',
+  });
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Update professional_type default when professionalTypes changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      professional_type: professionalTypes[0] || '',
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionalTypes]);
 
   const handleImport = () => {
     if (fileInputRef.current) {
