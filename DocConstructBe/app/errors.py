@@ -89,7 +89,7 @@ def handle_error(error: Exception):
             if validation_errors:
                 logging.error("Validation errors details:")
                 for field, msg in validation_errors.items():
-                    logging.error(f"  {field}: {msg}")
+                    logging.error(f"{field}: {msg}")
         error_response = ErrorResponse(api_error=error).generate_response()
     elif isinstance(error, ApiError):
         error_response = ErrorResponse(api_error=error).generate_response()

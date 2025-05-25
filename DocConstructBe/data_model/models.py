@@ -2,6 +2,8 @@ from datetime import date, datetime, UTC
 import re
 from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship
+
+from app.errors import ValidationError
 from database.base_model import Base
 from database.database import engine
 from database.database import UUID_F
@@ -65,7 +67,7 @@ class Project(Base):
                  description: str = None, **kwargs):
 
         if not name.strip():
-            raise ValueError("Project name cannot be empty")
+            raise ValidationError(params={"validation_errors": {"name": "Project name cannot be empty"}})
 
         super().__init__(
            name=name.strip(),
@@ -108,11 +110,11 @@ class Professional(Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self._validate_email(self.email):
-            raise ValueError("Invalid email format")
+            raise ValidationError(params={"validation_errors": {"email": "Invalid email format"}})
         if not self._validate_phone(self.phone):
-            raise ValueError("Invalid phone number format")
+            raise ValidationError(params={"validation_errors": {"phone": "Invalid phone format"}})
         if not self._validate_national_id(self.national_id):
-            raise ValueError("Invalid national ID format")
+            raise ValidationError(params={"validation_errors": {"national_id": "Invalid national ID format"}})
 
     @staticmethod
     def _validate_national_id(national_id):

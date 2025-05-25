@@ -101,12 +101,12 @@ class ProfessionalCreateSchema(Schema):
     name = fields.Str(required=True)
     national_id = fields.Str(required=True)
     email = fields.Email(required=True)
-    phone = fields.Str(required=True, validate=validate.Length(min=9, max=15))
+    phone = fields.Str(required=True)
     address = fields.Str(required=True)
     license_number = fields.Str(required=True)
     license_expiration_date = fields.Date(required=True)
     professional_type = fields.Enum(ProfessionalType, by_value=True, required=True)
-    license_file_path = fields.Str(required=True)
+    license_file_path = fields.Str(required=False)
 
 
 class ProfessionalUpdateSchema(Schema):
@@ -114,14 +114,13 @@ class ProfessionalUpdateSchema(Schema):
     name = fields.Str(required=False)
     national_id = fields.Str(required=False)
     email = fields.Email(required=False)
-    phone = fields.Str(required=False, validate=validate.Length(min=9, max=15))
+    phone = fields.Str(required=False)
     address = fields.Str(required=False)
     license_number = fields.Str(required=False)
     license_expiration_date = fields.Date(required=False)
     professional_type = fields.Enum(ProfessionalType, by_value=True, required=False)
     license_file_path = fields.Str(required=False)
     status = fields.Str(required=False)
-   # status = fields.Enum(ProfessionalStatus, by_value=True)
 
 
 class ProfessionalDeleteSchema(Schema):
