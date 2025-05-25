@@ -280,9 +280,7 @@ class ProfessionalManager:
         existing_professional = db_session.query(Professional).filter(
             (Professional.name == name) |
             (Professional.national_id == national_id) |
-            (Professional.email == email) |
-            (Professional.phone == phone) |
-            (Professional.license_number == license_number)
+            (Professional.email == email)
         ).first()
         if existing_professional:
             raise ProfessionalAlreadyExists()
