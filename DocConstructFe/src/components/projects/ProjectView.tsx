@@ -52,12 +52,14 @@ const StatusBadge = styled.span<{ status: string }>`
   font-weight: 500;
   background: ${({ status }) =>
     status === 'Active' ? '#e3f6ec' :
-    status === 'Inactive' ? '#ffecef' :
-    '#fff7e0'};
+    status === 'Expired' ? '#ffecef' :
+    status === 'Warning' ? '#fff7e0' :
+    '#ffecef'};
   color: ${({ status }) =>
     status === 'Active' ? '#1d8450' :
-    status === 'Inactive' ? '#e1273d' :
-    '#b0851f'};
+    status === 'Expired' ? '#e1273d' :
+    status === 'Warning' ? '#b0851f' :
+    '#e1273d'};
 `;
 
 // Main content layout

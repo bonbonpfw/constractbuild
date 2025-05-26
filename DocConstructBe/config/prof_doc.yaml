@@ -19,27 +19,28 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       address: [330, 350]
       mail: [250, 365]
       date: [80, 265]
-      permit_owner: [340, 420]
+      permit_owner: [350, 407]
       permit_owner_name_for_signed: [80, 290]
     2:
-      name: [300, 400]  
-      id: [80, 400]    
-      phone: [450, 365] 
-      address: [330, 350] 
-      mail: [250, 365] 
-      signed_name: [200, 300]
-      date_for_signed: [80, 290] 
+      name: [320, 727]  
+      id: [150, 727]    
+      phone: [425, 708] 
+      address: [333, 694] 
+      mail: [200, 707] 
+      name_for_signed: [80, 440]
+      date_for_signed: [80, 405] 
+      
 
   START_WORK_REQUEST:
     1:
-      name: [372, 426]
-      id: [100, 426]
-      license_number: [365,410]
-      phone: [195, 410]
-      address: [220, 393]
-      mail: [385, 393]
+      name: [370, 427]
+      id: [100, 427]
+      license_number: [400,410]
+      phone: [190, 410]
+      address: [230, 393]
+      mail: [390, 393]
       prof_name_for_signed: [120, 145]
-      date_for_signed: [120, 120]
+      date_for_signed: [100, 120]
 
   EXECUTION_LICENSE:
     1:
@@ -58,18 +59,18 @@ DOCUMENT_FIELD_COORDINATE_MAP:
 
   PESTICIDAL_OWNER:
     1:
-      name: [380, 630]
-      id: [100, 630]
+      name: [380, 632]
+      id: [100, 632]
       phone: [235, 607]
       address: [420, 607]
-      mail: [260, 582]
-      permit_owners: [260, 425]
-      date_for_signed: [425, 455]
-      prof_name_for_signed: [400, 393]
-      id_for_signed: [280, 393]
-      license_number: [120, 393]
+      mail: [270, 580]
+      permit_owner: [260, 456]
+      date_for_signed: [435, 456]
+      prof_name_for_signed: [415, 392]
+      id_for_signed: [277, 392]
+      license_number: [120, 392]
       
-      date_for_prof_signed: [210, 260]
+      date_for_prof_signed: [200, 256]
 
 
 DOCUMENT_PROFESSIONAL_MAP:
