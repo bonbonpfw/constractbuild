@@ -282,7 +282,6 @@ class ProfessionalManager:
     def create(name: str, national_id: str, email: str, phone: str, address: str, license_number: str,
                license_expiration_date: date, professional_type: str, license_file_path: str = None) -> Professional:
         existing_professional = db_session.query(Professional).filter(
-            (Professional.name == name) |
             (Professional.national_id == national_id) |
             (Professional.email == email)
         ).first()

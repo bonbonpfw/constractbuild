@@ -26,7 +26,7 @@ export const defaultProfessionalCreationFormData: ProfessionalCreationFormData =
   address: '',
   phone: '',
   email: '',
-  professional_type: 'Other',
+    professional_type: '',
   national_id: '',
   license_number: '',
   license_expiration_date: '',
@@ -54,7 +54,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      professional_type: professionalTypes[0] || '',
+      
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalTypes]);
