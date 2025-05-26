@@ -3,10 +3,8 @@ import uuid
 from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-from dotenv import load_dotenv
 from sqlalchemy import String
 
-load_dotenv()
 
 def get_db_conn_string():
     if os.environ.get('DATABASE_URL'):
@@ -46,6 +44,7 @@ engine = create_engine(
     max_overflow=0
 )
 
+
 db_session = scoped_session(
     sessionmaker(
         autocommit=False,
@@ -53,7 +52,6 @@ db_session = scoped_session(
         bind=engine
     )
 )
-
 
 
 class UUID_F(String):

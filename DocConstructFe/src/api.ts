@@ -1,540 +1,293 @@
-import axios, {AxiosResponse} from 'axios';
-import Cookies from "js-cookie";
-
-// Add this at the top of the file
-export class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
+import axios from 'axios';
+import {Professional, Project, ProjectCreationFormData, DocumentState} from "./types";
+import {ProfessionalCreationFormData} from "./components/professionals/ProfessionalCreationDialog";
 
 // Use the direct API URL from environment variables if available
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001/api';
 
-// Configure Axios defaults
-axios.defaults.headers.common['Content-Type'] = 'application/json';
-
-
-// Add this function to get headers without auth token
-const getHeaders = (): { [key: string]: string } => {
-  return {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
-};
-
 // Projects API
-export const createProject = async (data: {
-  project_name: string;
-  project_description?: string;
-  project_address: string;
-  project_case_id: string;
-  project_date: string;
-  project_status_id: string;
-  project_docs_path?: string;
-}) => {
-  try {
-    const response = await axios.post(`${API_URL}/create_project`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating project:', error);
-    throw error;
-  }
+export const getProjects = async (): Promise<Project[]> => {
+  const response = await axios.get(
+    `${API_URL}/projects`,
+  );
+  return response.data.projects
 };
 
-export const updateProject = async (data: {
-  project_id: string;
-  project_name?: string;
-  project_description?: string;
-  project_address?: string;
-  project_case_id?: string;
-  project_date?: string;
-  project_status_id?: string;
-  project_docs_path?: string;
-}) => {
-  try {
-    const response = await axios.post(`${API_URL}/update_project`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error updating project:', error);
-    throw error;
-  }
+export const getProjectById = async (projectId: string): Promise<Project> => {
+  const response = await axios.get(
+    `${API_URL}/project`,
+    {
+      params: {
+        project_id: projectId
+      }
+    }
+  );
+  return response.data.project;
 };
 
-export const deleteProject = async (data: { project_id: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/delete_project`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    throw error;
-  }
+export const createProject = async (data: ProjectCreationFormData): Promise<Project> => {
+  const response = await axios.post(
+    `${API_URL}/project`,
+    data
+  );
+  return response.data;
 };
 
-export const getProjects = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/projects`, {
-      headers: getHeaders(),
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    throw error;
-  }
+export const updateProject = async (data: Project): Promise<Project> => {
+  const { documents, professionals, permit_owner_data, ...rest } = data; // exclude 'documents' and extract permit_owner_data
+  
+  // Prepare the data for the backend
+  const requestData = {
+    ...rest,
+    // If permit_owner_data exists, use its name as permit_owner
+    permit_owner: permit_owner_data ? permit_owner_data.name : rest.permit_owner || rest.permit_owner_name
+  };
+  
+  const response = await axios.put(
+    `${API_URL}/project`,
+    requestData
+  );
+  return response.data;
 };
 
-export const getProjectById = async (projectId: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/projects/${projectId}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    throw error;
-  }
+export const deleteProject = async (id: string) => {
+  const response = await axios.delete(
+    `${API_URL}/project`,
+    {params: {project_id: id}}
+  );
+  return response.data;
 };
+
+export const getProjectStatuses = async (): Promise<string[]> => {
+  const response = await axios.get(
+    `${API_URL}/project/statuses`
+  );
+  return response.data.statuses;
+}
 
 // Professionals API
-export const createProfessional = async (data: {
-  proffsional_name: string;
-  proffsional_email: string;
-  proffsional_phone: string;
-  proffsional_address: string;
-  proffsional_license_number: string;
-  proffsional_license_expiration_date: string;
-  proffsional_type: string;
-  proffsional_status: string;
-  proffsional_state_id: string;
-}) => {
-  try {
-    const response = await axios.post(`${API_URL}/create_proffsional`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating professional:', error);
-    throw error;
-  }
+export const getProfessionals = async (): Promise<Professional[]> => {
+  const response = await axios.get(
+    `${API_URL}/professionals`
+  );
+  return response.data.professionals;
 };
 
-export const createProfessionalFromFile = async (file: File) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await axios.post(`${API_URL}/create_proffsional_from_file`, formData, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
+export const getProfessionalById = async (professional_id: string): Promise<Professional> => {
+  const response = await axios.get(
+    `${API_URL}/professional`,
+    {
+      params: {
+        professional_id
       }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating professional from file:', error);
-    throw error;
-  }
+    }
+  );
+  return response.data.professional;
 };
 
-export const updateProfessional = async (data: {
-  professional_id: string;
-  proffsional_name?: string;
-  proffsional_email?: string;
-  proffsional_phone?: string;
-  proffsional_address?: string;
-  proffsional_license_number?: string;
-  proffsional_license_expiration_date?: string;
-  proffsional_type?: string;
-  proffsional_status?: string;
-  proffsional_state_id?: string;
-}) => {
-  try {
-    const response = await axios.post(`${API_URL}/update_proffsional`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error updating professional:', error);
-    throw error;
-  }
+export const createProfessional = async (data: ProfessionalCreationFormData): Promise<Professional> => {
+  const response = await axios.post(
+    `${API_URL}/professional`,
+    data
+  );
+  return response.data;
 };
 
-export const deleteProfessional = async (data: { professional_id: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/delete_proffsional`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting professional:', error);
-    throw error;
-  }
+export const updateProfessional = async (data: Professional): Promise<Professional> => {
+  const { documents, ...rest } = data; // exclude 'documents'
+  const response = await axios.put(
+    `${API_URL}/professional`,
+    rest,
+  );
+  return response.data;
 };
 
-export const getProfessionals = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/proffsionals`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching professionals:', error);
-    throw error;
-  }
-};
-
-export const getProfessionalById = async (professional_id: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/proffsionals/${professional_id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching professional:', error);
-    throw error;
-  }
-};
-
-// Documents API
-export const uploadDocument = async (data: {
-  project_id: string;
-  professional_id: string;
-  document_type: string;
-  file: File;
-}) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', data.file);
-    formData.append('project_id', data.project_id);
-    formData.append('professional_id', data.professional_id);
-    formData.append('document_type', data.document_type);
-    
-    const response = await axios.post(`${API_URL}/documents/upload`, formData, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
+export const deleteProfessional = async (professionalId: string ): Promise<null> => {
+  const response = await axios.delete(
+    `${API_URL}/professional`,
+    {
+      params: {
+        professional_id: professionalId
       }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error uploading document:', error);
-    throw error;
-  }
+    }
+  );
+  return response.data;
 };
 
-export const downloadDocument = async (document_id: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/documents/download/${document_id}`, {
-      headers: getHeaders(),
-      responseType: 'blob'
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error downloading document:', error);
-    throw error;
-  }
-};
+export async function getProfessionalTypes(): Promise<string[]> {
+  const response = await axios.get(
+    `${API_URL}/professional/types`
+  );
+  return response.data.types;
+}
 
-export const deleteDocument = async (data: {
-  project_id: string;
-  document_id: string;
-}) => {
-  try {
-    const response = await axios.delete(`${API_URL}/documents/delete`, {
-      headers: getHeaders(),
-      data
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    throw error;
-  }
-};
-
-export const getDocuments = async (project_id?: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/documents`, {
-      headers: getHeaders(),
-      params: project_id ? { project_id } : undefined
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching documents:', error);
-    throw error;
-  }
-};
-
-export const getDocumentType = async (document_id: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/document/get_document_type/${document_id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching document type:', error);
-    throw error;
-  }
-};
+export async function getProfessionalStatuses(): Promise<string[]> {
+  const response = await axios.get(
+    `${API_URL}/professional/statuses`
+  );
+  return response.data.statuses
+}
 
 // Project-Professional Relationship API
 export const addProfessionalToProject = async (data: {
   project_id: string;
   professional_id: string;
 }) => {
-  try {
-    const response = await axios.post(`${API_URL}/project/add_proffsional_to_project`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error adding professional to project:', error);
-    throw error;
-  }
+  const response = await axios.post(
+    `${API_URL}/project/professionals`,
+    data
+  );
+  return response.data;
 };
 
 export const removeProfessionalFromProject = async (data: {
   project_id: string;
   professional_id: string;
 }) => {
-  try {
-    const response = await axios.post(`${API_URL}/project/remove_proffsional_from_project`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error removing professional from project:', error);
-    throw error;
-  }
-};
 
-// Municipalities API
-export const getMunicipalities = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/municipalities`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching municipalities:', error);
-    throw error;
-  }
-};
-
-export const getMunicipalityById = async (id: number) => {
-  try {
-    const response = await axios.get(`${API_URL}/municipalities/${id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching municipality with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const createMunicipality = async (data: any) => {
-  try {
-    const response = await axios.post(`${API_URL}/municipalities`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error creating municipality:', error);
-    throw error;
-  }
-};
-
-export const updateMunicipality = async (id: number, data: any) => {
-  try {
-    const response = await axios.put(`${API_URL}/municipalities/${id}`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating municipality with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteMunicipality = async (id: number) => {
-  try {
-    const response = await axios.delete(`${API_URL}/municipalities/${id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error deleting municipality with id ${id}:`, error);
-    throw error;
-  }
-};
-
-// Documents API
-export const getDocumentTemplates = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/documents/templates`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching document templates:', error);
-    throw error;
-  }
-};
-
-export const getDocumentTemplateById = async (id: number) => {
-  try {
-    const response = await axios.get(`${API_URL}/document-templates/${id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching document template with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const createDocumentTemplate = async (data: FormData) => {
-  try {
-    const response = await axios.post(`${API_URL}/documents/templates`, data, {
-      headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
+    const response = await axios.delete(
+      `${API_URL}/project/professionals`,
+      {
+        data,
       }
-    });
+    );
     return response.data;
-  } catch (error) {
-    console.error('Error creating document template:', error);
-    throw error;
-  }
 };
 
-export const updateDocumentTemplate = async (id: number, data: FormData) => {
-  try {
-    const response = await axios.put(`${API_URL}/documents/templates/${id}`, data, {
+export const uploadProfessionalDocument = async (
+  professionalId: string,
+  documentType: string,
+  documentName: string,
+  file: File
+) => {
+  const formData = new FormData();
+  formData.append('professional_id', professionalId);
+  formData.append('document_type', documentType);
+  formData.append('document_name', documentName);
+  formData.append('file', file);
+
+  const response = await axios.post(
+    `${API_URL}/professional/document`,
+    formData,
+    {
       headers: {
-        ...getHeaders(),
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'multipart/form-data'
       }
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating document template with id ${id}:`, error);
-    throw error;
-  }
+    }
+  );
+  return response.data;
 };
 
-export const deleteDocumentTemplate = async (id: number) => {
-  try {
-    const response = await axios.delete(`${API_URL}/documents/templates/${id}`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error deleting document template with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const downloadFile = async (fileId: number) => {
-  try {
-    const response = await axios.get(`${API_URL}/documents/files/${fileId}`, {
-      responseType: 'blob',
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error downloading file with id ${fileId}:`, error);
-    throw error;
-  }
-};
-
-// Projects API
-export const get_all_projects = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/projects`, {
-      headers: getHeaders(),
+export const downloadProfessionalDocument = async (professionalId: string, documentId: string) => {
+  const response = await axios.get(
+    `${API_URL}/professional/document`,
+    {
       params: {
-        include_professionals: true,
-        include_municipalities: true,
-        include_documents: true
+        professional_id: professionalId,
+        document_id: documentId
+      },
+      responseType: 'blob'
+    }
+  );
+  return response.data;
+};
+
+export const deleteProfessionalDocument = async (professionalId: string, documentId: string) => {
+  const response = await axios.delete(
+    `${API_URL}/professional/document`,
+    {
+      params: {
+        professional_id: professionalId,
+        document_id: documentId
       }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching all projects data:', error);
-    throw error;
-  }
+    }
+  );
+  return response.data;
 };
 
-export const getProjectProfessionals = async (projectId: number) => {
-  try {
-    const response = await axios.get(`${API_URL}/projects/${projectId}/professionals`, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching professionals for project with id ${projectId}:`, error);
-    throw error;
-  }
+export const getProfessionalDocumentTypes = async (): Promise<string[]> => {
+  const response = await axios.get(
+    `${API_URL}/professional/document/types`
+  );
+  console.log(response.data.document_types);
+  return response.data.document_types;
 };
 
-export const generateDocument = async (projectId: number, data: any) => {
-  try {
-    const response = await axios.post(`${API_URL}/projects/${projectId}/generate`, data, {
-      headers: getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error generating document for project with id ${projectId}:`, error);
-    throw error;
-  }
+export const importProfessionalData = async (file: File): Promise<ProfessionalCreationFormData> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(
+    `${API_URL}/professional/import`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }
+  );
+  return response.data;
 };
 
-// Authentication API functions
-export async function apiLogin(
-  email: string,
-  password: string
-): Promise<
-  AxiosResponse<{
-    access_token: string;
-    user_id: string;
-    email: string;
-  }>
-> {
-  return axios.post(`${API_URL}/auth/login`, {
-    email: email,
-    password: password
-  }, {
-    withCredentials: true
-  });
-}
+// Project Documents API
+export const uploadProjectDocument = async (
+  projectId: string,
+  documentType: string,
+  documentName: string,
+  file: File,
+  status: string = DocumentState.UPLOADED
+) => {
+  const formData = new FormData();
+  formData.append('project_id', projectId);
+  formData.append('document_type', documentType);
+  formData.append('document_name', documentName);
+  formData.append('file', file);
+  
+  // Send the status directly from the DocumentState enum
+  formData.append('status', status);
 
-export async function apiValidateToken(): Promise<AxiosResponse> {
-  return axios({
-    method: 'get',
-    headers: getHeaders(),
-    url: `${API_URL}/auth/profile`,
-  });
-}
+  const response = await axios.post(
+    `${API_URL}/project/document`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }
+  );
+  return response.data;
+};
 
-export async function apiChangePassword(
-  currentPassword: string,
-  newPassword: string
-): Promise<AxiosResponse> {
-  return axios({
-    method: 'post',
-    headers: getHeaders(),
-    url: `${API_URL}/auth/change-password`,
-    data: {
-      current_password: currentPassword,
-      new_password: newPassword
-    },
-  });
-}
+export const downloadProjectDocument = async (projectId: string, documentId: string) => {
+  const response = await axios.get(
+    `${API_URL}/project/document`,
+    {
+      params: {
+        project_id: projectId,
+        document_id: documentId
+      },
+      responseType: 'blob'
+    }
+  );
+  return response.data;
+};
+
+export const deleteProjectDocument = async (projectId: string, documentId: string) => {
+  const response = await axios.delete(
+    `${API_URL}/project/document`,
+    {
+      params: {
+        project_id: projectId,
+        document_id: documentId
+      }
+    }
+  );
+  return response.data;
+};
+
+export const getProjectDocumentTypes = async (): Promise<string[]> => {
+  const response = await axios.get(
+    `${API_URL}/project/document/types`
+  );
+  return response.data.document_types;
+};

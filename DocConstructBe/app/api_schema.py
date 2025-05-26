@@ -1,184 +1,315 @@
 from marshmallow import Schema, fields, validate
-from datetime import date
-from DocConstructBe.data_model.models import (
-    Status, DocumentType, ProffsionalType, 
-    ProffsionalStatus, DocumentStatus
-)
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus
 
 # Project Schemas
-class ProjectCreateSchema(Schema):
-    project_name = fields.Str(required=True, validate=validate.Length(min=1))
-    project_description = fields.Str(allow_none=True)
-    project_address = fields.Str(required=True)
-    project_case_id = fields.Str(allow_none=True)
-    project_due_date = fields.Date(allow_none=True)
-    project_status = fields.Enum(Status, required=True)
-    project_status_due_date = fields.Date(allow_none=True)
-    project_docs_path = fields.Str(allow_none=True)
 
-class ProjectUpdateSchema(Schema):
+
+class ProjectGetAllSchema(Schema):
+    pass
+
+
+class ProjectGetByIdSchema(Schema):
     project_id = fields.UUID(required=True)
-    project_name = fields.Str(validate=validate.Length(min=1))
-    project_description = fields.Str(allow_none=True)
-    project_address = fields.Str()
-    project_case_id = fields.Str()
-    project_due_date = fields.Date()
-    project_status = fields.Enum(Status)
-    project_status_due_date = fields.Date()
-    project_docs_path = fields.Str()
+
+
+class ProjectCreateSchema(Schema):
+    name = fields.Str(required=True, validate=validate.Length(min=1))
+    request_number = fields.Str(required=True)
+    permit_number = fields.Str(required=False)
+    construction_supervision_number = fields.Str(required=False)
+    engineering_coordinator_number = fields.Str(required=False)
+    firefighting_number = fields.Str(required=False)
+    description = fields.Str(required=False)
+    permit_owner = fields.Str(required=True)
+    status = fields.Enum(ProjectStatus, by_value=True, required=False)
+    status_due_date = fields.Date(required=False)
+    docs_path = fields.Str(required=False)
+    professionals = fields.List(fields.UUID(), required=False)
+
+
+class ProjectUpdateSchema (Schema):
+    id = fields.UUID(required=True)
+    name = fields.Str(required=False, validate=validate.Length(min=1))
+    request_number = fields.Str(required=False,allow_none=True) 
+    permit_number = fields.Str(required=False,allow_none=True)
+    permit_owner = fields.Str(required=False,allow_none=True)
+    construction_supervision_number = fields.Str(required=False,allow_none=True)
+    engineering_coordinator_number = fields.Str(required=False,allow_none=True)
+    firefighting_number = fields.Str(required=False,allow_none=True)
+    description = fields.Str(required=False,allow_none=True)
+    permit_owner_phone = fields.Str(required=False,allow_none=True)
+    permit_owner_email = fields.Str(required=False,allow_none=True)
+    permit_owner_address = fields.Str(required=False,allow_none=True)
+    permit_owner_name = fields.Str(required=False,allow_none=True)
+    status = fields.Enum(ProjectStatus, by_value=True, required=False)
+    status_due_date = fields.Date(required=False, allow_none=True)
+    docs_path = fields.Str(required=False,allow_none=True)
+
 
 class ProjectDeleteSchema(Schema):
     project_id = fields.UUID(required=True)
 
-class ProjectGetSchema(Schema):
-    project_id = fields.UUID(required=True)
 
-# Professional Schemas
-class ProfessionalCreateSchema(Schema):
-    proffsional_name = fields.Str(required=True)
-    proffsional_email = fields.Email(required=True)
-    proffsional_phone = fields.Str(required=True, validate=validate.Length(min=9, max=15))
-    proffsional_address = fields.Str(required=True)
-    proffsional_license_number = fields.Str(required=True)
-    proffsional_license_expiration_date = fields.Date(required=True)
-    proffsional_type = fields.Enum(ProffsionalType, required=True)
-    proffsional_status = fields.Enum(ProffsionalStatus, required=True)
-    proffsional_national_id = fields.Str(required=True)
+class ProjectGetStatusesSchema(Schema):
+    pass
 
-class ProfessionalUpdateSchema(Schema):
-    proffsional_id = fields.UUID(required=True)
-    proffsional_name = fields.Str()
-    proffsional_email = fields.Email()
-    proffsional_phone = fields.Str(validate=validate.Length(min=9, max=15))
-    proffsional_address = fields.Str()
-    proffsional_license_number = fields.Str()
-    proffsional_license_expiration_date = fields.Date()
-    proffsional_type = fields.Enum(ProffsionalType)
-    proffsional_status = fields.Enum(ProffsionalStatus)
-    proffsional_national_id = fields.Str()
 
-class ProfessionalDeleteSchema(Schema):
-    proffsional_id = fields.UUID(required=True)
-
-class ProfessionalGetSchema(Schema):
-    proffsional_id = fields.UUID(required=True)
-
-# Document Schemas
-class DocumentCreateSchema(Schema):
-    document_name = fields.Str(required=True)
-    document_type = fields.Enum(DocumentType, required=True)
-
-class DocumentDeleteSchema(Schema):
-    document_id = fields.UUID(required=True)
-
-class DocumentGetSchema(Schema):
-    document_id = fields.UUID(required=True)
-
-class DocumentUploadSchema(Schema):
-    project_id = fields.UUID(required=True)
-    document_id = fields.UUID(required=True)
-    professional_id = fields.UUID(required=True)
-    file = fields.Raw(required=True)
-
-# Project-Professional Relationship Schemas
 class ProjectProfessionalAddSchema(Schema):
     project_id = fields.UUID(required=True)
     professional_id = fields.UUID(required=True)
+
 
 class ProjectProfessionalRemoveSchema(Schema):
     project_id = fields.UUID(required=True)
     professional_id = fields.UUID(required=True)
 
-# Project-Document Relationship Schemas
-class ProjectDocumentAddSchema(Schema):
-    project_id = fields.UUID(required=True)
+
+class ProjectDocumentDownloadSchema(Schema):
     document_id = fields.UUID(required=True)
-    professional_id = fields.UUID(required=True)
+    project_id = fields.UUID(required=True)
+
+
+class ProjectDocumentUploadSchema(Schema):
+    project_id = fields.UUID(required=True)
+    document_type = fields.Enum(ProjectDocumentType, by_value=True, required=False)
+    document_name = fields.Str(required=True)
+    status = fields.Str(required=True)
+
+    file = fields.Raw(required=True)
 
 class ProjectDocumentRemoveSchema(Schema):
     project_id = fields.UUID(required=True)
     document_id = fields.UUID(required=True)
 
-# API Endpoint Definitions
+
+class ProjectDocumentTypesSchema(Schema):
+    pass
+
+
+# Professional Schemas
+
+
+class ProfessionalsGetSchema(Schema):
+    pass
+
+
+class ProfessionalGetSchema(Schema):
+    professional_id = fields.UUID(required=True)
+
+
+class ProfessionalCreateSchema(Schema):
+    name = fields.Str(required=True)
+    national_id = fields.Str(required=True)
+    email = fields.Email(required=True)
+    phone = fields.Str(required=True)
+    address = fields.Str(required=True)
+    license_number = fields.Str(required=True)
+    license_expiration_date = fields.Date(required=True)
+    professional_type = fields.Str(required=True)
+    license_file_path = fields.Str(required=False)
+
+
+class ProfessionalUpdateSchema(Schema):
+    id = fields.UUID(required=True)
+    name = fields.Str(required=False)
+    national_id = fields.Str(required=False)
+    email = fields.Email(required=False)
+    phone = fields.Str(required=False)
+    address = fields.Str(required=False)
+    license_number = fields.Str(required=False)
+    license_expiration_date = fields.Date(required=False)
+    professional_type = fields.Enum(ProfessionalType, by_value=True, required=False)
+    license_file_path = fields.Str(required=False)
+    status = fields.Str(required=False)
+
+
+class ProfessionalDeleteSchema(Schema):
+    professional_id = fields.UUID(required=True)
+
+
+class ProfessionalGetTypesSchema(Schema):
+    pass
+
+
+class ProfessionalGetStatusesSchema(Schema):
+    pass
+
+
+class ProfessionalDocumentDownloadSchema(Schema):
+    document_id = fields.UUID(required=True)
+    professional_id = fields.UUID(required=True)
+
+
+class ProfessionalDocumentAddSchema(Schema):
+    professional_id = fields.UUID(required=True)
+    document_name = fields.Str(required=True)
+    document_type = fields.Enum(ProfessionalDocumentType, by_value=True, required=True)
+    file = fields.Raw(required=True)
+
+
+class ProfessionalDocumentRemoveSchema(Schema):
+    professional_id = fields.UUID(required=True)
+    document_id = fields.UUID(required=True)
+
+
+class ProfessionalDocumentTypesSchema(Schema):
+    pass
+
+
+class ProfessionalImportSchema(Schema):
+    file = fields.Raw(required=True)
+
+
+class Endpoints:
+    GET_PROJECTS = "get_projects"
+    GET_PROJECT = "get_project"
+    CREATE_PROJECT = "create_project"
+    UPDATE_PROJECT = "update_project"
+    DELETE_PROJECT = "delete_project"
+    GET_PROJECT_STATUSES = "get_project_statuses"
+
+    ADD_PROJECT_PROFESSIONAL = "add_project_professional"
+    REMOVE_PROJECT_PROFESSIONAL = "remove_project_professional"
+
+    DOWNLOAD_PROJECT_DOCUMENT = "download_project_document"
+    UPLOAD_PROJECT_DOCUMENT = "upload_project_document"
+    REMOVE_PROJECT_DOCUMENT = "remove_project_document"
+    GET_PROJECT_DOCUMENT_TYPES = "get_project_document_types"
+
+    GET_PROFESSIONALS = "get_professionals"
+    GET_PROFESSIONAL = "get_professional"
+    CREATE_PROFESSIONAL = "create_professional"
+    IMPORT_PROFESSIONAL_FILE = "import_professional_file"
+    UPDATE_PROFESSIONAL = "update_professional"
+    DELETE_PROFESSIONAL = "delete_professional"
+    GET_PROFESSIONAL_TYPES = "get_professional_types"
+    GET_PROFESSIONAL_STATUSES = "get_professional_statuses"
+
+    DOWNLOAD_PROFESSIONAL_DOCUMENT = "download_professional_document"
+    ADD_PROFESSIONAL_DOCUMENT = "add_professional_document"
+    REMOVE_PROFESSIONAL_DOCUMENT = "remove_professional_document"
+    GET_PROFESSIONAL_DOCUMENT_TYPES = "get_professional_document_types"
+
+
 API_ENDPOINTS = {
-    'create_project': {
+    Endpoints.GET_PROJECTS: {
+        'method': 'GET',
+        'schema': ProjectGetAllSchema,
+        'description': 'Get all projects'
+    },
+    Endpoints.GET_PROJECT: {
+        'method': 'GET',
+        'schema': ProjectGetByIdSchema,
+        'description': 'Get project by ID'
+    },
+    Endpoints.CREATE_PROJECT: {
         'method': 'POST',
         'schema': ProjectCreateSchema,
         'description': 'Create a new project'
     },
-    'update_project': {
-        'method': 'POST',
+    Endpoints.UPDATE_PROJECT: {
+        'method': 'PUT',
         'schema': ProjectUpdateSchema,
         'description': 'Update an existing project'
     },
-    'delete_project': {
-        'method': 'POST',
+    Endpoints.DELETE_PROJECT: {
+        'method': 'DELETE',
         'schema': ProjectDeleteSchema,
         'description': 'Delete a project'
     },
-    'get_project': {
+    Endpoints.GET_PROJECT_STATUSES: {
         'method': 'GET',
-        'schema': ProjectGetSchema,
-        'description': 'Get project by ID'
+        'schema': ProjectGetStatusesSchema,
+        'description': 'Get all project statuses'
     },
-    'create_professional': {
-        'method': 'POST',
-        'schema': ProfessionalCreateSchema,
-        'description': 'Create a new professional'
-    },
-    'update_professional': {
-        'method': 'POST',
-        'schema': ProfessionalUpdateSchema,
-        'description': 'Update an existing professional'
-    },
-    'delete_professional': {
-        'method': 'POST',
-        'schema': ProfessionalDeleteSchema,
-        'description': 'Delete a professional'
-    },
-    'get_professional': {
-        'method': 'GET',
-        'schema': ProfessionalGetSchema,
-        'description': 'Get professional by ID'
-    },
-    'create_document': {
-        'method': 'POST',
-        'schema': DocumentCreateSchema,
-        'description': 'Create a new document'
-    },
-    'delete_document': {
-        'method': 'DELETE',
-        'schema': DocumentDeleteSchema,
-        'description': 'Delete a document'
-    },
-    'get_document': {
-        'method': 'GET',
-        'schema': DocumentGetSchema,
-        'description': 'Get document by ID'
-    },
-    'upload_document': {
-        'method': 'POST',
-        'schema': DocumentUploadSchema,
-        'description': 'Upload a document to a project'
-    },
-    'add_professional_to_project': {
+    Endpoints.ADD_PROJECT_PROFESSIONAL: {
         'method': 'POST',
         'schema': ProjectProfessionalAddSchema,
         'description': 'Add a professional to a project'
     },
-    'remove_professional_from_project': {
-        'method': 'POST',
+    Endpoints.REMOVE_PROJECT_PROFESSIONAL: {
+        'method': 'DELETE',
         'schema': ProjectProfessionalRemoveSchema,
         'description': 'Remove a professional from a project'
     },
-    'add_document_to_project': {
-        'method': 'POST',
-        'schema': ProjectDocumentAddSchema,
-        'description': 'Add a document to a project'
+    Endpoints.DOWNLOAD_PROJECT_DOCUMENT: {
+        'method': 'GET',
+        'schema': ProjectDocumentDownloadSchema,
+        'description': 'Download a project document'
     },
-    'remove_document_from_project': {
+    Endpoints.UPLOAD_PROJECT_DOCUMENT: {
         'method': 'POST',
+        'schema': ProjectDocumentUploadSchema,
+        'description': 'Upload a document for a project'
+    },
+    Endpoints.REMOVE_PROJECT_DOCUMENT: {
+        'method': 'DELETE',
         'schema': ProjectDocumentRemoveSchema,
         'description': 'Remove a document from a project'
-    }
-} 
+    },
+    Endpoints.GET_PROJECT_DOCUMENT_TYPES: {
+        'method': 'GET',
+        # 'schema': ProjectDocumentTypesSchema,
+        'description': 'Get all project document types'
+    },
+    Endpoints.GET_PROFESSIONALS: {
+        'method': 'GET',
+        'schema': ProfessionalsGetSchema,
+        'description': 'Get all professionals'
+    },
+    Endpoints.GET_PROFESSIONAL: {
+        'method': 'GET',
+        'schema': ProfessionalGetSchema,
+        'description': 'Get professional by ID'
+    },
+    Endpoints.CREATE_PROFESSIONAL: {
+        'method': 'POST',
+        'schema': ProfessionalCreateSchema,
+        'description': 'Create a new professional'
+    },
+    Endpoints.IMPORT_PROFESSIONAL_FILE: {
+        'method': 'POST',
+        'schema': ProfessionalImportSchema,
+        'description': 'Import professional data from file'
+    },
+    Endpoints.UPDATE_PROFESSIONAL: {
+        'method': 'PUT',
+        'schema': ProfessionalUpdateSchema,
+        'description': 'Update an existing professional'
+    },
+    Endpoints.DELETE_PROFESSIONAL: {
+        'method': 'DELETE',
+        'schema': ProfessionalDeleteSchema,
+        'description': 'Delete a professional'
+    },
+    Endpoints.GET_PROFESSIONAL_TYPES: {
+        'method': 'GET',
+        'schema': ProfessionalGetTypesSchema,
+        'description': 'Get all professional types'
+    },
+    Endpoints.GET_PROFESSIONAL_STATUSES: {
+        'method': 'GET',
+        'schema': ProfessionalGetStatusesSchema,
+        'description': 'Get all professional statuses'
+    },
+    Endpoints.DOWNLOAD_PROFESSIONAL_DOCUMENT: {
+        'method': 'GET',
+        'schema': ProfessionalDocumentDownloadSchema,
+        'description': 'Download a professional document'
+    },
+    Endpoints.ADD_PROFESSIONAL_DOCUMENT: {
+        'method': 'POST',
+        'schema': ProfessionalDocumentAddSchema,
+        'description': 'Add a document to a professional'
+    },
+    Endpoints.REMOVE_PROFESSIONAL_DOCUMENT: {
+        'method': 'DELETE',
+        'schema': ProfessionalDocumentRemoveSchema,
+        'description': 'Remove a document from a professional'
+    },
+    Endpoints.GET_PROFESSIONAL_DOCUMENT_TYPES: {
+        'method': 'GET',
+        'schema': ProfessionalDocumentTypesSchema,
+        'description': 'Get all professional document types'
+    },
+}

@@ -1,356 +1,431 @@
 import os
-import json
-import logging
-import threading
-from pathlib import Path
-from datetime import datetime as dt
-from flask import send_file, request, jsonify
-from DocConstructBe.app.api import (
-    api_project_create, api_project_update, api_project_delete,
-    api_project_get_all, api_project_get_by_id,
-    api_professional_create, api_professional_update, api_professional_delete,
-    api_professional_get_all, api_professional_get_by_id,
-    api_document_create, api_document_delete, api_document_get_all,
-    api_document_get_by_id, api_project_add_professional,
-    api_project_remove_professional, api_project_add_document,
-    api_project_remove_document, extract_license_data_from_image
+import tempfile
+
+from flask import send_file, request
+
+from app.errors import ValidationError
+from app.api import (
+    ProjectManager,
+    ProfessionalManager,
+    ProjectDocumentManager,
+    is_document_professional_related,
+    save_file_to_temp
 )
 from app.response import SuccessResponse
-from database.database import db_session
-from DocConstructBe.data_model.models import DocumentStatus
-from DocConstructBe.app.api_schema import API_ENDPOINTS
+from app.api_schema import API_ENDPOINTS, Endpoints
+from data_model.enum import enum_to_value, ProjectDocumentType
+from data_model.models import PermitOwner
 
-# Configure logging
-logging.basicConfig(filename='statistics_test.log', level=logging.INFO, format='%(asctime)s %(message)s')
-
-def validate_request(endpoint_name):
+def validate_request(endpoint):
     """Validate request data against schema"""
-    endpoint = API_ENDPOINTS.get(endpoint_name)
+    endpoint = API_ENDPOINTS.get(endpoint)
     if not endpoint:
-        raise ValueError(f"Unknown endpoint: {endpoint_name}")
-    
+        raise ValidationError(params={"unknown_endpoint": endpoint})
+
     if request.method != endpoint['method']:
-        raise ValueError(f"Invalid method. Expected {endpoint['method']}")
-    
+        raise ValidationError(
+            params={
+                "invalid_method": request.method,
+                "expected_method": endpoint['method']
+            }
+        )
+
     schema = endpoint['schema']()
-    
+
     if request.is_json:
         data = request.get_json()
+        print('JSON data:', data)
+        if 'status_code' in data:
+            del data['status_code']
+    elif request.method in ['GET', 'DELETE']:
+        data = request.args.to_dict()
+        print('GET data:', data)
     else:
         data = request.form.to_dict()
+        print('Form data:', data)
+        print('Files:', request.files)
         if 'file' in request.files:
             data['file'] = request.files['file']
-    
+
     errors = schema.validate(data)
     if errors:
-        raise ValueError(f"Validation error: {errors}")
-    
+        # Create a more detailed error message that includes the field names
+        detailed_errors = {}
+        for field, error_msgs in errors.items():
+            if isinstance(error_msgs, list):
+                detailed_errors[field] = f"Field '{field}': {', '.join(error_msgs)}"
+            else:
+                detailed_errors[field] = f"Field '{field}': {error_msgs}"
+        
+        raise ValidationError(params={"validation_errors": detailed_errors})
+
     return schema.load(data)
 
+
 def init_routes(app):
-    ### Project Routes ###
-    @app.route('/api/create_project', methods=['POST'])
-    def create_new_project():
-        try:
-            data = validate_request('create_project')
-            project = api_project_create(data)
-            return SuccessResponse({
-                'project_id': project.project_id,
-                'project_name': project.project_name,
-                'project_case_id': project.project_case_id
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
 
-    @app.route('/api/update_project', methods=['POST'])
-    def update_project():
-        try:
-            data = validate_request('update_project')
-            project_id = data.pop('project_id')
-            project = api_project_update(project_id, data)
-            return SuccessResponse({
-                'project_id': project.project_id,
-                'project_name': project.project_name,
-                'project_case_id': project.project_case_id
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/delete_project', methods=['POST'])
-    def delete_project():
-        try:
-            data = validate_request('delete_project')
-            api_project_delete(data['project_id'])
-            return SuccessResponse({'message': 'Project deleted successfully'}).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    
     @app.route('/api/projects', methods=['GET'])
-    def retrieve_all_projects():
-        try:
-            projects = api_project_get_all()
-            return SuccessResponse({
-                'projects': [{
-                    'project_id': project.project_id,
-                    'project_name': project.project_name,
-                    'project_case_id': project.project_case_id,
-                    'project_status': project.project_status.value
-                } for project in projects]
-            }).generate_response()
-        except Exception as e:
-            logging.error(f"Error in retrieve_all_projects: {str(e)}")
-            return jsonify({
-                'error': str(e),
-                'status_code': 'error'
-            }), 400
-    
-    @app.route('/api/projects/<string:project_id>', methods=['GET'])
-    def retrieve_project_by_id(project_id):
-        try:
-            data = validate_request('get_project')
-            project = api_project_get_by_id(project_id)
-            if not project:
-                return jsonify({'error': 'Project not found'}), 404
-            return SuccessResponse({
-                'project_id': project.project_id,
-                'project_name': project.project_name,
-                'project_case_id': project.project_case_id,
-                'project_due_date': project.project_due_date.isoformat(),
-                'project_status': project.project_status.value,
-                'project_description': project.project_description,
-                'project_address': project.project_address,
-                'project_docs_path': project.project_docs_path
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
+    def get_projects():
+        validate_request(endpoint=Endpoints.GET_PROJECTS)
+        projects = ProjectManager().get_all()
+        return SuccessResponse({
+            'projects': [{
+                'id': project.id,
+                'name': project.name,
+                'request_number': project.request_number,
+                'status': project.status,
+                'permit_owner': project.permit_owner.name,
+                'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
+            } for project in projects]
+        }).generate_response()
 
-    ### Professional Routes ###
-    @app.route('/api/create_proffsional_from_file', methods=['POST'])
-    def create_proffsional_from_file():
-        try:
-            if 'file' not in request.files:
-                return jsonify({'error': 'No file provided'}), 400
-            
-            file = request.files['file']
-            if file.filename == '':
-                return jsonify({'error': 'No file selected'}), 400
-
-            # Save the file temporarily
-            temp_path = os.path.join('temp', file.filename)
-            os.makedirs('temp', exist_ok=True)
-            file.save(temp_path)
-
-            # Extract license data from image
-            license_data = extract_license_data_from_image(temp_path)
-            
-            # Validate the extracted data
-            data = validate_request('create_professional')
-            professional = api_professional_create(license_data)
-            
-            # Clean up temp file
-            os.remove(temp_path)
-            
-            return SuccessResponse({
-                'professional_id': professional.proffsional_id,
-                'professional_name': professional.proffsional_name,
-                'professional_type': professional.proffsional_type.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/create_proffsional', methods=['POST'])
-    def create_proffsional():
-        try:
-            data = validate_request('create_professional')
-            professional = api_professional_create(data)
-            return SuccessResponse({
-                'professional_id': professional.proffsional_id,
-                'professional_name': professional.proffsional_name,
-                'professional_type': professional.proffsional_type.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/update_proffsional', methods=['POST'])
-    def update_proffsional():
-        try:
-            data = validate_request('update_professional')
-            professional_id = data.pop('professional_id')
-            professional = api_professional_update(professional_id, data)
-            return SuccessResponse({
-                'professional_id': professional.proffsional_id,
-                'professional_name': professional.proffsional_name,
-                'professional_type': professional.proffsional_type.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/delete_proffsional', methods=['POST'])
-    def delete_proffsional():
-        try:
-            data = validate_request('delete_professional')
-            api_professional_delete(data['professional_id'])
-            return SuccessResponse({'message': 'Professional deleted successfully'}).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/proffsionals', methods=['GET'])
-    def retrieve_all_proffsionals():
-        try:
-            professionals = api_professional_get_all()
-            return SuccessResponse({
+    @app.route('/api/project', methods=['GET'])
+    def get_project():
+        data = validate_request(endpoint=Endpoints.GET_PROJECT)
+        project = ProjectManager().get_by_id(project_id=str(data.get('project_id')))
+        return SuccessResponse({
+            'project': {
+                'id': project.id,
+                'name': project.name,
+                'request_number': project.request_number,
+                'permit_owner': project.permit_owner.name,
+                'permit_owner_address': project.permit_owner.address,
+                'permit_owner_phone': project.permit_owner.phone,
+                'permit_owner_email': project.permit_owner.email,
+                'status': enum_to_value(project.status),
+                'description': project.description,
+                'permit_number': project.permit_number,
+                'construction_supervision_number': project.construction_supervision_number,
+                'engineering_coordinator_number': project.engineering_coordinator_number,
+                'firefighting_number': project.firefighting_number,
+                'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
                 'professionals': [{
-                    'professional_id': prof.proffsional_id,
-                    'professional_name': prof.proffsional_name,
-                    'professional_type': prof.proffsional_type.value,
-                    'professional_status': prof.proffsional_status.value
-                } for prof in professionals]
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/proffsionals/<string:professional_id>', methods=['GET'])
-    def retrieve_proffsional_by_id(professional_id):
-        try:
-            data = validate_request('get_professional')
-            professional = api_professional_get_by_id(professional_id)
-            if not professional:
-                return jsonify({'error': 'Professional not found'}), 404
-            return SuccessResponse({
-                'professional_id': professional.proffsional_id,
-                'professional_name': professional.proffsional_name,
-                'professional_email': professional.proffsional_email,
-                'professional_phone': professional.proffsional_phone,
-                'professional_address': professional.proffsional_address,
-                'professional_license_number': professional.proffsional_license_number,
-                'professional_license_expiration_date': professional.proffsional_license_expiration_date.isoformat(),
-                'professional_type': professional.proffsional_type.value,
-                'professional_status': professional.proffsional_status.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    ### Document Routes ###
-    @app.route('/api/documents/upload', methods=['POST'])
-    def upload_document():
-        try:
-            data = validate_request('upload_document')
-            
-            # Create document record
-            document_data = {
-                'document_name': data['file'].filename,
-                'document_type': data.get('document_type')
-            }
-            document = api_document_create(document_data)
-
-            # Add document to project
-            project_document = api_project_add_document(
-                project_id=data['project_id'],
-                document_id=document.document_id,
-                professional_id=data['professional_id']
-            )
-
-            # Save file
-            file_path = os.path.join('documents', str(project_document.project_document_id))
-            os.makedirs('documents', exist_ok=True)
-            data['file'].save(file_path)
-
-            return SuccessResponse({
-                'document_id': document.document_id,
-                'document_name': document.document_name,
-                'document_type': document.document_type.value,
-                'status': project_document.status.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    
-    @app.route('/api/documents/download/<string:document_id>', methods=['GET'])
-    def download_document(document_id):
-        try:
-            data = validate_request('get_document')
-            document = api_document_get_by_id(document_id)
-            if not document:
-                return jsonify({'error': 'Document not found'}), 404
-
-            project_document = document.project_documents[0]  # Get first project document
-            file_path = os.path.join('documents', str(project_document.project_document_id))
-            
-            if not os.path.exists(file_path):
-                return jsonify({'error': 'File not found'}), 404
-
-            return send_file(
-                file_path,
-                as_attachment=True,
-                download_name=document.document_name
-            )
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    @app.route('/api/documents/delete', methods=['DELETE'])
-    def delete_document():
-        try:
-            data = validate_request('delete_document')
-            api_project_remove_document(data['project_id'], data['document_id'])
-            api_document_delete(data['document_id'])
-            return SuccessResponse({'message': 'Document deleted successfully'}).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    
-    @app.route('/api/documents', methods=['GET'])
-    def retrieve_all_documents():
-        try:
-            project_id = request.args.get('project_id')
-            documents = api_document_get_all(project_id)
-            return SuccessResponse({
+                    'id': prof.professional_id,
+                    'name': prof.professional.name,
+                    'email': prof.professional.email,
+                    'professional_type': prof.professional.professional_type,
+                    'status': prof.professional.status
+                } for prof in project.professionals],
                 'documents': [{
-                    'document_id': doc.document_id,
-                    'document_name': doc.document_name,
-                    'document_type': doc.document_type.value,
-                    'created_at': doc.created_at.isoformat()
-                } for doc in documents]
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    
-    ### Relations Routes ###
-    @app.route('/api/project/add_proffsional_to_project', methods=['POST'])
-    def add_proffsional_to_project():
-        try:
-            data = validate_request('add_professional_to_project')
-            project_professional = api_project_add_professional(
-                data['project_id'], 
-                data['professional_id']
+                    'id': doc.id,
+                    'name': doc.name,
+                    'document_type': doc.document_type,
+                    'status': doc.status,
+                    'created_at': doc.created_at.isoformat(),
+                } for doc in project.documents]
+            }
+        }).generate_response()
+
+    @app.route('/api/project', methods=['POST'])
+    def create_project():
+        data = validate_request(endpoint=Endpoints.CREATE_PROJECT)
+        permit_owner = PermitOwner(data.get('permit_owner'),"aaaa","12345","a@a.com")
+        project = ProjectManager().create(
+            name=data.get('name'),
+            request_number=data.get('request_number'),
+            description=data.get('description'),
+            permit_owner=permit_owner,
+            status=data.get('status'),
+            status_due_date=data.get('status_due_date'),
+        )
+        return SuccessResponse({'id': str(project.id)}).generate_response()
+
+    @app.route('/api/project', methods=['PUT'])
+    def update_project():
+        data = validate_request(endpoint=Endpoints.UPDATE_PROJECT)
+        # Create or update permit owner with proper data
+        permit_owner_name = data.get('permit_owner', '')
+        permit_owner_address = data.get('permit_owner_address', 'aaaa')
+        permit_owner_phone = data.get('permit_owner_phone', '12345')
+        permit_owner_email = data.get('permit_owner_email', 'a@a.com')
+        
+        # Create the permit owner object with the provided data
+        permit_owner = PermitOwner(
+            name=permit_owner_name,
+            address=permit_owner_address,
+            phone=permit_owner_phone,
+            email=permit_owner_email
+        )
+        
+        ProjectManager().update(
+            project_id=str(data.get('id')),
+            name=data.get('name'),
+            request_number=data.get('request_number'),
+            description=data.get('description'),
+            permit_owner=permit_owner,
+            status=data.get('status'),
+            status_due_date=data.get('status_due_date'),
+            construction_supervision_number=data.get('construction_supervision_number'),
+            engineering_coordinator_number=data.get('engineering_coordinator_number'),
+            firefighting_number=data.get('firefighting_number'),
+        )
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/project', methods=['DELETE'])
+    def delete_project():
+        data = validate_request(endpoint=Endpoints.DELETE_PROJECT)
+        ProjectManager().delete(project_id=str(data.get('project_id')))
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/project/statuses', methods=['GET'])
+    def get_project_statuses():
+        validate_request(endpoint=Endpoints.GET_PROJECT_STATUSES)
+        return SuccessResponse({
+            'statuses': ProjectManager().get_statuses()
+        }).generate_response()
+
+    @app.route('/api/project/professionals', methods=['POST'])
+    def add_professional_to_project():
+        data = validate_request(Endpoints.ADD_PROJECT_PROFESSIONAL)
+        project_professional = ProjectManager().attach_professional(
+            str(data.get('project_id')),
+            str(data.get('professional_id'))
+        )
+        return SuccessResponse({
+            'id': project_professional.id,
+            'project_id': project_professional.project_id,
+            'professional_id': project_professional.professional_id
+        }).generate_response()
+
+    @app.route('/api/project/professionals', methods=['DELETE'])
+    def remove_professional_from_project():
+        data = validate_request(Endpoints.REMOVE_PROJECT_PROFESSIONAL)
+        ProjectManager().detach_professional(
+            str(data.get('project_id')),
+            str(data.get('professional_id'))
+        )
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/project/document', methods=['GET'])
+    def download_project_document():
+        data = validate_request(endpoint=Endpoints.DOWNLOAD_PROJECT_DOCUMENT)
+        project_document = ProjectManager().get_document(
+            project_id=str(data.get('project_id')),
+            document_id=str(data.get('document_id'))
+        )
+        return send_file(
+            project_document.file_path,
+            as_attachment=True,
+            download_name=project_document.name
+        )
+
+    @app.route('/api/project/document', methods=['POST'])
+    def upload_project_document():
+        data = validate_request(endpoint=Endpoints.UPLOAD_PROJECT_DOCUMENT)
+        project_id = str(data.get('project_id'))
+        document_type = data.get('document_type')
+        document_status = data.get('status')
+        is_autofill = data.get('is_autofill',True)
+        if document_type == ProjectDocumentType.GENERAL:
+            is_autofill = False
+        
+        file_path = save_file_to_temp(data.get('file'))
+        if is_autofill:
+            if not is_document_professional_related(project_id=project_id, document_type=document_type):
+                raise ValidationError(params={"error": f"Professional  {document_type.value} not related to project {project_id}"})
+            permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
+            project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+            document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
+            filled_pdf = ProjectDocumentManager.autofill_document(
+                document_type=document_type,
+                professionals=document_professionals,
+                permit_owner=permit_owner,
+                src_pdf_path=file_path
             )
-            return SuccessResponse({
-                'project_id': project_professional.project_id,
-                'professional_id': project_professional.professional_id
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    
-    @app.route('/api/project/remove_proffsional_from_project', methods=['POST'])
-    def remove_proffsional_from_project():
-        try:
-            data = validate_request('remove_professional_from_project')
-            api_project_remove_professional(
-                data['project_id'], 
-                data['professional_id']
+        else:
+            filled_pdf = file_path
+        
+        project_document = ProjectManager().add_document(
+            file_path=filled_pdf,
+            project_id=project_id,
+            document_type=document_type,
+            document_name=data.get('document_name'),
+            document_status=document_status
             )
-            return SuccessResponse({'message': 'Professional removed from project successfully'}).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
+        return SuccessResponse({
+            'id': project_document.id,
+            'project_id': project_document.project_id,
+        }).generate_response()
     
-    @app.route('/api/document/get_document_type/<string:document_id>', methods=['GET'])
-    def get_document_type(document_id):
-        try:
-            data = validate_request('get_document')
-            document = api_document_get_by_id(document_id)
-            if not document:
-                return jsonify({'error': 'Document not found'}), 404
-            return SuccessResponse({
-                'document_id': document.document_id,
-                'document_type': document.document_type.value
-            }).generate_response()
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
+    @app.route('/api/project/document/autofill', methods=['POST'])
+    def autofill_project_document():
+        data = validate_request(endpoint=Endpoints.AUTOFILL_PROJECT_DOCUMENT)
+        professionals = ProjectDocumentManager.get_document_project_professionals(project_id=data.get('project_id'),document_type=data.get('document_type'))
+        document_type = enum_to_value(data.get('document_type'))
+        filled_pdf = ProjectDocumentManager.autofill_document(document_type=document_type,professionals=professionals,permit_owner=data.get('permit_owner'),src_pdf_path=data.get('src_pdf_path'))
+       
+        return SuccessResponse({
+          'filled_pdf': filled_pdf
+        }).generate_response()
     
+    @app.route('/api/project/document', methods=['DELETE'])
+    def delete_project_document():
+        data = validate_request(endpoint=Endpoints.REMOVE_PROJECT_DOCUMENT)
+        ProjectManager().remove_document(
+            project_id=str(data.get('project_id')),
+            document_id=str(data.get('document_id'))
+        )
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/project/document/types', methods=['GET'])
+    def get_project_document_types():
+        return SuccessResponse({
+            'document_types': ProjectManager().get_document_types()
+        }).generate_response()
+
+    @app.route('/api/project/document/statuses', methods=['GET'])
+    def get_project_document_statuses():
+        return SuccessResponse({
+            'document_statuses': ProjectManager().get_document_statuses()
+        }).generate_response()
+
+    ### Professionals ###
+    @app.route('/api/professionals', methods=['GET'])
+    def get_professionals():
+        validate_request(endpoint=Endpoints.GET_PROFESSIONALS)
+        professionals = ProfessionalManager.get_all()
+        return SuccessResponse({
+            'professionals': [{
+                'id': prof.id,
+                'name': prof.name,
+                'email': prof.email,
+                'professional_type': prof.professional_type,
+                'status': prof.status,
+            } for prof in professionals]
+        }).generate_response()
+
+    @app.route('/api/professional', methods=['GET'])
+    def get_professional():
+        data = validate_request(endpoint=Endpoints.GET_PROFESSIONAL)
+        professional = ProfessionalManager.get_by_id(professional_id=str(data.get('professional_id')))
+        return SuccessResponse({
+            'professional': {
+                'id': professional.id,
+                'name': professional.name,
+                'national_id': professional.national_id,
+                'email': professional.email,
+                'phone': professional.phone,
+                'address': professional.address,
+                'license_number': professional.license_number,
+                'license_expiration_date': professional.license_expiration_date.isoformat(),
+                'professional_type': professional.professional_type,
+                'status': professional.status,
+                'license_file_path': professional.license_file_path,
+                'documents': [{
+                    'id': doc.id,
+                    'name': doc.name,
+                    'document_type': doc.document_type,
+                    'status': doc.status,
+                    'created_at': doc.created_at.isoformat(),
+                } for doc in professional.documents]
+            }
+        }).generate_response()
+
+    @app.route('/api/professional', methods=['POST'])
+    def create_professional():
+        data = validate_request(endpoint=Endpoints.CREATE_PROFESSIONAL)
+        # Create the professional
+        professional = ProfessionalManager.create(
+            name=data.get('name'),
+            national_id=data.get('national_id'),
+            email=data.get('email'),
+            phone=data.get('phone'),
+            address=data.get('address'),
+            license_number=data.get('license_number'),
+            license_expiration_date=data.get('license_expiration_date'),
+            professional_type=enum_to_value(data.get('professional_type')),
+            license_file_path=data.get('license_file_path')
+        )
+        
+        return SuccessResponse({'id': professional.id}).generate_response()
+
+    @app.route('/api/professional/import', methods=['POST'])
+    def import_professional_data():
+        data = validate_request(endpoint=Endpoints.IMPORT_PROFESSIONAL_FILE)
+        file = data.get('file')
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, file.filename)
+        file.save(temp_path)
+        
+        # Extract data from the license file
+        # Note: license_file_path is included for backward compatibility
+        # but license files are now handled as LICENSE document type
+        license_data = ProfessionalManager().extract_professional_data(temp_path)
+        
+        return SuccessResponse(license_data).generate_response()
+
+    @app.route('/api/professional', methods=['PUT'])
+    def update_professional():
+        data = validate_request(endpoint=Endpoints.UPDATE_PROFESSIONAL)
+        ProfessionalManager().update(
+            professional_id=str(data.get('id')),
+            name=data.get('name'),
+            national_id=data.get('national_id'),
+            email=data.get('email'),
+            phone=data.get('phone'),
+            address=data.get('address'),
+            license_number=data.get('license_number'),
+            license_expiration_date=data.get('license_expiration_date'),
+            professional_type=enum_to_value(data.get('professional_type')),
+        )
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/professional', methods=['DELETE'])
+    def delete_professional():
+        data = validate_request(endpoint=Endpoints.DELETE_PROFESSIONAL)
+        ProfessionalManager().delete(professional_id=str(data.get('professional_id')))
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/professional/types', methods=['GET'])
+    def get_professional_types():
+        validate_request(endpoint=Endpoints.GET_PROFESSIONAL_TYPES)
+        return SuccessResponse({'types': ProfessionalManager().get_types()}).generate_response()
+
+    @app.route('/api/professional/statuses', methods=['GET'])
+    def get_professional_statuses():
+        validate_request(endpoint=Endpoints.GET_PROFESSIONAL_STATUSES)
+        return SuccessResponse({'statuses': ProfessionalManager().get_statuses()}).generate_response()
+
+    @app.route('/api/professional/document', methods=['GET'])
+    def download_professional_document():
+        data = validate_request(endpoint=Endpoints.DOWNLOAD_PROFESSIONAL_DOCUMENT)
+        professional_document = ProfessionalManager().get_document(
+            professional_id=str(data.get('professional_id')),
+            document_id=str(data.get('document_id'))
+        )
+        return send_file(
+            professional_document.file_path,
+            as_attachment=True,
+            download_name=professional_document.name
+        )
+
+    @app.route('/api/professional/document', methods=['POST'])
+    def add_professional_document():
+        data = validate_request(endpoint=Endpoints.ADD_PROFESSIONAL_DOCUMENT)
+        file_path = save_file_to_temp(data.get('file'))
+        professional_document = ProfessionalManager().add_document(
+            file_path=file_path,
+            professional_id=str(data.get('professional_id')),
+            document_type=enum_to_value(data.get('document_type')),
+            document_name=data.get('document_name')
+        )
+        return SuccessResponse({
+            'id': professional_document.id,
+            'professional_id': professional_document.professional_id
+        }).generate_response()
+
+    @app.route('/api/professional/document', methods=['DELETE'])
+    def remove_professional_document():
+        data = validate_request(endpoint=Endpoints.REMOVE_PROFESSIONAL_DOCUMENT)
+        ProfessionalManager().remove_document(
+            professional_id=str(data.get('professional_id')),
+            document_id=str(data.get('document_id'))
+        )
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/professional/document/types', methods=['GET'])
+    def get_professional_document_types():
+        validate_request(endpoint=Endpoints.GET_PROFESSIONAL_DOCUMENT_TYPES)
+        return SuccessResponse({
+            'document_types': ProfessionalManager().get_document_types()
+        }).generate_response()

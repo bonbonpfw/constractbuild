@@ -1,150 +1,98 @@
 // Types for the Permit Management System
 
-// Authentication Types
-export interface User {
-  id: string;
-  email: string;
-}
-
 // Professional Types
 export enum ProfessionalStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  PENDING = 'pending'
+  ACTIVE = 'Active',
+  WARNING = 'Warning',
+  EXPIRED = 'Expired'
 }
 
 export interface ProfessionalType {
-  type_id: number;
-  type_name: string;
+  value: string;
+  label: string;
   description?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface Professional {
-  professional_id: number;
+  id: string;
   name: string;
-  license_number: string;
-  professional_type_id: number;
+  national_id: string;
   email: string;
   phone: string;
-  address?: string;
-  status: ProfessionalStatus;
+  license_number: string;
+  license_expiration_date: string;
+  professional_type: string;
+  address: string;
+  status: string;
   created_at?: string;
   updated_at?: string;
-  professional_type?: ProfessionalType;
+  documents?: ProfessionalDocument[];
 }
 
-// Municipality Types
-export interface Municipality {
-  municipality_id: number;
+export interface ProfessionalDocument {
+  id: string;
+  professional_id: string;
+  document_type: string;
   name: string;
-  state?: string;
-  county?: string;
-  contact_person?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  website?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Document Types
-export interface DocumentTemplate {
-  template_id: number;
-  template_name: string;
-  professional_type_id?: number;
-  municipality_id?: number;
-  file_id: number;
-  created_at?: string;
-  updated_at?: string;
-  professional_type?: ProfessionalType;
-  file?: File;
-}
-
-export interface File {
-  file_id: number;
-  entity_type: string;
-  entity_id: number;
   file_path: string;
-  file_type: string;
-  file_name: string;
-  file_size: number;
-  created_at?: string;
-  updated_at?: string;
+  status: string;
+  created_at: string;
 }
 
-export interface GeneratedDocument {
-  document_id: number;
-  project_id: number;
-  template_id: number;
-  professional_id?: number;
-  file_id: number;
-  created_at?: string;
-  updated_at?: string;
-  project?: Project;
-  template?: DocumentTemplate;
-  professional?: Professional;
-  file?: File;
+export interface ProjectDocument {
+  id: string;
+  project_id: string;
+  document_type: string;
+  name: string;
+  file_path: string;
+  status: string;
+  created_at: string;
+}
+
+// Permit Owner Data
+export interface PermitOwnerData {
+  name: string;
+  address: string;
+  phone: string;
+  email?: string;
 }
 
 // Project Types
 export enum ProjectStatus {
-  PRE_PERMIT = 'PRE_PERMIT',
-  POST_PERMIT = 'POST_PERMIT',
-  FINAL = 'FINAL'
+  PRE_PERMIT = 'Pre permit',
+  POST_PERMIT = 'Post permit',
+  FINAL = 'Final'
+}
+
+export enum DocumentState {
+  PENDING = 'Pending',
+  SIGNED = 'Signed',
+  DELIVERED = 'Delivered',
+  MISSING = 'Missing',
+  UPLOADED = 'Uploaded'
 }
 
 export interface Project {
-  project_id: string;
-  project_name: string;
-  project_case_id: string;
-  project_status: ProjectStatus;
-}
-
-export interface ProjectProfessional {
-  pp_id: number;
-  project_id: number;
-  professional_id: number;
-  role?: string;
-  document_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  professional?: Professional;
-  project?: Project;
-  document?: File;
-}
-
-// Form related types
-export interface FormField {
   id: string;
   name: string;
-  label: string;
-  type: string;
-  required: boolean;
-  placeholder?: string;
-  options?: string[];
-  value?: any;
+  request_number: string;
+  permit_number: string;
+  construction_supervision_number: string;
+  engineering_coordinator_number: string;
+  firefighting_number: string;
+  description: string;
+  permit_owner: string;
+  permit_owner_name?: string;
+  permit_owner_address?: string;
+  permit_owner_phone?: string;
+  permit_owner_email?: string;
+  permit_owner_data?: PermitOwnerData;
+  status_due_date?: string;
+  status?: string;
+  is_warning?: boolean;
+  is_expired?: boolean;
+  professionals: Professional[];
+  documents?: ProjectDocument[];
 }
 
-export interface FormTemplate {
-  id: number;
-  name: string;
-  fields: FormField[];
-  municipality_id: number;
-  professional_type_id: number;
-}
-
-// API Response types
-export interface ApiResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  user_id: string;
-  email: string;
-}
+export interface ProjectCreationFormData extends Omit<Project, 'id'> {}

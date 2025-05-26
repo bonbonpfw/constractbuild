@@ -1,8 +1,8 @@
 import os
 from flask import Flask
 
-from DocConstructBe.config.sys_config import DOCUMENTS_FOLDER
-from DocConstructBe.data_model.models import init_tables
+from config.sys_config import DOCUMENTS_FOLDER
+from data_model.models import init_tables
 from app.errors import handle_error
 from flask_executor import Executor
 

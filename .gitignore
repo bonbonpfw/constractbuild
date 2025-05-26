@@ -189,3 +189,4 @@ build/
 .next/
 out/
 
+/DocConstructFe/tsconfig.tsbuildinfo
