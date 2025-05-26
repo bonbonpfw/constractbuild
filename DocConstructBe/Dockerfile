@@ -4,6 +4,13 @@ FROM python:3.11-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Install poppler-utils needed for pdf2image
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    poppler-utils \
+    tesseract-ocr \
+    tesseract-ocr-heb \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create the data directory and set permissions
 RUN mkdir -p /app/data/files /app/data/reports /app/data/dbs && \
     chmod 777 -R /app/data
@@ -28,6 +35,4 @@ ENV FLASK_APP=run.py
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Command to run the Flask application
-#CMD ["flask", "run", "--host=0.0.0.0", "--port=5001"]
 CMD ["gunicorn", "--preload", "--bind", "0.0.0.0:5001", "--workers", "2", "--threads", "2", "run:app"]
-

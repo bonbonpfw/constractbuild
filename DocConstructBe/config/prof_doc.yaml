@@ -22,13 +22,13 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       permit_owner: [340, 420]
       permit_owner_name_for_signed: [80, 290]
     2:
-      name: [-500, 400]
-      id: [660, 400]
-      phone: [500, 480]
-      address: [400, 460]
-      mail: [330, 480]
+      name: [300, 400]  
+      id: [80, 400]    
+      phone: [450, 365] 
+      address: [330, 350] 
+      mail: [250, 365] 
       signed_name: [200, 300]
-      date_for_signed: [1180, 290]
+      date_for_signed: [80, 290] 
 
   START_WORK_REQUEST:
     1:
