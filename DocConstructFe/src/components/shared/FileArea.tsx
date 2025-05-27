@@ -557,7 +557,7 @@ const FileArea: React.FC<{
     
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
+    input.accept = '.pdf,.jpeg,.png';
     
     input.onchange = (e: Event) => {
       const files = (e.target as HTMLInputElement).files;
