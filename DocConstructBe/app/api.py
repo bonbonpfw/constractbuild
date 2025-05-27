@@ -421,7 +421,7 @@ class ProfessionalManager:
         elif mimetypes.guess_type(file_path)[0] == 'image/jpeg' or mimetypes.guess_type(file_path)[0] == 'image/png':
             binary_data = process_image_to_binary(file_path)
         else:
-            raise InvalidFileFormat(mimetypes.guess_type(file_path)[0])
+            raise InvalidFileFormat(file_format=mimetypes.guess_type(file_path)[0])
         extract_professional = ExtractProfessional(binary_data)
         license_data = extract_professional.extract_text()
         # Convert LicenseData object to dict before accessing
