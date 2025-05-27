@@ -3,7 +3,7 @@ import tempfile
 
 from flask import send_file, request
 
-from app.errors import ValidationError
+from app.errors import ValidationError, InvalidProjectProfessionalDocument
 from app.api import (
     ProjectManager,
     ProfessionalManager,
@@ -222,7 +222,7 @@ def init_routes(app):
         file_path = save_file_to_temp(data.get('file'))
         if is_autofill:
             if not is_document_professional_related(project_id=project_id, document_type=document_type):
-                raise ValidationError(params={"error": f"Professional  {document_type.value} not related to project {project_id}"})
+                raise InvalidProjectProfessionalDocument(document_type=document_type.value, project_id=project_id)
             permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)

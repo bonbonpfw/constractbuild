@@ -193,3 +193,11 @@ class ProjectDocumentNotFound(ApiError):
 
     def http_code(self):
         return HttpCodes.NOT_FOUND
+
+
+class InvalidProjectProfessionalDocument(ApiError):
+    def __init__(self, document_type, project_id: str):
+        super().__init__(
+            msg=f'Professional {document_type} not related to project {project_id}"',
+            code='invalid_project_professional_document'
+        )
