@@ -401,7 +401,7 @@ const ProfessionalView: React.FC = () => {
               <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 40px 0', display: 'block' }}>Documents</Label>
               <FileArea
                 files={filesData}
-                disabled={!isEditing}
+                disabled={false}
                 onUpload={handleFileUpload}
                 onDownload={handleFileDownload}
                 onDelete={handleFileDelete}
