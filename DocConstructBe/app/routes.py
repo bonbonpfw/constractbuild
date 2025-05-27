@@ -246,18 +246,7 @@ def init_routes(app):
             'id': project_document.id,
             'project_id': project_document.project_id,
         }).generate_response()
-    
-    @app.route('/api/project/document/autofill', methods=['POST'])
-    def autofill_project_document():
-        data = validate_request(endpoint=Endpoints.AUTOFILL_PROJECT_DOCUMENT)
-        professionals = ProjectDocumentManager.get_document_project_professionals(project_id=data.get('project_id'),document_type=data.get('document_type'))
-        document_type = enum_to_value(data.get('document_type'))
-        filled_pdf = ProjectDocumentManager.autofill_document(document_type=document_type,professionals=professionals,permit_owner=data.get('permit_owner'),src_pdf_path=data.get('src_pdf_path'))
-       
-        return SuccessResponse({
-          'filled_pdf': filled_pdf
-        }).generate_response()
-    
+
     @app.route('/api/project/document', methods=['DELETE'])
     def delete_project_document():
         data = validate_request(endpoint=Endpoints.REMOVE_PROJECT_DOCUMENT)
