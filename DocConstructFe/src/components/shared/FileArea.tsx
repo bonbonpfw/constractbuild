@@ -305,7 +305,7 @@ const FileItem: React.FC<{
   fileType: string;
   state: DocumentState;
   disabled: boolean;
-  onUpload?: (fileType: string, file: File) => void;
+  onUpload?: (fileType: string, file: File, mode: 'auto' | 'manual') => void;
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
   onRequestUpload: (fileType: string, file: File) => void;
@@ -391,18 +391,20 @@ const FileItem: React.FC<{
 };
 
 // Main FileArea component with tabbed interface
-const FileArea: React.FC<{ 
-  files: FileAreaDocument[]; 
+type FileAreaProps = {
+  files: FileAreaDocument[];
   disabled: boolean;
-  onUpload?: (fileType: string, file: File) => void;
+  onUpload?: (fileType: string, file: File, mode: 'auto' | 'manual') => void;
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
   onUploadGeneral?: (file: File) => void;
-}> = ({ 
-  files, 
-  disabled, 
-  onUpload, 
-  onDelete, 
+};
+
+const FileArea: React.FC<FileAreaProps> = ({
+  files,
+  disabled,
+  onUpload,
+  onDelete,
   onPreview,
   onUploadGeneral
 }) => {
@@ -415,7 +417,7 @@ const FileArea: React.FC<{
   };
   const handleConfirmUploadMode = (mode: 'auto' | 'manual') => {
     if (pendingUpload && onUpload) {
-      onUpload(pendingUpload.fileType, pendingUpload.file);
+      onUpload(pendingUpload.fileType, pendingUpload.file, mode);
     }
     setShowUploadModeDialog(false);
     setPendingUpload(null);

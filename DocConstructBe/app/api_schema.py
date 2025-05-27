@@ -74,6 +74,7 @@ class ProjectDocumentUploadSchema(Schema):
     document_type = fields.Enum(ProjectDocumentType, by_value=True, required=False)
     document_name = fields.Str(required=True)
     status = fields.Str(required=True)
+    mode = fields.Str(required=False, validate=validate.OneOf(['auto', 'manual']))
 
     file = fields.Raw(required=True)
 

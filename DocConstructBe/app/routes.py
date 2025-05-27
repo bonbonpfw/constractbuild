@@ -215,7 +215,7 @@ def init_routes(app):
         project_id = str(data.get('project_id'))
         document_type = data.get('document_type')
         document_status = data.get('status')
-        is_autofill = data.get('is_autofill',True)
+        is_autofill = data.get('mode', 'auto') == 'auto'
         if document_type == ProjectDocumentType.GENERAL:
             is_autofill = False
         
@@ -241,7 +241,7 @@ def init_routes(app):
             document_type=document_type,
             document_name=data.get('document_name'),
             document_status=document_status
-            )
+        )
         return SuccessResponse({
             'id': project_document.id,
             'project_id': project_document.project_id,

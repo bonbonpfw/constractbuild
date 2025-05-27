@@ -590,20 +590,10 @@ const ProjectView: React.FC = () => {
     }
   });
 
-  const handleFileUpload = async (fileType: string, file: File) => {
+  const handleFileUpload = async (fileType: string, file: File, mode: 'auto' | 'manual') => {
     if (!id || !file) return;
-
     try {
-      const formData = new FormData();
-      formData.append('project_id', id);
-      formData.append('document_type', fileType);
-      formData.append('document_name', file.name);
-      formData.append('file', file);
-      formData.append('status', DocumentState.UPLOADED);
-
-      console.log(`Uploading file: ${file.name}, type: ${fileType}, size: ${file.size} bytes, status: ${DocumentState.UPLOADED}`);
-      
-      await uploadProjectDocument(id, fileType, file.name, file, DocumentState.UPLOADED);
+      await uploadProjectDocument(id, fileType, file.name, file, DocumentState.UPLOADED, mode);
       await loadData();
       toast.success(`${fileType} uploaded successfully`);
     } catch (error) {

@@ -235,7 +235,8 @@ export const uploadProjectDocument = async (
   documentType: string,
   documentName: string,
   file: File,
-  status: string = DocumentState.UPLOADED
+  status: string = DocumentState.UPLOADED,
+  mode?: 'auto' | 'manual'
 ) => {
   const formData = new FormData();
   formData.append('project_id', projectId);
@@ -245,7 +246,9 @@ export const uploadProjectDocument = async (
   
   // Send the status directly from the DocumentState enum
   formData.append('status', status);
-
+  if (mode) {
+    formData.append('mode', mode);
+  }
   const response = await axios.post(
     `${API_URL}/project/document`,
     formData,
