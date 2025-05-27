@@ -38,7 +38,8 @@ class ProfessionalType(Enum):
             return ProfessionalType.PESTICIDAL
         elif "קבלן ביצוע" in value:
             return ProfessionalType.GENERAL_CONTRACTOR
-        return value
+        
+        return ProfessionalType.SUPERVISOR_ENGINEER
 
 class ProfessionalStatus(Enum):
     ACTIVE = 'Active'
