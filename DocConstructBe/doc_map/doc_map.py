@@ -47,6 +47,7 @@ class DocumentFiller:
         can.setFont("ArialHebrew", 12)
         
         for page_number in page_numbers:
+            can.setFont("ArialHebrew", 12)
             self.fill_page(can, page_number)
             can.showPage()
         can.save()
@@ -90,6 +91,8 @@ class DocumentFiller:
                 can.drawString(*self.document_positions[page_number]["date"], datetime.now().strftime("%d/%m/%Y"))
             if self.document_positions[page_number].get("prof_name_for_signed"):
                 can.drawString(*self.document_positions[page_number]["prof_name_for_signed"], professional.name[::-1])
+            if self.document_positions[page_number].get("license_expiration_date"):
+                can.drawString(*self.document_positions[page_number]["license_expiration_date"], professional.license_expiration_date.strftime("%d/%m/%Y"))
             if self.document_positions[page_number].get("date_for_signed"):
                 can.drawString(*self.document_positions[page_number]["date_for_signed"], datetime.now().strftime("%d/%m/%Y"))
             if self.document_positions[page_number].get("permit_owner"):
@@ -100,5 +103,7 @@ class DocumentFiller:
                 can.drawString(*self.document_positions[page_number]["permit_number_for_signed"], self.permit_owner.signature_file_path)
             if self.document_positions[page_number].get("id_for_signed"):
                 can.drawString(*self.document_positions[page_number]["id_for_signed"], professional.national_id)
+            if self.document_positions[page_number].get("name_for_signed"):
+                can.drawString(*self.document_positions[page_number]["name_for_signed"], professional.name[::-1])
             if self.document_positions[page_number].get("date_for_prof_signed"):
                 can.drawString(*self.document_positions[page_number]["date_for_prof_signed"], datetime.now().strftime("%d/%m/%Y"))

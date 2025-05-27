@@ -19,7 +19,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       address: [330, 350]
       mail: [250, 365]
       date: [80, 265]
-      permit_owner: [350, 407]
+      permit_owner: [350, 415]
       permit_owner_name_for_signed: [80, 290]
     2:
       name: [320, 727]  
@@ -30,7 +30,6 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       name_for_signed: [80, 440]
       date_for_signed: [80, 405] 
       
-
   START_WORK_REQUEST:
     1:
       name: [370, 427]
@@ -42,20 +41,35 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       prof_name_for_signed: [120, 145]
       date_for_signed: [100, 120]
 
-  EXECUTION_LICENSE:
+  STRUCTURAL_SUPERVISOR:
     1:
-      name: [380, 424]
-      id: [100, 424]
-      phone: [435, 405]
-      address: [380, 385]
-      mail: [220, 405]
+      name: [000, 424]
+      id: [000, 424]
+      phone: [000, 405]
+      address: [000, 385]
+      mail: [00, 405]
 
   EXECUTION_INSPECTION:
     1:
-      name: [150, 250]
-      id: [350, 250]
-      phone: [550, 250]
-      address: [250, 350]
+      permit_owner: [395, 390]
+      name: [355, 370]
+      id: [150, 370]
+      license_number: [430, 355]
+      phone: [430, 338]
+      mail: [320, 338]
+      address: [430, 320]
+      permit_owner_name_for_signed: [90, 255]
+      date_for_signed: [90, 230]
+    2:
+      name: [350, 730]
+      id: [420, 710]
+      license_number: [300, 710]
+      phone: [420, 690]
+      mail: [300, 690]
+      address: [360, 675]
+    3:
+      name_for_signed: [100, 625]
+      date_for_signed: [90, 597]
 
   PESTICIDAL_OWNER:
     1:
@@ -71,7 +85,28 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       license_number: [120, 392]
       
       date_for_prof_signed: [200, 256]
-
+ 
+  CONTRACTOR_OWNER:
+    1:
+      permit_owner: [395, 390]
+      name: [355, 370]
+      id: [430, 355]
+      license_number: [310, 355]
+      phone: [430, 338]
+      mail: [310, 338]
+      address: [430, 320]
+      permit_owner_name_for_signed: [90, 270]
+      date_for_signed: [90, 245]
+    2:
+      name: [430, 712]
+      id: [120, 712]
+      license_number: [410, 695]
+      license_expiration_date: [200, 695]
+      phone: [420, 680]
+      mail: [280, 680]
+      address: [400, 665]
+      prof_name_for_signed: [120, 480]
+      date_for_signed: [100, 455]
 
 DOCUMENT_PROFESSIONAL_MAP:
   TRASH_INSPECTION:
@@ -83,7 +118,7 @@ DOCUMENT_PROFESSIONAL_MAP:
   START_WORK_REQUEST:
     - CONSTRUCTION_INSPECTION_OFFICER
 
-  EXECUTION_LICENSE:
+  STRUCTURAL_SUPERVISOR:
     - STRUCTURAL_ENGINEER
 
   EXECUTION_INSPECTION:
@@ -91,3 +126,6 @@ DOCUMENT_PROFESSIONAL_MAP:
 
   PESTICIDAL_OWNER:
     - PESTICIDAL
+
+  CONTRACTOR_OWNER:
+    - GENERAL_CONTRACTOR

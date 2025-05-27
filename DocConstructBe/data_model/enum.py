@@ -9,7 +9,7 @@ class ProjectDocumentType(Enum):
     TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
     ADAPTER_AGREEMENT = 'אחראי לתיאום עם מכון בקרה'
     START_WORK_REQUEST = 'בקשה לתחילת עבודות'
-    EXECUTION_LICENSE = 'מינוי אחראי לביצוע שלד (101)'
+    STRUCTURAL_SUPERVISOR = 'מינוי אחראי לביצוע שלד (101)'
     EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
     PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
     CONTRACTOR_OWNER = 'מינוי קבלן רשום'
