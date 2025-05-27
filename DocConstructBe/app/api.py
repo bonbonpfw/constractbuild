@@ -16,7 +16,8 @@ from app.errors import (
     ProfessionalAlreadyInProject,
     ProfessionalNotInProject,
     ProfessionalDocumentNotFound,
-    ProjectDocumentNotFound
+    ProjectDocumentNotFound,
+    InvalidDocumentStatus
 )
 from data_model.models import (
     Project,
@@ -161,8 +162,8 @@ class ProjectManager:
         try:
           status = document_status.value if hasattr(document_status, 'value') else document_status
         except KeyError:
-            raise ValueError(f"Invalid document status: {document_status}")
-        # Create document record in database
+            raise InvalidDocumentStatus(document_status=document_status)
+        # Create a document record in the database
         document = ProjectDocument(
             project_id=project_id,
             document_type=enum_to_value(document_type),

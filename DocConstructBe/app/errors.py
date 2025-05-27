@@ -201,3 +201,11 @@ class InvalidProjectProfessionalDocument(ApiError):
             msg=f'Professional {document_type} not related to project {project_id}"',
             code='invalid_project_professional_document'
         )
+
+
+class InvalidDocumentStatus(ApiError):
+    def __init__(self, document_status):
+        super().__init__(
+            msg=f'Invalid document status: {document_status}',
+            code='invalid_document_status'
+        )
