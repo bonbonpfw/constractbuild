@@ -245,8 +245,7 @@ class ProjectDocumentManager:
             if prof_type_value.name in doc_professionals_types:
                 document_professionals.append(professional)
         return document_professionals
-    
-    
+
     @staticmethod
     def autofill_document(document_type: ProjectDocumentType,professionals: list[Professional],permit_owner: PermitOwner,src_pdf_path: str):
         document_filler = DocumentFiller(document_type=document_type,professionals=professionals,permit_owner=permit_owner,src_pdf_path=src_pdf_path)
