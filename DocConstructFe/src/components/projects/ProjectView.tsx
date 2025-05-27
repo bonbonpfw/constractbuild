@@ -926,7 +926,6 @@ const ProjectView: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
                       <CompactButton 
                         onClick={handleAddProfessional} 
-                        disabled={!isEditing}
                       >
                         {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
                       </CompactButton>
@@ -961,7 +960,6 @@ const ProjectView: React.FC = () => {
                             <IconOnlyButton 
                               onClick={() => handleRemoveProfessional(professional)} 
                               title="הסר בעל מקצוע"
-                              disabled={!isEditing}
                               style={{ margin: '0', width: '24px', height: '24px', fontSize: '12px' }}
                             >
                               {renderIcon(FaIcons.FaTrash, 12)}
