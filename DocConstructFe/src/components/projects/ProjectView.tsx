@@ -1014,7 +1014,6 @@ const ProjectView: React.FC = () => {
                   files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : filesData.filter(f => f.fileType === 'כללי')}
                   disabled={false}
                   onUpload={handleFileUpload}
-                  onDownload={handleFileDownload}
                   onDelete={handleFileDelete}
                   onPreview={handleFilePreview}
                   onUploadGeneral={handleUploadGeneralFile}

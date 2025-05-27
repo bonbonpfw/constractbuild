@@ -403,7 +403,6 @@ const ProfessionalView: React.FC = () => {
                 files={filesData}
                 disabled={false}
                 onUpload={handleFileUpload}
-                onDownload={handleFileDownload}
                 onDelete={handleFileDelete}
                 onPreview={handleFilePreview}
               />

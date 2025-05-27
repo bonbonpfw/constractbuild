@@ -306,51 +306,35 @@ const FileItem: React.FC<{
   state: DocumentState;
   disabled: boolean;
   onUpload?: (fileType: string, file: File) => void;
-  onDownload?: (fileId: string, fileName: string) => void;
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
   onRequestUpload: (fileType: string, file: File) => void;
-  onSelect?: (fileId: string, selected: boolean) => void;
-  selected?: boolean;
 }> = ({ 
   fileId, 
   fileName, 
   fileType, 
   state, 
   disabled, 
-  onUpload, 
-  onDownload, 
-  onDelete, 
-  onPreview, 
-  onRequestUpload,
-  onSelect,
-  selected
+  onUpload,
+  onDelete,
+  onPreview,
+  onRequestUpload
 }) => {
-  const [showEmailDialog, setShowEmailDialog] = React.useState(false);
-
   const handleUpload = async () => {
     if (disabled) return;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
-    
     input.onchange = (e: Event) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files || files.length === 0) return;
-      
       const file = files[0];
       onRequestUpload(fileType, file);
     };
-    
     input.click();
   };
 
-  const handleDownload = () => {
-    if (state === DocumentState.MISSING || !onDownload) return;
-    onDownload(fileId, fileName || '');
-  };
-
-  const handleDelete = () => {
+    const handleDelete = () => {
     if (disabled || state === DocumentState.MISSING || !onDelete) return;
     onDelete(fileId);
   };
@@ -360,46 +344,23 @@ const FileItem: React.FC<{
     onPreview(fileId, fileName || '');
   };
 
-  const handleSendEmail = (email: string) => {
-    // Handle sending email
-    setShowEmailDialog(false);
-    toast.success(`Email sent to ${email}`);
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onSelect && state === DocumentState.UPLOADED) {
-      onSelect(fileId, e.target.checked);
-    }
-  };
-
   return (
-    <>
-      <FileItemContainer disabled={disabled} state={state}>
-        <FileInfo>
-          {onSelect && state === DocumentState.UPLOADED && (
-            <input 
-              type="checkbox" 
-              checked={selected} 
-              onChange={handleCheckboxChange}
-              disabled={false}
-              style={{ marginRight: '4px' }}
-            />
-          )}
-          <FileIcon state={state}>
-            <FaFileAlt />
-          </FileIcon>
-          <FileDetails>
-            <FileTypeBadge state={state}>{fileType}</FileTypeBadge>
-            <FileName state={state}>
-              {state === DocumentState.UPLOADED ? fileName : 'Missing document'}
-            </FileName>
-          </FileDetails>
-        </FileInfo>
-        
-        <Actions>
+    <FileItemContainer disabled={disabled} state={state}>
+      <FileInfo>
+        <FileIcon state={state}>
+          <FaFileAlt />
+        </FileIcon>
+        <FileDetails>
+          <FileTypeBadge state={state}>{fileType}</FileTypeBadge>
+          <FileName state={state}>
+            {state === DocumentState.UPLOADED ? fileName : 'Missing document'}
+          </FileName>
+        </FileDetails>
+      </FileInfo>
+      <Actions>
           {state === DocumentState.MISSING ? (
-            <ActionButton 
-              disabled={disabled} 
+            <ActionButton
+              disabled={disabled}
               onClick={handleUpload}
               title="Upload document"
             >
@@ -407,30 +368,16 @@ const FileItem: React.FC<{
             </ActionButton>
           ) : (
             <>
-              <ActionButton 
+              <ActionButton
                 disabled={false}
                 onClick={handlePreview}
                 title="Preview"
               >
                 <FaEye />
               </ActionButton>
-              <ActionButton 
-                disabled={false}
-                onClick={handleDownload}
-                title="Download"
-              >
-                <FaDownload />
-              </ActionButton>
-              <ActionButton 
-                disabled={false}
-                onClick={() => setShowEmailDialog(true)}
-                title="Send email"
-              >
-                <FaEnvelope />
-              </ActionButton>
-              <ActionButton 
-                disabled={disabled} 
-                danger 
+              <ActionButton
+                disabled={disabled}
+                danger
                 onClick={handleDelete}
                 title="Delete"
               >
@@ -439,16 +386,7 @@ const FileItem: React.FC<{
             </>
           )}
         </Actions>
-      </FileItemContainer>
-
-      {/* Email Dialog */}
-      <EmailDialog
-        isOpen={showEmailDialog}
-        onClose={() => setShowEmailDialog(false)}
-        onSend={handleSendEmail}
-        fileNames={[fileName || '']}
-      />
-    </>
+    </FileItemContainer>
   );
 };
 
@@ -457,7 +395,6 @@ const FileArea: React.FC<{
   files: FileAreaDocument[]; 
   disabled: boolean;
   onUpload?: (fileType: string, file: File) => void;
-  onDownload?: (fileId: string, fileName: string) => void;
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
   onUploadGeneral?: (file: File) => void;
@@ -465,22 +402,17 @@ const FileArea: React.FC<{
   files, 
   disabled, 
   onUpload, 
-  onDownload, 
   onDelete, 
   onPreview,
   onUploadGeneral
 }) => {
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showUploadModeDialog, setShowUploadModeDialog] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ fileType: string; file: File } | null>(null);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-
   const handleRequestUpload = (fileType: string, file: File) => {
     setPendingUpload({ fileType, file });
     setShowUploadModeDialog(true);
   };
-
   const handleConfirmUploadMode = (mode: 'auto' | 'manual') => {
     if (pendingUpload && onUpload) {
       onUpload(pendingUpload.fileType, pendingUpload.file);
@@ -488,92 +420,34 @@ const FileArea: React.FC<{
     setShowUploadModeDialog(false);
     setPendingUpload(null);
   };
-  
-  const handleSelectFile = (fileId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedFiles(prev => [...prev, fileId]);
-    } else {
-      setSelectedFiles(prev => prev.filter(id => id !== fileId));
-    }
-  };
-  
-  const handleBatchDownload = () => {
-    if (!onDownload) return;
-    
-    // Get selected file info
-    const filesToDownload = files.filter(file => 
-      file.state === DocumentState.UPLOADED && 
-      selectedFiles.includes(file.fileId || '')
-    );
-    
-    // Download each file
-    filesToDownload.forEach(file => {
-      if (file.fileId && file.fileName) {
-        onDownload(file.fileId, file.fileName);
-      }
-    });
-    
-    toast.success(`Downloading ${filesToDownload.length} files`);
-  };
-  
-  const handleBatchEmail = () => {
-    if (selectedFiles.length === 0) return;
-    setShowEmailDialog(true);
-  };
-  
-  const handleSendBatchEmail = (email: string) => {
-    // Get selected file names for the success message
-    const selectedFileNames = files
-      .filter(file => file.state === DocumentState.UPLOADED && selectedFiles.includes(file.fileId || ''))
-      .map(file => file.fileName || '');
-    
-    setShowEmailDialog(false);
-    toast.success(`${selectedFileNames.length} files sent to ${email}`);
-  };
-  
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
-  
   const handleDragLeave = () => {
     setIsDragging(false);
   };
-  
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
     if (disabled || !onUploadGeneral) return;
-    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       onUploadGeneral(files[0]);
     }
   };
-  
   const handleGeneralUploadClick = () => {
     if (disabled || !onUploadGeneral) return;
-    
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.jpeg,.png';
-    
     input.onchange = (e: Event) => {
       const files = (e.target as HTMLInputElement).files;
       if (!files || files.length === 0) return;
-      
       onUploadGeneral(files[0]);
     };
-    
     input.click();
   };
-
-  // Get file names for email dialog
-  const selectedFileNames = files
-    .filter(file => file.state === DocumentState.UPLOADED && selectedFiles.includes(file.fileId || ''))
-    .map(file => file.fileName || '');
-
   return (
     <FileAreaContainer>
       <FileAreaContent>
@@ -592,26 +466,14 @@ const FileArea: React.FC<{
                 state={file.state}
                 disabled={disabled}
                 onUpload={onUpload}
-                onDownload={onDownload}
                 onDelete={onDelete}
                 onPreview={onPreview}
                 onRequestUpload={handleRequestUpload}
-                onSelect={handleSelectFile}
-                selected={selectedFiles.includes(file.fileId || '')}
               />
             ))
           )}
         </FileListContainer>
       </FileAreaContent>
-      
-      {/* Email Dialog for batch operations */}
-      <EmailDialog
-        isOpen={showEmailDialog}
-        onClose={() => setShowEmailDialog(false)}
-        onSend={handleSendBatchEmail}
-        fileNames={selectedFileNames}
-      />
-      
       {/* Upload Mode Dialog */}
       <UploadModeDialog
         isOpen={showUploadModeDialog}
