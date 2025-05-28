@@ -932,12 +932,11 @@ const ProjectView: React.FC = () => {
                   </button>
                 </div>
                 {activeDocTab === 'categorized' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12, gap: 8 }}>
                     <button
                       onClick={handleDownloadAllFiles}
                       disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
                       style={{
-                        width: '100%',
                         background: '#648fbf',
                         color: '#fff',
                         border: 'none',
@@ -956,6 +955,28 @@ const ProjectView: React.FC = () => {
                     >
                       {renderIcon(FaIcons.FaDownload, 16)}
                       הורד הכל
+                    </button>
+                    <button
+                      disabled={true}
+                      style={{
+                        background: '#648fbf',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 16px',
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: 'not-allowed',
+                        opacity: 0.5,
+                        marginBottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      {renderIcon(FaIcons.FaEnvelope, 16)}
+                      שלח במייל
                     </button>
                   </div>
                 )}
