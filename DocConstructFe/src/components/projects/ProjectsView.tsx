@@ -9,7 +9,13 @@ import {
   PageContainer,
   TopPanelGroup,
   PageContent,
-  IconButton, TopPanelTitleHolder, TopPanelTitle, CardGrid, Card, CardName, CardInfo
+  IconButton,
+  TopPanelTitleHolder,
+  TopPanelTitle,
+  CardGrid,
+  Card,
+  CardName,
+  CardInfo
 } from '../../styles/SharedStyles';
 import { Project, ProjectStatus, ProfessionalStatus } from "../../types";
 import EmptyStatePlaceholder from "../shared/EmptyState";

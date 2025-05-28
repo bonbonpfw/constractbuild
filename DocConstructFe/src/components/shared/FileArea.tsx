@@ -40,7 +40,7 @@ const FileListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 16px 16px;
+  padding: 0;
   overflow-y: visible;
 `;
 

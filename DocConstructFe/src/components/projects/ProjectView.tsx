@@ -12,9 +12,6 @@ import {
   PageContainer,
   PageContent,
   Select,
-  Table,
-  TableBody,
-  TableHeader,
   TextArea,
   TopPanel,
   TopPanelGroup,
@@ -43,7 +40,6 @@ import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 
-// Modern status badge with Apple-style design
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
   padding: 4px 8px;
@@ -62,7 +58,6 @@ const StatusBadge = styled.span<{ status: string }>`
     '#e1273d'};
 `;
 
-// Main content layout
 const MainLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -73,13 +68,11 @@ const MainLayout = styled.div`
   overflow: visible;
 `;
 
-// Project details panel
 const ProjectPanel = styled.div`
   grid-area: project;
-  padding: 0 12px;
+  padding: 0 0px;
 `;
 
-// Documents panel
 const DocumentsPanel = styled.div`
   grid-area: documents;
   width: 380px;
@@ -88,14 +81,12 @@ const DocumentsPanel = styled.div`
   overflow-y: visible;
 `;
 
-// Tab container
 const TabContainer = styled.div`
   display: flex;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 16px;
 `;
 
-// Tab button
 const TabButton = styled.button<{ active: boolean }>`
   background: transparent;
   border: none;
@@ -112,12 +103,10 @@ const TabButton = styled.button<{ active: boolean }>`
   }
 `;
 
-// Tab content
 const TabContent = styled.div`
   padding: 0;
 `;
 
-// Section card component with Apple-style design
 const Card = styled.div`
   background: #ffffff;
   border-radius: 12px;
@@ -126,68 +115,21 @@ const Card = styled.div`
   margin-bottom: 16px;
 `;
 
-// Section titles
-const SectionTitle = styled.h2`
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 16px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
-`;
-
-// Container for action buttons in document area
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-`;
-
-// Compact form grid
 const CompactFormGrid = styled(FormGrid)`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 `;
 
-// Compact field
 const CompactField = styled(Field)`
   margin-bottom: 8px;
 `;
 
-// Compact label
 const CompactLabel = styled(Label)`
   margin-bottom: 4px;
   font-size: 14px;
 `;
 
-// Compact table
-const CompactTable = styled(Table)`
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-  
-  th {
-    background-color: #f5f5f7;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #333;
-    text-align: right;
-  }
-  
-  td {
-    padding: 8px 12px;
-    border-top: 1px solid #f0f0f0;
-    font-size: 13px;
-  }
-  
-  tr:hover td {
-    background-color: #f9f9fb;
-  }
-`;
-
-// Compact button
 const CompactButton = styled(Button)`
   padding: 6px 12px;
   font-size: 13px;
@@ -203,22 +145,12 @@ const CompactButton = styled(Button)`
   }
 `;
 
-// Compact icon only button
 const IconOnlyButton = styled(IconButton)`
   width: 30px;
   height: 30px;
   font-size: 14px;
 `;
 
-// Fix import for ProfessionalsGrid and ProfessionalCard components
-const ProfessionalsGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-start;
-`;
-
-// More compact professional card
 const ProfessionalCard = styled.div`
   display: flex;
   align-items: center;
@@ -230,7 +162,6 @@ const ProfessionalCard = styled.div`
   transition: all 0.2s ease;
   flex: 1;
   min-width: 230px;
-  //max-width: 280px;
   
   &:hover {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
