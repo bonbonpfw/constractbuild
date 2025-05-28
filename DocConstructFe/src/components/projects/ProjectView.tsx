@@ -1000,6 +1000,34 @@ const ProjectView: React.FC = () => {
                     מסמכים כלליים
                   </button>
                 </div>
+                {activeDocTab === 'categorized' && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                    <button
+                      onClick={handleDownloadAllFiles}
+                      disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
+                      style={{
+                        width: '100%',
+                        background: '#648fbf',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 16px',
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 'not-allowed' : 'pointer',
+                        opacity: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 0.5 : 1,
+                        marginBottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      {renderIcon(FaIcons.FaDownload, 16)}
+                      הורד הכל
+                    </button>
+                  </div>
+                )}
                 <FileArea
                   files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : filesData.filter(f => f.fileType === 'כללי')}
                   disabled={false}
