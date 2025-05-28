@@ -106,8 +106,13 @@ const Projects: React.FC = () => {
                 <StatusBadge status={project.status || 'draft'}>
                   {getStatusLabel(project.status)}
                 </StatusBadge>
-                {hasWarningOrExpiredProfessionals(project) && (
-                  <WarningBadge title="יש בעלי מקצוע עם רישיון שפג תוקף או בסטטוס אזהרה">
+                {project.is_expired && (
+                  <WarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
+                    <FaExclamationTriangle />
+                  </WarningBadge>
+                )}
+                {!project.is_expired && project.is_warning && (
+                  <WarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
                     <FaExclamationTriangle />
                   </WarningBadge>
                 )}
@@ -177,14 +182,15 @@ const StatusBadge = styled.div<{ status: string }>`
   }};
 `;
 
-const WarningBadge = styled.div`
+const WarningBadge = styled.div<{ color?: string }>`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 22px;
   font-size: 18px;
-  color: #f57c00;
+  color: ${props => props.color || '#f57c00'};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: help;
+  font-weight: bold;
 `;

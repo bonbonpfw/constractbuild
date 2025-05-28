@@ -76,6 +76,18 @@ def init_routes(app):
                 'status': project.status,
                 'permit_owner': project.permit_owner.name,
                 'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
+                # Calculate is_warning and is_expired based on professionals' license expiration dates
+                'is_expired': any(
+                    ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Expired'
+                    for prof in ProjectManager.get_project_professionals(project.id)
+                ),
+                'is_warning': (not any(
+                    ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Expired'
+                    for prof in ProjectManager.get_project_professionals(project.id)
+                ) and any(
+                    ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Warning'
+                    for prof in ProjectManager.get_project_professionals(project.id)
+                ))
             } for project in projects]
         }).generate_response()
 
