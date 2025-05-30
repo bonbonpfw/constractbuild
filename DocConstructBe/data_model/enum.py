@@ -17,17 +17,23 @@ class ProjectDocumentType(Enum):
     GENERAL = 'כללי'
 
 class ProfessionalType(Enum):
-    SUPERVISOR_ENGINEER = 'מהנדס אחראי ביקורת'
+    SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
+    SUPERVISOR_ENGINEER_CONSTRUCTION = 'אחראי ביקורת - קונסטרוקציה'
+    SUPERVISOR_ENGINEER_ARCHITECTURE = 'אחראי ביקורת - אדריכלות'
     STRUCTURAL_ENGINEER = 'מהנדס אחראי שלד'
     CONSTRUCTION_INSPECTION_OFFICER = 'אחראי לביקורת על ביצוע'
     ARCHITECT = 'אדריכל'
     PESTICIDAL = 'מדביר'
-    GENERAL_CONTRACTOR = 'קבלן ביצוע'
+    GENERAL_CONTRACTOR = 'קבלן ראשי'
 
-    @staticmethod
+    @staticmethod   
     def map_to_value(value: str) -> 'ProfessionalType':
-        if "מהנדס אחראי ביקורת" in value:
+        if "אחראי ביקורת - כללי" in value:
             return ProfessionalType.SUPERVISOR_ENGINEER
+        elif "אחראי ביקורת - קונסטרוקציה" in value:
+            return ProfessionalType.SUPERVISOR_ENGINEER_CONSTRUCTION
+        elif "אחראי ביקורת - אדריכלות" in value:
+            return ProfessionalType.SUPERVISOR_ENGINEER_ARCHITECTURE
         elif "מהנדס אחראי שלד" in value:
             return ProfessionalType.STRUCTURAL_ENGINEER
         elif "אחראי לביקורת על ביצוע" in value:
@@ -36,7 +42,7 @@ class ProfessionalType(Enum):
             return ProfessionalType.ARCHITECT
         elif "מדביר" in value:
             return ProfessionalType.PESTICIDAL
-        elif "קבלן ביצוע" in value:
+        elif "קבלן ראשי" in value:
             return ProfessionalType.GENERAL_CONTRACTOR
         
         return ProfessionalType.SUPERVISOR_ENGINEER

@@ -233,22 +233,24 @@ class ProjectDocumentManager:
         return professionals
     
     @staticmethod
-    def get_document_professionals_types(document_type: ProjectDocumentType):
+    def get_document_professionals_names(document_type: ProjectDocumentType):
         doc_professionals_types = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
         return doc_professionals_types
     
     @staticmethod
     def get_document_professionals(document_type: ProjectDocumentType,professionals: list[Professional]):
-        doc_professionals_types = ProjectDocumentManager.get_document_professionals_types(document_type)
+        doc_professionals_types = ProjectDocumentManager.get_document_professionals_names(document_type)
         document_professionals = []
         for professional in professionals:
-            prof_type_value = ProfessionalManager.get_professional_type_by_value(professional.professional_type)
-            if prof_type_value.name in doc_professionals_types:
+            prof_name = ProfessionalManager.get_prof_name(professional.professional_type)
+            if prof_name in doc_professionals_types:
                 document_professionals.append(professional)
         return document_professionals
 
     @staticmethod
     def autofill_document(document_type: ProjectDocumentType,professionals: list[Professional],permit_owner: PermitOwner,src_pdf_path: str):
+        for professional in professionals:
+            professional.prof_type_name =ProfessionalManager.get_prof_name(professional.professional_type) 
         document_filler = DocumentFiller(document_type=document_type,professionals=professionals,permit_owner=permit_owner,src_pdf_path=src_pdf_path)
         filled_pdf_path = document_filler.fill_document()
         return filled_pdf_path
@@ -257,12 +259,24 @@ class ProjectDocumentManager:
 class ProfessionalManager:
     @staticmethod
     def get_types() -> list[str]:
-        return [professional_type.value for professional_type in ProfessionalType]
+        return [professional_type for professional_type in ProfessionalType]
 
     @staticmethod
     def get_statuses() -> list[str]:
         return [status.value for status in ProfessionalStatus]
 
+    @staticmethod
+    def get_prof_name(prof_value: str) -> ProfessionalType:
+        return ProfessionalType.map_to_value(prof_value).name
+    
+    @staticmethod
+    def get_prof_value(prof_name: str) -> str:
+        types = ProfessionalManager.get_types()
+        for type in types:
+            if prof_name == type.name:
+                return type.value
+        return None
+    
     @staticmethod
     def get_all() -> list[Professional]:
         professionals = db_session.query(Professional).all()
@@ -426,7 +440,8 @@ class ProfessionalManager:
         license_data = extract_professional.extract_text()
         # Convert LicenseData object to dict before accessing
         license_dict = license_data.__dict__()
-        license_dict['professional_type'] = ProfessionalType.map_to_value(license_dict['professional_type'])
+        if license_dict.get('professional_type'):
+            license_dict['professional_type'] = ProfessionalType.map_to_value(license_dict.get('professional_type'))
         license_dict['license_file_path'] = file_path
         return license_dict
     
@@ -439,17 +454,18 @@ class ProfessionalManager:
         else:
             return ProfessionalStatus.ACTIVE
         
-    @staticmethod
-    def get_professional_type_by_value(professional_type_value: str) -> ProfessionalType:
-        return ProfessionalType.map_to_value(professional_type_value)
-
+   
+def get_project_professionals_types(document_type: str) -> list[str]:
+    doc_professionals_names = ProjectDocumentManager.get_document_professionals_names(document_type)
+    doc_professionals_values =  [ProfessionalManager.get_prof_value(professional_type) for professional_type in doc_professionals_names]
+    return doc_professionals_names,doc_professionals_values
 
 def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
-    doc_professionals_types = ProjectDocumentManager.get_document_professionals_types(document_type)
+    doc_professionals_names,_ = get_project_professionals_types(document_type=document_type)
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
-    project_prof_types = [ProfessionalManager.get_professional_type_by_value(p_professional.professional_type).name for p_professional in project_professionals]
-    for doc_professional_type in doc_professionals_types:
-        if doc_professional_type not in project_prof_types:
+    project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
+    for doc_professional_name in doc_professionals_names:
+        if doc_professional_name not in project_prof_types:
             return False
     return True
 

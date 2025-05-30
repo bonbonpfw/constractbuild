@@ -9,6 +9,7 @@ from app.api import (
     ProfessionalManager,
     ProjectDocumentManager,
     is_document_professional_related,
+    get_project_professionals_types,
     save_file_to_temp
 )
 from app.response import SuccessResponse
@@ -234,7 +235,8 @@ def init_routes(app):
         file_path = save_file_to_temp(data.get('file'))
         if is_autofill:
             if not is_document_professional_related(project_id=project_id, document_type=document_type):
-                raise InvalidProjectProfessionalDocument(document_type=document_type.value, project_id=project_id)
+                _,required_professionals_values = get_project_professionals_types(document_type=document_type)
+                raise InvalidProjectProfessionalDocument(required_professionals_types=', '.join(required_professionals_values))
             permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)

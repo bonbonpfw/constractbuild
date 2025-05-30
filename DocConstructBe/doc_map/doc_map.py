@@ -75,35 +75,41 @@ class DocumentFiller:
     
     def fill_page(self,can: canvas.Canvas,page_number: int):    
         for professional in self.professionals:
-            if self.document_positions[page_number].get("name"):
-                can.drawString(*self.document_positions[page_number]["name"], professional.name[::-1])
-            if self.document_positions[page_number].get("id"):
-                can.drawString(*self.document_positions[page_number]["id"], professional.national_id)
-            if self.document_positions[page_number].get("phone"):
-                can.drawString(*self.document_positions[page_number]["phone"], professional.phone)
-            if self.document_positions[page_number].get("address"):
-                can.drawString(*self.document_positions[page_number]["address"], professional.address[::-1])
-            if self.document_positions[page_number].get("mail"):
-                can.drawString(*self.document_positions[page_number]["mail"], professional.email)
-            if self.document_positions[page_number].get("license_number"):
-                can.drawString(*self.document_positions[page_number].get("license_number"), professional.license_number)
-            if self.document_positions[page_number].get("date"):
-                can.drawString(*self.document_positions[page_number]["date"], datetime.now().strftime("%d/%m/%Y"))
-            if self.document_positions[page_number].get("prof_name_for_signed"):
-                can.drawString(*self.document_positions[page_number]["prof_name_for_signed"], professional.name[::-1])
-            if self.document_positions[page_number].get("license_expiration_date"):
-                can.drawString(*self.document_positions[page_number]["license_expiration_date"], professional.license_expiration_date.strftime("%d/%m/%Y"))
-            if self.document_positions[page_number].get("date_for_signed"):
-                can.drawString(*self.document_positions[page_number]["date_for_signed"], datetime.now().strftime("%d/%m/%Y"))
+            prefix = professional.prof_type_name.lower()
+            
+            ## Professional Data
+            if self.document_positions[page_number].get(f"{prefix}_name"):
+                can.drawString(*self.document_positions[page_number][f"{prefix}_name"], professional.name[::-1])
+            if self.document_positions[page_number].get(f"{prefix}_id"):
+                can.drawString(*self.document_positions[page_number][f"{prefix}_id"], professional.national_id)
+            if self.document_positions[page_number].get(f"{prefix}_phone"):
+                can.drawString(*self.document_positions[page_number][f"{prefix}_phone"], professional.phone)
+            if self.document_positions[page_number].get(f"{prefix}_address"):
+                can.drawString(*self.document_positions[page_number].get(f"{prefix}_address"), professional.address[::-1])
+            if self.document_positions[page_number].get(f"{prefix}_mail"):
+                can.drawString(*self.document_positions[page_number][f"{prefix}_mail"], professional.email)
+            if self.document_positions[page_number].get(f"{prefix}_license_number"):
+                can.drawString(*self.document_positions[page_number].get(f"{prefix}_license_number"), professional.license_number)
+            if self.document_positions[page_number].get(f"{prefix}_license_expiration_date"):
+                can.drawString(*self.document_positions[page_number].get(f"{prefix}_license_expiration_date"), professional.license_expiration_date.strftime("%d/%m/%Y"))
+            
+            ## Professional Signature Area
+            if self.document_positions[page_number].get(f"{prefix}_name_for_signed"):
+                can.drawString(*self.document_positions[page_number].get(f"{prefix}_name_for_signed"), professional.name[::-1])
+            if self.document_positions[page_number].get(f"{prefix}_id_for_signed"):
+                can.drawString(*self.document_positions[page_number].get(f"{prefix}_id_for_signed"), professional.national_id)
+
+            ## Date for Signed
+            if self.document_positions[page_number].get(f"date_for_signed"):
+                can.drawString(*self.document_positions[page_number].get(f"date_for_signed"), datetime.now().strftime("%d/%m/%Y"))
+            if self.document_positions[page_number].get(f"date"):
+                can.drawString(*self.document_positions[page_number].get(f"date"), datetime.now().strftime("%d/%m/%Y"))
+            
+            ## Permit Owner Data
             if self.document_positions[page_number].get("permit_owner"):
                 can.drawString(*self.document_positions[page_number]["permit_owner"], self.permit_owner.name[::-1])
             if self.document_positions[page_number].get("permit_owner_name_for_signed"):
                 can.drawString(*self.document_positions[page_number]["permit_owner_name_for_signed"], self.permit_owner.name[::-1])
             if self.document_positions[page_number].get("permit_number_for_signed") and self.permit_owner.signature_file_path:
                 can.drawString(*self.document_positions[page_number]["permit_number_for_signed"], self.permit_owner.signature_file_path)
-            if self.document_positions[page_number].get("id_for_signed"):
-                can.drawString(*self.document_positions[page_number]["id_for_signed"], professional.national_id)
-            if self.document_positions[page_number].get("name_for_signed"):
-                can.drawString(*self.document_positions[page_number]["name_for_signed"], professional.name[::-1])
-            if self.document_positions[page_number].get("date_for_prof_signed"):
-                can.drawString(*self.document_positions[page_number]["date_for_prof_signed"], datetime.now().strftime("%d/%m/%Y"))
+

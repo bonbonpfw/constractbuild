@@ -58,7 +58,7 @@ class HttpException(ApiError):
 class InvalidFileFormat(ApiError):
     def __init__(self, file_format: str):
         super().__init__(
-            msg=f'Invalid file format: {file_format}',
+            msg=f'פורמט קובץ לא תקין: {file_format}',
             code='invalid_file_format'
         )
 
@@ -72,7 +72,7 @@ class ValidationError(ApiError):
                 print(f"  {field}: {error}")
                 
         super().__init__(
-            msg='Validation error',
+            msg='חלק מהשדות חסרים או לא תקינים',
             code='validation_error',
             params=params if params else None
         )
@@ -112,7 +112,7 @@ def handle_error(error: Exception):
 class ProjectDoesNotExist(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Project not found',
+            msg='פרויקט לא נמצא',
             code='project_does_not_exist'
         )
 
@@ -123,7 +123,7 @@ class ProjectDoesNotExist(ApiError):
 class ProjectAlreadyExists(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Project already exists',
+            msg='פרויקט כבר קיים',
             code='project_already_exists'
         )
 
@@ -134,7 +134,7 @@ class ProjectAlreadyExists(ApiError):
 class ProfessionalDoesNotExist(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Professional not found',
+            msg='איש מקצוע לא נמצא',
             code='professional_does_not_exist'
         )
 
@@ -145,7 +145,7 @@ class ProfessionalDoesNotExist(ApiError):
 class ProfessionalAlreadyExists(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Professional already exists (Name, National ID or Email must be unique)',
+            msg='איש מקצוע כבר קיים (תעודת זהות או אימייל חייבים להיות ייחודיים)',
             code='professional_already_exists'
         )
 
@@ -155,7 +155,7 @@ class ProfessionalAlreadyExists(ApiError):
 class ProfessionalAlreadyInProject(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Professional already in project',
+            msg='איש מקצוע כבר קיים בפרויקט',
             code='professional_already_in_project'
         )
 
@@ -165,7 +165,7 @@ class ProfessionalAlreadyInProject(ApiError):
 class ProfessionalNotInProject(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Professional is not associated with this project',
+            msg='אין איש מקצוע בפרויקט',
             code='professional_not_in_project'
         )
 
@@ -176,7 +176,7 @@ class ProfessionalNotInProject(ApiError):
 class ProfessionalDocumentNotFound(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Document not found or not associated with this professional',
+            msg='מסמך לא נמצא או לא קשור לאיש מקצוע זה',
             code='professional_document_not_found'
         )
 
@@ -187,7 +187,7 @@ class ProfessionalDocumentNotFound(ApiError):
 class ProjectDocumentNotFound(ApiError):
     def __init__(self):
         super().__init__(
-            msg='Document not found or not associated with this project',
+            msg='מסמך לא נמצא או לא קשור לפרויקט זה',
             code='project_document_not_found'
         )
 
@@ -196,9 +196,9 @@ class ProjectDocumentNotFound(ApiError):
 
 
 class InvalidProjectProfessionalDocument(ApiError):
-    def __init__(self, document_type, project_id: str):
+    def __init__(self, required_professionals_types: str):
         super().__init__(
-            msg=f'Professional {document_type} not related to project {project_id}"',
+            msg=f'אנשי מקצוע אינם משוייכים לפרויקט : {required_professionals_types}',
             code='invalid_project_professional_document'
         )
 
@@ -206,6 +206,6 @@ class InvalidProjectProfessionalDocument(ApiError):
 class InvalidDocumentStatus(ApiError):
     def __init__(self, document_status):
         super().__init__(
-            msg=f'Invalid document status: {document_status}',
+            msg=f'סטטוס מסמך לא תקין: {document_status}',
             code='invalid_document_status'
         )

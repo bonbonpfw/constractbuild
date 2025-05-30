@@ -505,12 +505,12 @@ const UploadModeDialog: React.FC<{
         style={{ borderRadius: '16px', maxWidth: '450px' }}
       >
         <DialogHeader>
-          <DialogTitle>Select Upload Mode</DialogTitle>
+          <DialogTitle>העלאה מסמך</DialogTitle>
           <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
         </DialogHeader>
         <div style={{ padding: 24 }}>
           <div style={{ marginBottom: 24 }}>
-            <label style={{ display: 'block', fontWeight: 500, fontSize: 16, marginBottom: 12 }}>How do you want to fill the document?</label>
+            <label style={{ display: 'block', fontWeight: 500, fontSize: 16, marginBottom: 12 }}></label>
             <div style={{ display: 'flex', flexDirection: 'row', gap: 24 }}>
               <label style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
                 <input 
@@ -521,7 +521,7 @@ const UploadModeDialog: React.FC<{
                   onChange={() => setMode('auto')} 
                   style={{ marginRight: 8 }} 
                 />
-                Auto fill
+                מלא באופן אוטומטי
               </label>
               <label style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
                 <input 
@@ -532,12 +532,12 @@ const UploadModeDialog: React.FC<{
                   onChange={() => setMode('manual')} 
                   style={{ marginRight: 8 }} 
                 />
-                Manual
+                העלאה ללא שינוי
               </label>
             </div>
           </div>
           <DialogActions style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-            <Button variant="text" onClick={onClose}>Cancel</Button>
+            <Button variant="text" onClick={onClose}>ביטול</Button>
             <Button 
               variant="contained" 
               onClick={() => onConfirm(mode)}
@@ -547,7 +547,7 @@ const UploadModeDialog: React.FC<{
                 padding: '8px 16px'
               }}
             >
-              Continue
+              המשך
             </Button>
           </DialogActions>
         </div>

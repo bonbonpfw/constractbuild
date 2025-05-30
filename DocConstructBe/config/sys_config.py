@@ -8,9 +8,9 @@ load_dotenv()
 
 # Set up base application path using environment variables with a default value
 # APP_PATH = "/home/ubuntu/doc-construct/"
-APP_CODE = 'DocConstructBe'
+#APP_CODE = 'DocConstructBe'
 APP_PATH = os.getenv('APP_PATH')
-# APP_CODE = '/app'
+APP_CODE = '/app'
 
 DOCUMENTS_FOLDER = os.path.join(APP_PATH, "documents")
 

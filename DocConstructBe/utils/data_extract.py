@@ -42,8 +42,8 @@ class LicenseExtract:
          self.license_config = {
             "id_pattern": r'(?:מספר ת"ז|מספר ת\.ז|ת\.ז|ת"ז|תעודת זהות|ח\.פ|ID)[\s:]*(\d{9})',
             "date_pattern": r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{2}/\d{2}/\d{4})',
-            "name_pattern": r'(?:שם|שם פרטי|שם פרטי ושם משפחה|שם משפחה)[\s:]*((?:\S+\s+){0,1}\S+)',
-            "license_pattern": r'(?:מספר רישיון|רישיון|מס\' רישיון|מס רישיון)[\s:]*(\d{4,8})',
+            "name_pattern": r'(?:שם|שם פרטי|שם פרטי ושם משפחה|מרה|שם משפחה)[\s:]*((?:\S+\s+){0,1}\S+)',
+            "license_pattern": r'(?:מספר רישיון|רישיון|מס תעודה |מס\' רישיון|מס רישיון)[\s:]*(\d{4,8})',
             "proffessional_type_pattern": r'רישיון\s+(\S+)'
         }
        
@@ -79,9 +79,13 @@ class LicenseExtract:
 
 class ExtractProfessional:
     def __init__(self, text: bytes):
-        self.text = text
+        self.text = self._clean_text(text)
         self.license_extract = LicenseExtract()
         self.license_data = LicenseData()
+
+    def _clean_text(self, text: str) -> str:
+        """Remove single quotes and forward slashes from text"""
+        return text.replace("'", "").replace("/", "")
 
     def extract_text(self):
         id = self._extract_id(self.text)
@@ -119,15 +123,15 @@ class ExtractProfessional:
             name = name_match.group(1) if len(name_match.groups()) > 0 else name_match.group()
             self.license_data.name = name
             return name
-        else:
-            # If standard pattern fails, try to find name near ID
-            id_position = text.find(self.license_extract.id_number) if self.license_extract.id_number else -1
-            if id_position > 0:
-                # Look for name before ID (typical format in Israeli documents)
-                name_text = text[:id_position].strip().split('\n')[-1]
-                if name_text and len(name_text) > 2:
-                    self.license_data.name = name_text
-                    return name_text
+        # elif self.license_extract.id_number:
+        #     # If standard pattern fails, try to find name near ID
+        #     id_position = text.find(self.license_extract.id_number) if self.license_extract.id_number else -1
+        #     if id_position > 0:
+        #         # Look for name before ID (typical format in Israeli documents)
+        #         name_text = text[:id_position].strip().split('\n')[-1]
+        #         if name_text and len(name_text) > 2:
+        #             self.license_data.name = name_text
+        #             return name_text
             
             logging.error(f"לא ניתן למצוא שם בטקסט: ...")
             return None

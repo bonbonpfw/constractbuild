@@ -190,3 +190,4 @@ build/
 out/
 
 /DocConstructFe/tsconfig.tsbuildinfo
+.dec_env
