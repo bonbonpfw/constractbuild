@@ -21,8 +21,7 @@ services:
     ports:
       - "8080:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost/api
-      - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL:-https://localhost}
+     - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
     env_file:
       - .env
     depends_on:
@@ -44,7 +43,7 @@ services:
       - FLASK_ENV=production
       - FLASK_DEBUG=0
       - APP_PATH=/app/data
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@postgres:5432/${DB_NAME:-docconstruct} 
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@postgres:5432/${DB_NAME:-docconstruct}
     env_file:
       - .env
     depends_on:
