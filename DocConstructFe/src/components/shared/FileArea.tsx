@@ -196,54 +196,176 @@ export const FilePreview: React.FC<{
   fileUrl: string;
   fileName: string;
   onClose: () => void;
-}> = ({ fileUrl, fileName, onClose }) => (
-  <DialogOverlay 
-    onClick={onClose}
-    style={{ 
-      justifyContent: 'flex-end', 
-      alignItems: 'stretch',
-      background: 'rgba(0, 0, 0, 0.4)'
-    }}
-  >
-    <DialogContainer 
-      onClick={e => e.stopPropagation()} 
+}> = ({ fileUrl, fileName, onClose }) => {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+  const lowerFileName = fileName?.toLowerCase() || '';
+  const isImage = imageExtensions.some(ext => lowerFileName.endsWith(ext));
+
+  // Zoom state for images
+  const [zoom, setZoom] = React.useState(1);
+  const [dragging, setDragging] = React.useState(false);
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const [startDrag, setStartDrag] = React.useState<{ x: number; y: number } | null>(null);
+  const imgContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Reset zoom and position when file changes
+  React.useEffect(() => {
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+    setDragging(false);
+    setStartDrag(null);
+  }, [fileUrl]);
+
+  // Mouse/touch event handlers for panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom === 1) return;
+    setDragging(true);
+    setStartDrag({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragging || !startDrag) return;
+    setPosition({ x: e.clientX - startDrag.x, y: e.clientY - startDrag.y });
+  };
+  const handleMouseUp = () => {
+    setDragging(false);
+    setStartDrag(null);
+  };
+  // Touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoom === 1) return;
+    const touch = e.touches[0];
+    setDragging(true);
+    setStartDrag({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragging || !startDrag) return;
+    const touch = e.touches[0];
+    setPosition({ x: touch.clientX - startDrag.x, y: touch.clientY - startDrag.y });
+  };
+  const handleTouchEnd = () => {
+    setDragging(false);
+    setStartDrag(null);
+  };
+
+  // Clamp zoom
+  const minZoom = 0.2;
+  const maxZoom = 5;
+  const handleZoomIn = () => setZoom(z => Math.min(z + 0.2, maxZoom));
+  const handleZoomOut = () => setZoom(z => Math.max(z - 0.2, minZoom));
+  const handleReset = () => {
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <DialogOverlay 
+      onClick={onClose}
       style={{ 
-        margin: '0',
-        borderRadius: '16px 0 0 16px',
-        width: '45%',
-        maxWidth: '600px',
-        height: '100%', 
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '-2px 0 25px rgba(0, 0, 0, 0.2)'
+        justifyContent: 'flex-end', 
+        alignItems: 'stretch',
+        background: 'rgba(0, 0, 0, 0.4)'
       }}
     >
-      <DialogHeader>
-        <DialogTitle>{fileName}</DialogTitle>
-        <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
-      </DialogHeader>
-      <div style={{ 
-        padding: '16px', 
-        flex: '1', 
-        overflow: 'auto',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <iframe
-          src={fileUrl}
-          title={fileName}
-          width="100%"
-          style={{ 
-            border: 'none',
-            flex: '1',
-            minHeight: '500px',
-            borderRadius: '8px'
-          }}
-        />
-      </div>
-    </DialogContainer>
-  </DialogOverlay>
-);
+      <DialogContainer 
+        onClick={e => e.stopPropagation()} 
+        style={{ 
+          margin: '0',
+          borderRadius: '16px 0 0 16px',
+          width: '45%',
+          maxWidth: '600px',
+          height: '100%', 
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '-2px 0 25px rgba(0, 0, 0, 0.2)'
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle>{fileName}</DialogTitle>
+          <DialogCloseButton onClick={onClose}>&times;</DialogCloseButton>
+        </DialogHeader>
+        <div style={{ 
+          padding: '16px', 
+          flex: '1', 
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          {isImage ? (
+            <>
+              {/* Zoom Controls */}
+              <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
+                {/* Only show zoom out if zoom > 1 */}
+                <Button variant="contained" disabled={zoom === 1} onClick={handleZoomOut}>-</Button>
+                <span style={{ marginTop: 7, minWidth: 40, textAlign: 'center', fontWeight: 500 }}>{Math.round(zoom * 100)}%</span>
+                <Button variant="contained" onClick={handleZoomIn} disabled={zoom >= maxZoom}>+</Button>
+                {/*<Button variant="text" onClick={handleReset} disabled={zoom === 1 && position.x === 0 && position.y === 0}>Reset</Button>*/}
+              </div>
+              <div
+                ref={imgContainerRef}
+                style={{
+                  width: '100%',
+                  height: '70vh',
+                  maxWidth: 560,
+                  maxHeight: 700,
+                  overflow: zoom > 1 ? 'scroll' : 'hidden',
+                  background: '#fff',
+                  borderRadius: 8,
+                  boxShadow: '0 2px 8px #0001',
+                  cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'default',
+                  position: 'relative',
+                  userSelect: 'none',
+                  touchAction: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <img
+                  src={fileUrl}
+                  alt={fileName}
+                  draggable={false}
+                  style={{
+                    transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)` ,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    borderRadius: 8,
+                    background: '#fff',
+                    boxShadow: '0 2px 8px #0001',
+                    transition: dragging ? 'none' : 'transform 0.2s',
+                    cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'default',
+                    userSelect: 'none',
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <iframe
+              src={fileUrl}
+              title={fileName}
+              width="100%"
+              style={{ 
+                border: 'none',
+                flex: '1',
+                minHeight: '500px',
+                borderRadius: '8px'
+              }}
+            />
+          )}
+        </div>
+      </DialogContainer>
+    </DialogOverlay>
+  );
+};
 
 // Email Dialog for sending file to signer
 const EmailDialog: React.FC<{
@@ -398,6 +520,8 @@ type FileAreaProps = {
   onDelete?: (fileId: string) => void;
   onPreview?: (fileId: string, fileName: string) => void;
   onUploadGeneral?: (file: File) => void;
+  isAutoFill?: boolean;
+  showAddDoc?: boolean;
 };
 
 const FileArea: React.FC<FileAreaProps> = ({
@@ -406,15 +530,26 @@ const FileArea: React.FC<FileAreaProps> = ({
   onUpload,
   onDelete,
   onPreview,
-  onUploadGeneral
+  onUploadGeneral,
+  isAutoFill,
+  showAddDoc
 }) => {
   const [showUploadModeDialog, setShowUploadModeDialog] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ fileType: string; file: File } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
   const handleRequestUpload = (fileType: string, file: File) => {
-    setPendingUpload({ fileType, file });
-    setShowUploadModeDialog(true);
+    if (isAutoFill) {
+      setPendingUpload({ fileType, file });
+      setShowUploadModeDialog(true);
+    } else {
+      // Always upload in manual mode if isAutoFill is false or not provided
+      if (onUpload) {
+        onUpload(fileType, file, 'manual');
+      }
+    }
   };
+
   const handleConfirmUploadMode = (mode: 'auto' | 'manual') => {
     if (pendingUpload && onUpload) {
       onUpload(pendingUpload.fileType, pendingUpload.file, mode);

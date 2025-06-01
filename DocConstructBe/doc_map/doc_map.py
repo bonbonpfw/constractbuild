@@ -1,5 +1,5 @@
 from data_model.enum import ProjectDocumentType
-from data_model.models import Professional, PermitOwner
+from data_model.models import Professional, ProjectTeamMember
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -31,7 +31,7 @@ class DocumentMap:
 
 class DocumentFiller:
     def __init__(self, document_type: ProjectDocumentType, professionals: list[Professional],
-                 permit_owner: PermitOwner, src_pdf_path: str):
+                 permit_owner: ProjectTeamMember, src_pdf_path: str):
         self.document_positions = DocumentMap.DOCUMENT_FIELD_COORDINATE_MAP.get(document_type.name, {})
         self.permit_owner = permit_owner
         self.professionals = professionals

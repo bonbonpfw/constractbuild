@@ -25,7 +25,7 @@ from data_model.models import (
     ProjectProfessional,
     ProjectDocument,
     ProfessionalDocument,
-    PermitOwner, 
+    ProjectTeamMember,
 )
 from database.database import db_session
 from data_model.enum import (
@@ -35,7 +35,8 @@ from data_model.enum import (
     ProfessionalDocumentType,
     ProjectDocumentType,
     enum_to_value,
-    DocumentStatus
+    DocumentStatus,
+    ProjectTeamRole
 )
 from doc_map.doc_map import DocumentFiller
 from app.errors import InvalidFileFormat
@@ -54,7 +55,7 @@ class ProjectManager:
         return project
 
     @staticmethod
-    def create(name: str,  request_number: str, status: ProjectStatus, description: str = None, permit_owner: PermitOwner = None,
+    def create(name: str,  request_number: str, status: ProjectStatus, description: str = None,
                status_due_date: date = None) -> Project:
         existing_project = db_session.query(Project).filter(
             (Project.name == name) | (Project.request_number == request_number)
@@ -65,7 +66,6 @@ class ProjectManager:
             name=name,
             request_number=request_number,
             description=description,
-            permit_owner=permit_owner,
             status=enum_to_value(status),
             status_due_date=status_due_date,
         )
@@ -74,12 +74,11 @@ class ProjectManager:
         db_session.commit()
         return project
 
-    def update(self, project_id: str, name: str, status: ProjectStatus, description: str = None,permit_owner: PermitOwner = None,
+    def update(self, project_id: str, name: str, status: ProjectStatus, description: str = None,
                status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None, engineering_coordinator_number: str = None, firefighting_number: str = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
         project.description = description
-        project.permit_owner = permit_owner
         project.request_number = request_number
         project.construction_supervision_number = construction_supervision_number
         project.engineering_coordinator_number = engineering_coordinator_number
@@ -209,13 +208,6 @@ class ProjectManager:
     @staticmethod
     def get_document_statuses() -> list[str]:
         return [status.value for status in DocumentStatus]
-    
-    @staticmethod
-    def get_permit_owner(project_id: str) -> PermitOwner:
-        project = db_session.query(Project).filter(Project.id == project_id).join(PermitOwner).first()
-        if not project:
-            raise ProjectDoesNotExist()
-        return project.permit_owner
 
 
 class ProjectDocumentManager:
@@ -248,10 +240,17 @@ class ProjectDocumentManager:
         return document_professionals
 
     @staticmethod
-    def autofill_document(document_type: ProjectDocumentType,professionals: list[Professional],permit_owner: PermitOwner,src_pdf_path: str):
+    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional], src_pdf_path: str, project_id: str):
+        from data_model.enum import ProjectTeamRole
+        permit_owner = get_permit_owner_for_project(project_id)
         for professional in professionals:
-            professional.prof_type_name =ProfessionalManager.get_prof_name(professional.professional_type) 
-        document_filler = DocumentFiller(document_type=document_type,professionals=professionals,permit_owner=permit_owner,src_pdf_path=src_pdf_path)
+            professional.prof_type_name = ProfessionalManager.get_prof_name(professional.professional_type)
+        document_filler = DocumentFiller(
+            document_type=document_type,
+            professionals=professionals,
+            src_pdf_path=src_pdf_path,
+            permit_owner=permit_owner
+        )
         filled_pdf_path = document_filler.fill_document()
         return filled_pdf_path
 
@@ -458,7 +457,8 @@ class ProfessionalManager:
 def get_project_professionals_types(document_type: str) -> list[str]:
     doc_professionals_names = ProjectDocumentManager.get_document_professionals_names(document_type)
     doc_professionals_values =  [ProfessionalManager.get_prof_value(professional_type) for professional_type in doc_professionals_names]
-    return doc_professionals_names,doc_professionals_values
+    return doc_professionals_names, doc_professionals_values
+
 
 def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
     doc_professionals_names,_ = get_project_professionals_types(document_type=document_type)
@@ -475,3 +475,69 @@ def save_file_to_temp(file):
     file_path = os.path.join(tmpdir, file.filename)
     file.save(file_path)
     return file_path
+
+
+class ProjectTeamManager:
+    @staticmethod
+    def get_all_by_project(project_id: str):
+        return db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
+
+    @staticmethod
+    def get_by_id(team_id: str):
+        team = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.id == team_id).first()
+        if not team:
+            raise Exception('Project team member not found')
+        return team
+
+    @staticmethod
+    def create(project_id: str, name: str, address: str, phone: str, role: str, email: str = None, signature_file_path: str = None) -> ProjectTeamMember:
+        # Map role to enum for validation, then store as string
+        role_enum = ProjectTeamRole.map_to_value(role)
+        team_member = ProjectTeamMember(
+            name=name,
+            address=address,
+            phone=phone,
+            role=role_enum.value,
+            email=email,
+            signature_file_path=signature_file_path,
+            project_id=project_id
+        )
+        db_session.add(team_member)
+        db_session.commit()
+        return team_member
+
+    @staticmethod
+    def update(team_id: str, name: str = None, address: str = None, phone: str = None, email: str = None, signature_file_path: str = None, role: str = None):
+        team_member = ProjectTeamManager.get_by_id(team_id)
+        if name is not None:
+            team_member.name = name
+        if address is not None:
+            team_member.address = address
+        if phone is not None:
+            team_member.phone = phone
+        if email is not None:
+            team_member.email = email
+        if signature_file_path is not None:
+            team_member.signature_file_path = signature_file_path
+        if role is not None:
+            role_enum = ProjectTeamRole.map_to_value(role)
+            team_member.role = role_enum.value
+        team_member.updated_at = datetime.datetime.now()
+        db_session.commit()
+        return team_member
+
+    @staticmethod
+    def delete(team_id: str):
+        team_member = ProjectTeamManager.get_by_id(team_id)
+        db_session.delete(team_member)
+        db_session.commit()
+
+
+def get_permit_owner_for_project(project_id):
+    from data_model.models import ProjectTeamMember
+    from data_model.enum import ProjectTeamRole
+    from database.database import db_session
+    return db_session.query(ProjectTeamMember).filter_by(
+        project_id=project_id,
+        role=ProjectTeamRole.PERMIT_OWNER.value
+    ).first()

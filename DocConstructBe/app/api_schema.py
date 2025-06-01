@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole
 
 # Project Schemas
 
@@ -20,7 +20,6 @@ class ProjectCreateSchema(Schema):
     engineering_coordinator_number = fields.Str(required=False)
     firefighting_number = fields.Str(required=False)
     description = fields.Str(required=False)
-    permit_owner = fields.Str(required=True)
     status = fields.Enum(ProjectStatus, by_value=True, required=False)
     status_due_date = fields.Date(required=False)
     docs_path = fields.Str(required=False)
@@ -30,17 +29,12 @@ class ProjectCreateSchema(Schema):
 class ProjectUpdateSchema (Schema):
     id = fields.UUID(required=True)
     name = fields.Str(required=False, validate=validate.Length(min=1))
-    request_number = fields.Str(required=False,allow_none=True) 
+    request_number = fields.Str(required=False,allow_none=True)
     permit_number = fields.Str(required=False,allow_none=True)
-    permit_owner = fields.Str(required=False,allow_none=True)
     construction_supervision_number = fields.Str(required=False,allow_none=True)
     engineering_coordinator_number = fields.Str(required=False,allow_none=True)
     firefighting_number = fields.Str(required=False,allow_none=True)
     description = fields.Str(required=False,allow_none=True)
-    permit_owner_phone = fields.Str(required=False,allow_none=True)
-    permit_owner_email = fields.Str(required=False,allow_none=True)
-    permit_owner_address = fields.Str(required=False,allow_none=True)
-    permit_owner_name = fields.Str(required=False,allow_none=True)
     status = fields.Enum(ProjectStatus, by_value=True, required=False)
     status_due_date = fields.Date(required=False, allow_none=True)
     docs_path = fields.Str(required=False,allow_none=True)
@@ -161,6 +155,47 @@ class ProfessionalImportSchema(Schema):
     file = fields.Raw(required=True)
 
 
+class ProjectTeamSchema(Schema):
+    id = fields.UUID(required=True)
+    project_id = fields.UUID(required=True)
+    name = fields.Str(required=True)
+    address = fields.Str(required=True)
+    phone = fields.Str(required=True)
+    email = fields.Str(required=False, allow_none=True)
+    signature_file_path = fields.Str(required=False, allow_none=True)
+    role = fields.Enum(ProjectTeamRole, by_value=True, required=True)
+    created_at = fields.DateTime(required=True)
+    updated_at = fields.DateTime(required=True)
+
+
+class ProjectTeamCreateSchema(Schema):
+    project_id = fields.UUID(required=True)
+    name = fields.Str(required=True)
+    address = fields.Str(required=True)
+    phone = fields.Str(required=True)
+    email = fields.Str(required=False, allow_none=True)
+    signature_file_path = fields.Str(required=False, allow_none=True)
+    role = fields.Enum(ProjectTeamRole, by_value=True, required=True)
+
+
+class ProjectTeamUpdateSchema(Schema):
+    id = fields.UUID(required=True)
+    name = fields.Str(required=False)
+    address = fields.Str(required=False)
+    phone = fields.Str(required=False)
+    email = fields.Str(required=False, allow_none=True)
+    signature_file_path = fields.Str(required=False, allow_none=True)
+    role = fields.Enum(ProjectTeamRole, by_value=True, required=False)
+
+
+class ProjectTeamDeleteSchema(Schema):
+    id = fields.UUID(required=True)
+
+
+class ProjectTeamGetSchema(Schema):
+    project_id = fields.UUID(required=True)
+
+
 class Endpoints:
     GET_PROJECTS = "get_projects"
     GET_PROJECT = "get_project"
@@ -190,6 +225,12 @@ class Endpoints:
     ADD_PROFESSIONAL_DOCUMENT = "add_professional_document"
     REMOVE_PROFESSIONAL_DOCUMENT = "remove_professional_document"
     GET_PROFESSIONAL_DOCUMENT_TYPES = "get_professional_document_types"
+
+    # Project Team Endpoints
+    GET_PROJECT_TEAM = "get_project_team"
+    CREATE_PROJECT_TEAM = "create_project_team"
+    UPDATE_PROJECT_TEAM = "update_project_team"
+    DELETE_PROJECT_TEAM = "delete_project_team"
 
 
 API_ENDPOINTS = {
@@ -312,5 +353,25 @@ API_ENDPOINTS = {
         'method': 'GET',
         'schema': ProfessionalDocumentTypesSchema,
         'description': 'Get all professional document types'
+    },
+    Endpoints.GET_PROJECT_TEAM: {
+        'method': 'GET',
+        'schema': ProjectTeamGetSchema,
+        'description': 'Get all project team members for a project'
+    },
+    Endpoints.CREATE_PROJECT_TEAM: {
+        'method': 'POST',
+        'schema': ProjectTeamCreateSchema,
+        'description': 'Create a new project team member'
+    },
+    Endpoints.UPDATE_PROJECT_TEAM: {
+        'method': 'PUT',
+        'schema': ProjectTeamUpdateSchema,
+        'description': 'Update a project team member'
+    },
+    Endpoints.DELETE_PROJECT_TEAM: {
+        'method': 'DELETE',
+        'schema': ProjectTeamDeleteSchema,
+        'description': 'Delete a project team member'
     },
 }

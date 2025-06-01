@@ -1,7 +1,8 @@
 from datetime import date, datetime, UTC
 import re
-from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime
+from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime, Enum as SqlEnum
 from sqlalchemy.orm import relationship
+import enum
 
 from app.errors import ValidationError
 from database.base_model import Base
@@ -9,33 +10,11 @@ from database.database import engine
 from database.database import UUID_F
 
 
-class PermitOwner(Base):
-    __tablename__ = 'permit_owners'
-    id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
-    name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
-    phone = Column(String, nullable=False)
-    email = Column(String, nullable=True)
-    signature_file_path = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
-    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
-  
-    def __init__(self, name: str, address: str, phone: str, email: str = None, signature_file_path: str = None):
-        super().__init__()
-        self.name = name
-        self.address = address
-        self.phone = phone
-        self.email = email
-        self.signature_file_path = signature_file_path
-
-    def __repr__(self):
-        return f"<PermitOwner(name='{self.name}', address='{self.address}', phone='{self.phone}', email='{self.email}')>"
 
 
 class Project(Base):
     __tablename__ = 'projects'
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
-    permit_owner_id = Column(UUID_F(), ForeignKey('permit_owners.id'), nullable=False)
     name = Column(String, nullable=False)
     request_number = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -46,32 +25,22 @@ class Project(Base):
     construction_supervision_number = Column(String, nullable=True)
     engineering_coordinator_number = Column(String, nullable=True)
     firefighting_number = Column(String, nullable=True)
-
     created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
-
-    
     __table_args__ = (
         UniqueConstraint('request_number', name='uix_request_number'),
     )
-
     documents = relationship("ProjectDocument", backref="project", cascade="all,delete")
     professionals = relationship("ProjectProfessional", backref="project", cascade="all,delete")
-    permit_owner = relationship("PermitOwner", backref="projects")
-
-
-    def __init__(self, name: str, permit_owner: PermitOwner,request_number: str,permit_number: str=None,
-                 construction_supervision_number: str=None,engineering_coordinator_number: str=None,
-                 firefighting_number: str=None,docs_path: str = None, status: str = None,
-                 status_due_date: date = None,
-                 description: str = None, **kwargs):
-
+    team_members = relationship("ProjectTeamMember", backref="project", cascade="all,delete")
+    def __init__(self, name: str, request_number: str, permit_number: str=None,
+                 construction_supervision_number: str=None, engineering_coordinator_number: str=None,
+                 firefighting_number: str=None, docs_path: str = None, status: str = None,
+                 status_due_date: date = None, description: str = None, **kwargs):
         if not name.strip():
             raise ValidationError(params={"validation_errors": {"name": "Project name cannot be empty"}})
-
         super().__init__(
            name=name.strip(),
-           permit_owner=permit_owner,
            docs_path=docs_path.strip() if docs_path else None,
            status=status,
            status_due_date=status_due_date,
@@ -83,9 +52,8 @@ class Project(Base):
            description=description,
            **kwargs
         )
-
     def __repr__(self):
-        return f"<Project(name='{self.name}', request_number='{self.request_number}', status='{self.status}', permit_owner='{self.permit_owner.name}')>"
+        return f"<Project(name='{self.name}', request_number='{self.request_number}', status='{self.status}')>"
 
 
 class Professional(Base):
@@ -176,6 +144,34 @@ class ProfessionalDocument(Base):
 
     def __repr__(self):
         return f"<ProfessionalDocument(professional_id='{self.professional_id}', id='{self.id}'')>"
+
+
+class ProjectTeamMember(Base):
+    __tablename__ = 'project_team_members'
+    id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    signature_file_path = Column(String, nullable=True)
+    # Allowed roles: 'permit_owner' (בעל ההיתר), 'request_editor' (עורך הבקשה), 'contractor_representative' (נציג הקבלן), 'project_manager' (מנהל הפרויקט), 'permit_owner_representative' (נציג בעל ההיתר)
+    role = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
+    project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
+
+    def __init__(self, project_id: str, name: str, address: str, phone: str, role: str, email: str = None, signature_file_path: str = None):
+        super().__init__()
+        self.project_id = project_id
+        self.name = name
+        self.address = address
+        self.phone = phone
+        self.role = role
+        self.email = email
+        self.signature_file_path = signature_file_path
+
+    def __repr__(self):
+        return f"<ProjectTeamMember(name='{self.name}', role='{self.role}', address='{self.address}', phone='{self.phone}', email='{self.email}')>"
 
 
 def init_tables():

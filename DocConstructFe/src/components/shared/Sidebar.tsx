@@ -1,15 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
-import {FaClipboardList, FaChartLine, FaBars, FaSearch} from 'react-icons/fa';
+import {FaBars} from 'react-icons/fa';
 import Link from 'next/link';
-import {IoSettingsSharp} from "react-icons/io5";
+import {FaBuilding, FaUserTie} from "react-icons/fa";
 
 const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
   width: ${props => props.isCollapsed ? '60px' : '250px'};
   height: 100vh;
-  background: ${props => props.theme.colors.primary};
-  color: ${props => props.theme.colors.primary};
+  background: #ffffff;
+  color: #51789f;
   transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -27,22 +27,19 @@ const SidebarItemHolder = styled.div<{ isActive: boolean }>`
   cursor: ${props => props.isActive ? 'default' : 'pointer'};
   height: 65px;
   display: flex;
-  color: #ffffff;
   text-decoration: none;
   padding: 14px 0 14px 0;
   font-weight: ${props => props.isActive ? '600' : '400'};
-  background-color: ${props => props.isActive ? 'rgba(52, 152, 219, 0.2)' : 'transparent'};
   transition: all 0.2s ease;
 
   &:hover, &:focus {
-    background-color: rgba(52, 152, 219, 0.2);
+    background-color: rgb(227, 237, 246);
   }
 `;
 
 const SidebarItemLabel = styled.span<{ isCollapsed: boolean; isActive: boolean }>`
   display: flex;
   align-items: center;
-  color: #ffffff;
   text-decoration: none;
   font-weight: ${props => props.isActive ? '600' : '400'};
   font-size: 22px;
@@ -78,31 +75,30 @@ const ToggleButtonHolder = styled.div`
 const ToggleButton = styled.button`
   background: none;
   border: none;
-  color: #bdc3c7;
+  color: #51789f;
   font-size: 28px;
   cursor: pointer;
   margin-bottom: 30px;
   transition: color 0.2s ease;
-
-  &:hover {
-    color: white;
-  }
 `;
 
 const Sidebar: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(() => {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  useEffect(() => {
     const stored = localStorage.getItem('sidebarCollapsed');
-    return stored ? JSON.parse(stored) : true;
-  });
+    if (stored !== null) {
+      setIsCollapsed(JSON.parse(stored));
+    }
+  }, []);
+
   const router = useRouter();
 
   const isActive = (path: string) => router.pathname === path;
 
   const routes = [
-    {'label': 'Projects', 'icon': <FaClipboardList/>, 'path': '/projects'},
-    {'label': 'Professionals', 'icon': <FaChartLine/>, 'path': '/professionals'},
-    {'label': 'Municipalities', 'icon': <FaSearch/>, 'path': '/municipalities'},
-    {'label': 'Settings', 'icon': <IoSettingsSharp/>, 'path': '/settings'},
+    {'label': 'פרויקטים', 'icon': <FaBuilding/>, 'path': '/projects'},
+    {'label': 'אנשי מקצוע', 'icon': <FaUserTie/>, 'path': '/professionals'},
   ]
 
   useEffect(() => {
@@ -120,7 +116,7 @@ const Sidebar: React.FC = () => {
           </ToggleButtonHolder>
         </SidebarGroup>
         <SidebarGroup>
-          <div style={{marginTop: '20px'}}>
+          <div style={{marginTop: '70px'}}>
             {routes.map((route, index) => (
               <Link key={index} href={route.path} passHref>
                 <SidebarItemHolder isActive={isActive(route.path)}>

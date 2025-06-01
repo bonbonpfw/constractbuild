@@ -28,7 +28,12 @@ import {
   uploadProjectDocument,
   downloadProjectDocument,
   deleteProjectDocument,
-  getProjectDocumentTypes
+  getProjectDocumentTypes,
+  getProjectTeamRoles,
+  getProjectTeamMembers,
+  createProjectTeamMember,
+  updateProjectTeamMember,
+  deleteProjectTeamMember
 } from "../../api";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
@@ -39,6 +44,7 @@ import {toast} from "react-toastify";
 import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
@@ -138,10 +144,10 @@ const CompactButton = styled(Button)`
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #0071e3;
-  
+  background-color: #4b87c3;
+
   &:hover {
-    background-color: #0262c2;
+    background-color: #4b87c3;
   }
 `;
 
@@ -220,10 +226,16 @@ const ProjectView: React.FC = () => {
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   // Add tab state
-  const [activeTab, setActiveTab] = useState<'details' | 'professionals'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'professionals' | 'team'>('details');
+  const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [teamExpanded, setTeamExpanded] = useState<Record<string, boolean>>({});
+  const [teamData, setTeamData] = useState<Record<string, { name: string; phone: string; email: string; address: string }>>({});
 
   // In the DocumentsPanel, add tab state and tab buttons for document sections
   const [activeDocTab, setActiveDocTab] = useState<'categorized' | 'general'>('categorized');
+
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   const loadData = async () => {
     try {
@@ -294,6 +306,34 @@ const ProjectView: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Fetch team member roles from backend
+    getProjectTeamRoles()
+      .then(roles => {
+        setTeamRoles(roles.map((role: any) => ({ key: role.name, label: role.value })));
+      })
+      .finally(() => setRolesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (teamRoles.length > 0) {
+      const expanded: Record<string, boolean> = {};
+      const data: Record<string, { name: string; phone: string; email: string; address: string }> = {};
+      teamRoles.forEach(role => {
+        expanded[role.key] = role.key === 'PERMIT_OWNER';
+        // Find the team member for this role
+        const member = teamMembers.find((m: any) => m.role === role.label);
+        data[role.key] = {
+          name: member?.name || '',
+          phone: member?.phone || '',
+          email: member?.email || '',
+          address: member?.address || ''
+        };
+      });
+      setTeamExpanded(expanded);
+      setTeamData(data);
+    }
+  }, [teamRoles, teamMembers]);
 
   const handleAddProfessional = () => {
     setShowAddProfessionalDialog(true);
@@ -628,6 +668,85 @@ const ProjectView: React.FC = () => {
     return <IconComponent size={size} />;
   };
 
+  // Fetch team members when loading the project or after save
+  const loadTeamMembers = async () => {
+    if (!id) return;
+    const members = await getProjectTeamMembers(id);
+    setTeamMembers(members);
+  };
+
+  useEffect(() => {
+    loadTeamMembers();
+  }, [id]);
+
+  // Prepare filesData for FileArea
+  let generalFiles = filesData.filter(f => f.fileType === 'כללי');
+  if (activeDocTab === 'general') {
+    // Always show a missing doc item at the end
+    generalFiles = [
+      ...generalFiles,
+      {
+        fileId: '',
+        fileName: null,
+        state: DocumentState.MISSING,
+        fileType: 'כללי',
+      },
+    ];
+  }
+
+  const saveTeam = async (data: typeof teamData) => {
+    if (!id) return;
+    const currentMembers = await getProjectTeamMembers(id);
+    let hasValidationError = false;
+
+    for (const roleKey of Object.keys(teamData)) {
+      const role = teamRoles.find(r => r.key === roleKey);
+      if (!role) continue;
+      const memberData = teamData[roleKey];
+      const existing = currentMembers.find((m: any) => m.role === role.label);
+
+      // If all fields are empty, skip
+      if (!memberData.name && !memberData.phone && !memberData.email && !memberData.address) {
+        if (existing) {
+          await deleteProjectTeamMember(existing.id);
+        }
+        continue;
+      }
+
+      // If some fields are filled but not all required, show error and skip
+      if (!memberData.name || !memberData.address || !memberData.phone) {
+        hasValidationError = true;
+        toast.error(`יש למלא שם, כתובת וטלפון עבור תפקיד: ${role.label}`);
+        continue;
+      }
+
+      // All required fields are filled, create or update
+      if (existing) {
+        await updateProjectTeamMember({
+          id: existing.id,
+          name: memberData.name,
+          address: memberData.address,
+          phone: memberData.phone,
+          email: memberData.email,
+          role: role.label
+        });
+      } else {
+        await createProjectTeamMember({
+          project_id: id,
+          name: memberData.name,
+          address: memberData.address,
+          phone: memberData.phone,
+          email: memberData.email,
+          role: role.label
+        });
+      }
+    }
+    await loadTeamMembers();
+    if (!hasValidationError) {
+      toast.success('Team members saved successfully');
+    }
+  };
+
   return (
     <PageContainer>
       <TopPanel>
@@ -696,6 +815,12 @@ const ProjectView: React.FC = () => {
                     onClick={() => setActiveTab('professionals')}
                   >
                     בעלי מקצוע
+                  </TabButton>
+                  <TabButton
+                    active={activeTab === 'team'}
+                    onClick={() => setActiveTab('team')}
+                  >
+                    צוות הפרויקט
                   </TabButton>
                 </TabContainer>
                 
@@ -795,49 +920,6 @@ const ProjectView: React.FC = () => {
                           style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
                         />
                       </FullWidthField>
-                      <FullWidthField>
-                        <CompactLabel>בעל ההיתר</CompactLabel>
-                      </FullWidthField>
-                      <CompactField>
-                        <CompactLabel>שם</CompactLabel>
-                        <Input
-                          name="permit_owner_name"
-                          placeholder="שם"
-                          value={formData.permit_owner_name || formData.permit_owner || ''}
-                          onChange={handleChange}
-                          disabled={!isEditing}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>כתובת</CompactLabel>
-                        <Input
-                          name="permit_owner_address"
-                          placeholder="כתובת"
-                          value={formData.permit_owner_address || ''}
-                          disabled={!isEditing}
-                          onChange={handleChange}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>טלפון</CompactLabel>
-                        <Input
-                          name="permit_owner_phone"
-                          placeholder="טלפון"
-                          value={formData.permit_owner_phone || ''}
-                          disabled={!isEditing}
-                          onChange={handleChange}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>דוא״ל</CompactLabel>
-                        <Input
-                          name="permit_owner_email"
-                          placeholder="דוא״ל"
-                          value={formData.permit_owner_email || ''}
-                          disabled={!isEditing}
-                          onChange={handleChange}
-                        />
-                      </CompactField>
                     </CompactFormGrid>
                   </TabContent>
                 )}
@@ -889,6 +971,71 @@ const ProjectView: React.FC = () => {
                         ))}
                       </div>
                     )}
+                  </TabContent>
+                )}
+
+                {activeTab === 'team' && (
+                  <TabContent>
+                    {rolesLoading ? (
+                      <div>Loading roles...</div>
+                    ) : (
+                      teamRoles.map(member => (
+                        <Card key={member.key} style={{ marginBottom: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                            onClick={() => setTeamExpanded(prev => ({ ...prev, [member.key]: !prev[member.key] }))}>
+                            <span style={{ fontWeight: 600 }}>{member.label}</span>
+                            {teamExpanded[member.key] ? <FaChevronUp /> : <FaChevronDown />}
+                          </div>
+                          {teamExpanded[member.key] && (
+                            <div style={{ marginTop: 12 }}>
+                              <CompactFormGrid>
+                                <CompactField>
+                                  <CompactLabel>שם מלא</CompactLabel>
+                                  <Input
+                                    value={teamData[member.key]?.name || ''}
+                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], name: e.target.value } }))}
+                                    placeholder="שם מלא"
+                                    disabled={!isEditing}
+                                  />
+                                </CompactField>
+                                <CompactField>
+                                  <CompactLabel>טלפון</CompactLabel>
+                                  <Input
+                                    value={teamData[member.key]?.phone || ''}
+                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], phone: e.target.value } }))}
+                                    placeholder="טלפון"
+                                    disabled={!isEditing}
+                                  />
+                                </CompactField>
+                                <CompactField>
+                                  <CompactLabel>דוא"ל</CompactLabel>
+                                  <Input
+                                    value={teamData[member.key]?.email || ''}
+                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], email: e.target.value } }))}
+                                    placeholder={'דוא"ל'}
+                                    disabled={!isEditing}
+                                  />
+                                </CompactField>
+                                <CompactField>
+                                  <CompactLabel>כתובת</CompactLabel>
+                                  <Input
+                                    value={teamData[member.key]?.address || ''}
+                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], address: e.target.value } }))}
+                                    placeholder="כתובת"
+                                    disabled={!isEditing}
+                                  />
+                                </CompactField>
+                              </CompactFormGrid>
+                            </div>
+                          )}
+                        </Card>
+                      ))
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                      <CompactButton onClick={() => saveTeam(teamData)} disabled={!isEditing}>
+                        Save changes
+                      </CompactButton>
+                    </div>
                   </TabContent>
                 )}
               </Card>
@@ -981,12 +1128,15 @@ const ProjectView: React.FC = () => {
                   </div>
                 )}
                 <FileArea
-                  files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : filesData.filter(f => f.fileType === 'כללי')}
+                  files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
                   disabled={false}
                   onUpload={handleFileUpload}
                   onDelete={handleFileDelete}
                   onPreview={handleFilePreview}
-                  onUploadGeneral={handleUploadGeneralFile}
+                  isAutoFill={activeDocTab === 'categorized'}
+                  {...(activeDocTab === 'general' && {
+                    onUploadGeneral: handleUploadGeneralFile
+                  })}
                 />
               </Card>
             </DocumentsPanel>

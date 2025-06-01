@@ -27,7 +27,12 @@ class ProfessionalType(Enum):
     GENERAL_CONTRACTOR = 'קבלן ראשי'
 
     @staticmethod   
-    def map_to_value(value: str) -> 'ProfessionalType':
+    def map_to_value(value) -> 'ProfessionalType':
+        if isinstance(value, ProfessionalType):
+            return value
+        if hasattr(value, 'value'):
+            value = value.value
+        value = str(value)
         if "אחראי ביקורת - כללי" in value:
             return ProfessionalType.SUPERVISOR_ENGINEER
         elif "אחראי ביקורת - קונסטרוקציה" in value:
@@ -44,7 +49,6 @@ class ProfessionalType(Enum):
             return ProfessionalType.PESTICIDAL
         elif "קבלן ראשי" in value:
             return ProfessionalType.GENERAL_CONTRACTOR
-        
         return ProfessionalType.SUPERVISOR_ENGINEER
 
 class ProfessionalStatus(Enum):
@@ -61,6 +65,32 @@ class DocumentStatus(Enum):
     DELIVERED = 'Delivered'
     MISSING = 'Missing'
     UPLOADED = 'Uploaded'
+
+class ProjectTeamRole(Enum):
+    PERMIT_OWNER = 'בעל ההיתר'
+    REQUEST_EDITOR = 'עורך הבקשה'
+    CONTRACTOR_REPRESENTATIVE = 'נציג הקבלן'
+    PROJECT_MANAGER = 'מנהל הפרויקט'
+    PERMIT_OWNER_REPRESENTATIVE = 'נציג בעל ההיתר'
+
+    @staticmethod
+    def map_to_value(value) -> 'ProjectTeamRole':
+        if isinstance(value, ProjectTeamRole):
+            return value
+        if hasattr(value, 'value'):
+            value = value.value
+        value = str(value)
+        if "בעל ההיתר" in value:
+            return ProjectTeamRole.PERMIT_OWNER
+        elif "עורך הבקשה" in value:
+            return ProjectTeamRole.REQUEST_EDITOR
+        elif "נציג הקבלן" in value:
+            return ProjectTeamRole.CONTRACTOR_REPRESENTATIVE
+        elif "מנהל הפרויקט" in value:
+            return ProjectTeamRole.PROJECT_MANAGER
+        elif "נציג בעל ההיתר" in value:
+            return ProjectTeamRole.PERMIT_OWNER_REPRESENTATIVE
+        return ProjectTeamRole.PERMIT_OWNER
 
 def enum_to_value(enum_member_or_value):
     return enum_member_or_value.value if hasattr(enum_member_or_value, "value") else enum_member_or_value

@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from app.api import ProjectManager, ProfessionalManager, ProfessionalType, ProjectStatus
-from data_model.models import PermitOwner
+from data_model.models import ProjectTeamMember
+from data_model.enum import ProjectTeamRole
 from database.database import db_session
 
 PROFESSIONALS = [
@@ -56,7 +57,7 @@ PROFESSIONALS = [
     }
 ]
 
-PERMIT_OWNERS = [
+PERMIT_OWNER_MEMBERS = [
     {
         "name": "Alice Green",
         "address": "100 Apple St, Cityville, USA",
@@ -133,26 +134,8 @@ def create_professionals():
             print(f"Error creating professional {prof_data['name']}: {str(e)}")
 
 
-def create_permit_owners():
-    for owner_data in PERMIT_OWNERS:
-        try:
-            owner = PermitOwner(
-                name=owner_data["name"],
-                address=owner_data["address"],
-                phone=owner_data["phone"],
-                email=owner_data["email"],
-                signature_file_path=owner_data["signature_file_path"]
-            )
-            db_session.add(owner)
-            db_session.commit()
-            print(f"Created permit owner: {owner.name} (ID: {owner.id})")
-        except Exception as e:
-            print(f"Error creating permit owner {owner_data['name']}: {str(e)}")
-
 def create_projects():
-    # Get permit owners
-    permit_owners = db_session.query(PermitOwner).all()
-    # Create projects
+    # Remove permit owners
     created_projects = []
     for idx, proj_data in enumerate(PROJECTS):
         try:
@@ -160,11 +143,23 @@ def create_projects():
                 name=proj_data["name"],
                 request_number=proj_data["request_number"],
                 description=proj_data["description"],
-                permit_owner=permit_owners[0] if idx // 2 == 0 else permit_owners[1],
                 status=proj_data["status"]
             )
+            # Create a ProjectTeamMember with role 'בעל ההיתר' for this project
+            owner_data = PERMIT_OWNER_MEMBERS[idx % len(PERMIT_OWNER_MEMBERS)]
+            team_member = ProjectTeamMember(
+                project_id=project.id,
+                name=owner_data["name"],
+                address=owner_data["address"],
+                phone=owner_data["phone"],
+                email=owner_data["email"],
+                signature_file_path=owner_data["signature_file_path"],
+                role=ProjectTeamRole.PERMIT_OWNER.value
+            )
+            db_session.add(team_member)
+            db_session.commit()
             created_projects.append(project)
-            print(f"Created project: {project.name} (ID: {project.id})")
+            print(f"Created project: {project.name} (ID: {project.id}) with permit owner team member: {team_member.name}")
         except Exception as e:
             print(f"Error creating project {proj_data['name']}: {str(e)}")
             raise e
@@ -209,6 +204,5 @@ def delete_all():
 if __name__ == "__main__":
     delete_all()
     create_professionals()
-    create_permit_owners()
     create_projects()
     attach_professionals_to_projects()

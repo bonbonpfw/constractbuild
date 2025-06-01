@@ -101,7 +101,7 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
       color: #4b6370;
 
       &:hover:not(:disabled) {
-        transform: scale(1.05);
+        transform: scale(1.02);
         background: ${p.theme.colors.accent}33;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }

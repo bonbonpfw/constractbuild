@@ -294,3 +294,28 @@ export const getProjectDocumentTypes = async (): Promise<string[]> => {
   );
   return response.data.document_types;
 };
+
+export const getProjectTeamRoles = async (): Promise<{ value: string; name: string }[]> => {
+  const response = await axios.get(`${API_URL}/project/team/roles`);
+  return response.data.roles;
+};
+
+export const getProjectTeamMembers = async (projectId: string) => {
+  const response = await axios.get(`${API_URL}/project/teams`, { params: { project_id: projectId } });
+  return response.data.teams;
+};
+
+export const createProjectTeamMember = async (data: any) => {
+  const response = await axios.post(`${API_URL}/project/team`, data);
+  return response.data;
+};
+
+export const updateProjectTeamMember = async (data: any) => {
+  const response = await axios.put(`${API_URL}/project/team`, data);
+  return response.data;
+};
+
+export const deleteProjectTeamMember = async (id: string) => {
+  const response = await axios.delete(`${API_URL}/project/team`, { data: { id } });
+  return response.data;
+};

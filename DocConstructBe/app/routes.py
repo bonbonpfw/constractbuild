@@ -10,12 +10,12 @@ from app.api import (
     ProjectDocumentManager,
     is_document_professional_related,
     get_project_professionals_types,
-    save_file_to_temp
+    save_file_to_temp,
+    ProjectTeamManager
 )
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
 from data_model.enum import enum_to_value, ProjectDocumentType
-from data_model.models import PermitOwner
 
 def validate_request(endpoint):
     """Validate request data against schema"""
@@ -75,9 +75,7 @@ def init_routes(app):
                 'name': project.name,
                 'request_number': project.request_number,
                 'status': project.status,
-                'permit_owner': project.permit_owner.name,
                 'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
-                # Calculate is_warning and is_expired based on professionals' license expiration dates
                 'is_expired': any(
                     ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Expired'
                     for prof in ProjectManager.get_project_professionals(project.id)
@@ -88,7 +86,7 @@ def init_routes(app):
                 ) and any(
                     ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Warning'
                     for prof in ProjectManager.get_project_professionals(project.id)
-                ))
+                )),
             } for project in projects]
         }).generate_response()
 
@@ -96,15 +94,12 @@ def init_routes(app):
     def get_project():
         data = validate_request(endpoint=Endpoints.GET_PROJECT)
         project = ProjectManager().get_by_id(project_id=str(data.get('project_id')))
+        permit_owner = get_permit_owner_for_project(project.id)
         return SuccessResponse({
             'project': {
                 'id': project.id,
                 'name': project.name,
                 'request_number': project.request_number,
-                'permit_owner': project.permit_owner.name,
-                'permit_owner_address': project.permit_owner.address,
-                'permit_owner_phone': project.permit_owner.phone,
-                'permit_owner_email': project.permit_owner.email,
                 'status': enum_to_value(project.status),
                 'description': project.description,
                 'permit_number': project.permit_number,
@@ -125,7 +120,11 @@ def init_routes(app):
                     'document_type': doc.document_type,
                     'status': doc.status,
                     'created_at': doc.created_at.isoformat(),
-                } for doc in project.documents]
+                } for doc in project.documents],
+                'permit_owner': permit_owner.name if permit_owner else None,
+                'permit_owner_address': permit_owner.address if permit_owner else None,
+                'permit_owner_phone': permit_owner.phone if permit_owner else None,
+                'permit_owner_email': permit_owner.email if permit_owner else None,
             }
         }).generate_response()
 
@@ -237,14 +236,13 @@ def init_routes(app):
             if not is_document_professional_related(project_id=project_id, document_type=document_type):
                 _,required_professionals_values = get_project_professionals_types(document_type=document_type)
                 raise InvalidProjectProfessionalDocument(required_professionals_types=', '.join(required_professionals_values))
-            permit_owner = ProjectManager().get_permit_owner(project_id=project_id)
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
             filled_pdf = ProjectDocumentManager.autofill_document(
                 document_type=document_type,
                 professionals=document_professionals,
-                permit_owner=permit_owner,
-                src_pdf_path=file_path
+                src_pdf_path=file_path,
+                project_id=project_id
             )
         else:
             filled_pdf = file_path
@@ -432,3 +430,78 @@ def init_routes(app):
         return SuccessResponse({
             'document_types': ProfessionalManager().get_document_types()
         }).generate_response()
+
+    # Project Team routes
+    @app.route('/api/project/teams', methods=['GET'])
+    def get_project_teams():
+        data = validate_request(endpoint=Endpoints.GET_PROJECT_TEAM)
+        project_id = str(data.get('project_id'))
+        teams = ProjectTeamManager.get_all_by_project(project_id)
+        return SuccessResponse({
+            'teams': [
+                {
+                    'id': str(team.id),
+                    'project_id': str(team.project_id),
+                    'name': team.name,
+                    'address': team.address,
+                    'phone': team.phone,
+                    'email': team.email,
+                    'signature_file_path': team.signature_file_path,
+                    'created_at': team.created_at.isoformat() if team.created_at else None,
+                    'updated_at': team.updated_at.isoformat() if team.updated_at else None,
+                    'role': team.role,
+                } for team in teams
+            ]
+        }).generate_response()
+
+    @app.route('/api/project/team', methods=['POST'])
+    def create_project_team():
+        data = validate_request(endpoint=Endpoints.CREATE_PROJECT_TEAM)
+        team = ProjectTeamManager.create(
+            project_id=str(data.get('project_id')),
+            name=data.get('name'),
+            address=data.get('address'),
+            phone=data.get('phone'),
+            role=data.get('role'),
+            email=data.get('email'),
+            signature_file_path=data.get('signature_file_path'),
+        )
+        return SuccessResponse({'id': str(team.id)}).generate_response()
+
+    @app.route('/api/project/team', methods=['PUT'])
+    def update_project_team():
+        data = validate_request(endpoint=Endpoints.UPDATE_PROJECT_TEAM)
+        team = ProjectTeamManager.update(
+            team_id=str(data.get('id')),
+            name=data.get('name'),
+            address=data.get('address'),
+            phone=data.get('phone'),
+            role=data.get('role'),
+            email=data.get('email'),
+            signature_file_path=data.get('signature_file_path'),
+        )
+        return SuccessResponse({'id': str(team.id)}).generate_response()
+
+    @app.route('/api/project/team', methods=['DELETE'])
+    def delete_project_team():
+        data = validate_request(endpoint=Endpoints.DELETE_PROJECT_TEAM)
+        ProjectTeamManager.delete(team_id=str(data.get('id')))
+        return SuccessResponse().generate_response()
+
+    @app.route('/api/project/team/roles', methods=['GET'])
+    def get_project_team_roles():
+        from data_model.enum import ProjectTeamRole
+        roles = [{
+            'value': role.value,
+            'name': role.name
+        } for role in ProjectTeamRole]
+        return SuccessResponse({'roles': roles}).generate_response()
+
+def get_permit_owner_for_project(project_id):
+    from data_model.models import ProjectTeamMember
+    from data_model.enum import ProjectTeamRole
+    from database.database import db_session
+    return db_session.query(ProjectTeamMember).filter_by(
+        project_id=project_id,
+        role=ProjectTeamRole.PERMIT_OWNER.value
+    ).first()
