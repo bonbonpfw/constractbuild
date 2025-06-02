@@ -13,7 +13,7 @@ class ProjectDocumentType(Enum):
     EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
     PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
     CONTRACTOR_OWNER = 'מינוי קבלן רשום'
-    PROFESSIONAL_LIST = 'רשימת בעלי תפקידים'
+    PROJECT_TEAMS = 'רשימת בעלי תפקידים'
     GENERAL = 'כללי'
 
 class ProfessionalType(Enum):
@@ -74,21 +74,25 @@ class ProjectTeamRole(Enum):
     PERMIT_OWNER_REPRESENTATIVE = 'נציג בעל ההיתר'
 
     @staticmethod
+    def get_all() -> list[str]:
+        return [role for role in ProjectTeamRole]
+    
+    @staticmethod
     def map_to_value(value) -> 'ProjectTeamRole':
         if isinstance(value, ProjectTeamRole):
             return value
         if hasattr(value, 'value'):
             value = value.value
         value = str(value)
-        if "בעל ההיתר" in value:
+        if "בעל ההיתר" == value:
             return ProjectTeamRole.PERMIT_OWNER
-        elif "עורך הבקשה" in value:
+        elif "עורך הבקשה" == value:
             return ProjectTeamRole.REQUEST_EDITOR
-        elif "נציג הקבלן" in value:
+        elif "נציג הקבלן" == value:
             return ProjectTeamRole.CONTRACTOR_REPRESENTATIVE
-        elif "מנהל הפרויקט" in value:
+        elif "מנהל הפרויקט" == value:
             return ProjectTeamRole.PROJECT_MANAGER
-        elif "נציג בעל ההיתר" in value:
+        elif "נציג בעל ההיתר" == value:
             return ProjectTeamRole.PERMIT_OWNER_REPRESENTATIVE
         return ProjectTeamRole.PERMIT_OWNER
 

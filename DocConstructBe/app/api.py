@@ -36,7 +36,8 @@ from data_model.enum import (
     ProjectDocumentType,
     enum_to_value,
     DocumentStatus,
-    ProjectTeamRole
+    ProjectTeamRole,
+    
 )
 from doc_map.doc_map import DocumentFiller
 from app.errors import InvalidFileFormat
@@ -228,6 +229,7 @@ class ProjectDocumentManager:
     def get_document_professionals_names(document_type: ProjectDocumentType):
         doc_professionals_types = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
         return doc_professionals_types
+  
     
     @staticmethod
     def get_document_professionals(document_type: ProjectDocumentType,professionals: list[Professional]):
@@ -240,16 +242,14 @@ class ProjectDocumentManager:
         return document_professionals
 
     @staticmethod
-    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional], src_pdf_path: str, project_id: str):
-        from data_model.enum import ProjectTeamRole
-        permit_owner = get_permit_owner_for_project(project_id)
+    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional],team_members: list[ProjectTeamMember], src_pdf_path: str, project_id: str):
         for professional in professionals:
-            professional.prof_type_name = ProfessionalManager.get_prof_name(professional.professional_type)
+            professional.role =ProfessionalManager.get_role(professional.professional_type)
         document_filler = DocumentFiller(
             document_type=document_type,
             professionals=professionals,
             src_pdf_path=src_pdf_path,
-            permit_owner=permit_owner
+            team_members=team_members
         )
         filled_pdf_path = document_filler.fill_document()
         return filled_pdf_path
@@ -261,6 +261,9 @@ class ProfessionalManager:
         return [professional_type for professional_type in ProfessionalType]
 
     @staticmethod
+    def get_role(prof_value: str) -> str:
+        return next((professional_type for professional_type in ProfessionalType if professional_type.value == prof_value), None)
+    @staticmethod
     def get_statuses() -> list[str]:
         return [status.value for status in ProfessionalStatus]
 
@@ -270,7 +273,7 @@ class ProfessionalManager:
     
     @staticmethod
     def get_prof_value(prof_name: str) -> str:
-        types = ProfessionalManager.get_types()
+        types = ProfessionalManager.get_types() 
         for type in types:
             if prof_name == type.name:
                 return type.value
@@ -454,18 +457,23 @@ class ProfessionalManager:
             return ProfessionalStatus.ACTIVE
         
    
-def get_project_professionals_types(document_type: str) -> list[str]:
-    doc_professionals_names = ProjectDocumentManager.get_document_professionals_names(document_type)
-    doc_professionals_values =  [ProfessionalManager.get_prof_value(professional_type) for professional_type in doc_professionals_names]
-    return doc_professionals_names, doc_professionals_values
+def get_project_releated_types(document_type: str) -> list[str]:
+    doc_required_names = ProjectDocumentManager.get_document_professionals_names(document_type)
+    
+    doc_required_values =  [ProfessionalManager.get_prof_value(professional_type) if ProfessionalManager.get_prof_value(professional_type) is not None 
+                            else ProjectTeamManager.get_team_member_value(professional_type) for professional_type in doc_required_names]
+    
+    return doc_required_names, doc_required_values
 
 
 def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
-    doc_professionals_names,_ = get_project_professionals_types(document_type=document_type)
+    doc_required_members_names,_ = get_project_releated_types(document_type=document_type)
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+    team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
     project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
-    for doc_professional_name in doc_professionals_names:
-        if doc_professional_name not in project_prof_types:
+    project_team_types = [team_member.role.name for team_member in team_members]
+    for doc_required_member_name in doc_required_members_names:
+        if doc_required_member_name not in project_prof_types+project_team_types:
             return False
     return True
 
@@ -480,7 +488,12 @@ def save_file_to_temp(file):
 class ProjectTeamManager:
     @staticmethod
     def get_all_by_project(project_id: str):
-        return db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
+        team_members = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
+        # Expunge objects from session to prevent SQLAlchemy from tracking changes
+        for team_member in team_members:
+            db_session.expunge(team_member)
+            team_member.role = ProjectTeamRole.map_to_value(team_member.role)
+        return team_members
 
     @staticmethod
     def get_by_id(team_id: str):
@@ -532,11 +545,15 @@ class ProjectTeamManager:
         db_session.delete(team_member)
         db_session.commit()
 
-
+    @staticmethod
+    def get_team_member_value(team_member_name: str) -> str:
+        types = ProjectTeamRole.get_all()
+        for type in types:
+            if team_member_name == type.name:
+                return type.value
+        return None
 def get_permit_owner_for_project(project_id):
-    from data_model.models import ProjectTeamMember
-    from data_model.enum import ProjectTeamRole
-    from database.database import db_session
+  
     return db_session.query(ProjectTeamMember).filter_by(
         project_id=project_id,
         role=ProjectTeamRole.PERMIT_OWNER.value

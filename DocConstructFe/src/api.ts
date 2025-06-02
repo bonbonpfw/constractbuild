@@ -34,18 +34,11 @@ export const createProject = async (data: ProjectCreationFormData): Promise<Proj
 };
 
 export const updateProject = async (data: Project): Promise<Project> => {
-  const { documents, professionals, permit_owner_data, ...rest } = data; // exclude 'documents' and extract permit_owner_data
-  
-  // Prepare the data for the backend
-  const requestData = {
-    ...rest,
-    // If permit_owner_data exists, use its name as permit_owner
-    permit_owner: permit_owner_data ? permit_owner_data.name : rest.permit_owner || rest.permit_owner_name
-  };
+  const { documents, professionals, team_members, ...rest } = data; // exclude 'documents', 'professionals', and 'team_members'
   
   const response = await axios.put(
     `${API_URL}/project`,
-    requestData
+    rest
   );
   return response.data;
 };
@@ -306,16 +299,16 @@ export const getProjectTeamMembers = async (projectId: string) => {
 };
 
 export const createProjectTeamMember = async (data: any) => {
-  const response = await axios.post(`${API_URL}/project/team`, data);
+  const response = await axios.post(`${API_URL}/project/teams`, data);
   return response.data;
 };
 
 export const updateProjectTeamMember = async (data: any) => {
-  const response = await axios.put(`${API_URL}/project/team`, data);
+  const response = await axios.put(`${API_URL}/project/teams`, data);
   return response.data;
 };
 
 export const deleteProjectTeamMember = async (id: string) => {
-  const response = await axios.delete(`${API_URL}/project/team`, { data: { id } });
+  const response = await axios.delete(`${API_URL}/project/teams`, { data: { id } });
   return response.data;
 };

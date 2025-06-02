@@ -19,7 +19,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       structural_engineer_address: [330, 350]
       structural_engineer_mail: [250, 365]
       structural_engineer_date: [80, 265]
-      permit_owner: [350, 415]
+      permit_owner_name: [350, 415]
       permit_owner_name_for_signed: [80, 290]
       date_for_signed: [80, 265]
     2:
@@ -72,7 +72,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
 
   EXECUTION_INSPECTION:
     1:
-      permit_owner: [395, 390]
+      permit_owner_name: [395, 390]
       general_contractor_name: [355, 370]
       general_contractor_id: [150, 370]
       general_contractor_license_number: [430, 355]
@@ -99,7 +99,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       pesticidal_phone: [235, 607]
       pesticidal_address: [420, 607]
       pesticidal_mail: [270, 580]
-      permit_owner: [260, 456]
+      permit_owner_name: [260, 456]
       date: [435, 456]
       pesticidal_name_for_signed: [415, 392]
       pesticidal_id_for_signed: [277, 392]
@@ -108,7 +108,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
  
   CONTRACTOR_OWNER:
     1:
-      permit_owner: [395, 390]
+      permit_owner_name: [395, 390]
       general_contractor_name: [355, 370]
       general_contractor_id: [430, 355]
       general_contractor_license_number: [310, 355]
@@ -127,6 +127,47 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       general_contractor_address: [400, 665]
       general_contractor_name_for_signed: [120, 480]
       date_for_signed: [100, 455]
+
+  PROJECT_TEAMS:
+    1:
+      permit_owner_name: [600, 395]
+      permit_owner_phone: [520, 395]
+      permit_owner_mail: [380, 395]
+      permit_owner_address: [150, 395]
+
+      permit_owner_representative_name: [600, 350]
+      permit_owner_representative_phone: [520, 350]
+      permit_owner_representative_mail: [380, 350]
+      permit_owner_representative_address: [150, 350]
+
+      request_editor_name: [600, 310]
+      request_editor_phone: [520, 310]
+      request_editor_mail: [380, 310]
+      request_editor_address: [150, 310]
+
+      structural_engineer_name: [600, 270]
+      structural_engineer_phone: [520, 270]
+      structural_engineer_mail: [380, 270]
+      structural_engineer_address: [150, 270]
+
+      general_contractor_name: [600, 230]
+      general_contractor_phone: [520, 230]
+      general_contractor_mail: [380, 230]
+      general_contractor_address: [150, 230]
+
+      contractor_representative_name: [600, 180]
+      contractor_representative_phone: [520, 180]
+      contractor_representative_mail: [380, 180]
+      contractor_representative_address: [150, 180]
+
+      project_manager_name: [600, 130]
+      project_manager_phone: [520, 130]
+      project_manager_mail: [380, 130]
+      project_manager_address: [150, 130]
+
+
+
+
 
 DOCUMENT_PROFESSIONAL_MAP:
   TRASH_INSPECTION:
@@ -149,4 +190,13 @@ DOCUMENT_PROFESSIONAL_MAP:
     - PESTICIDAL
 
   CONTRACTOR_OWNER:
+    - GENERAL_CONTRACTOR
+
+  PROJECT_TEAMS:
+    - PERMIT_OWNER
+    - REQUEST_EDITOR
+    - CONTRACTOR_REPRESENTATIVE
+    - PROJECT_MANAGER
+    - PERMIT_OWNER_REPRESENTATIVE
+    - STRUCTURAL_ENGINEER
     - GENERAL_CONTRACTOR

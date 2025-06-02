@@ -439,7 +439,9 @@ const ProjectView: React.FC = () => {
     );
   };
 
-  const startEditing = () => setIsEditing(true);
+  const startEditing = () => {
+    setIsEditing(true);
+  };
   const cancelEditing = () => {
     setFormData(originalData.current);
     setIsEditing(false);
@@ -449,25 +451,8 @@ const ProjectView: React.FC = () => {
     if (!formData) return;
     setSaving(true);
     try {
-      // Extract permit owner fields from formData
-      const projectData = {...formData};
-      
-      // Create permit owner data structure - keep the format consistent with the backend
-      const permitOwnerData = {
-        name: formData.permit_owner_name || formData.permit_owner || '',
-        address: formData.permit_owner_address || '',
-        phone: formData.permit_owner_phone || '',
-        email: formData.permit_owner_email || ''
-      };
-      
-      // Add permit owner data to the project data
-      projectData.permit_owner_data = permitOwnerData;
-      
-      // Make sure permit_owner field is set to maintain backward compatibility
-      projectData.permit_owner = permitOwnerData.name;
-      
       // Send updated data to the backend
-      await updateProject(projectData);
+      await updateProject(formData);
 
       // Fetch the updated project data
       try {
@@ -511,6 +496,8 @@ const ProjectView: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  console.log('ProjectView render - isEditing:', isEditing, 'activeTab:', activeTab);
 
   // Convert ProjectDocument[] to FileAreaDocument[]
   const filesData: FileAreaDocument[] = [];
@@ -1032,7 +1019,13 @@ const ProjectView: React.FC = () => {
                       ))
                     )}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      <CompactButton onClick={() => saveTeam(teamData)} disabled={!isEditing}>
+                      <CompactButton 
+                        onClick={() => {
+                          console.log('Save team button clicked, isEditing:', isEditing, 'teamData:', teamData);
+                          saveTeam(teamData);
+                        }} 
+                        disabled={!isEditing}
+                      >
                         Save changes
                       </CompactButton>
                     </div>

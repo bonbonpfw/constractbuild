@@ -9,7 +9,7 @@ from app.api import (
     ProfessionalManager,
     ProjectDocumentManager,
     is_document_professional_related,
-    get_project_professionals_types,
+    get_project_releated_types,
     save_file_to_temp,
     ProjectTeamManager
 )
@@ -94,7 +94,7 @@ def init_routes(app):
     def get_project():
         data = validate_request(endpoint=Endpoints.GET_PROJECT)
         project = ProjectManager().get_by_id(project_id=str(data.get('project_id')))
-        permit_owner = get_permit_owner_for_project(project.id)
+        team_members = ProjectTeamManager.get_all_by_project(str(data.get('project_id')))
         return SuccessResponse({
             'project': {
                 'id': project.id,
@@ -121,22 +121,28 @@ def init_routes(app):
                     'status': doc.status,
                     'created_at': doc.created_at.isoformat(),
                 } for doc in project.documents],
-                'permit_owner': permit_owner.name if permit_owner else None,
-                'permit_owner_address': permit_owner.address if permit_owner else None,
-                'permit_owner_phone': permit_owner.phone if permit_owner else None,
-                'permit_owner_email': permit_owner.email if permit_owner else None,
+                'team_members': [{
+                    'id': str(team.id),
+                    'project_id': str(team.project_id),
+                    'name': team.name,
+                    'address': team.address,
+                    'phone': team.phone,
+                    'email': team.email,
+                    'signature_file_path': team.signature_file_path,
+                    'role': team.role.value,
+                    'created_at': team.created_at.isoformat() if team.created_at else None,
+                    'updated_at': team.updated_at.isoformat() if team.updated_at else None,
+                } for team in team_members],
             }
         }).generate_response()
 
     @app.route('/api/project', methods=['POST'])
     def create_project():
         data = validate_request(endpoint=Endpoints.CREATE_PROJECT)
-        permit_owner = PermitOwner(data.get('permit_owner'),"aaaa","12345","a@a.com")
         project = ProjectManager().create(
             name=data.get('name'),
             request_number=data.get('request_number'),
             description=data.get('description'),
-            permit_owner=permit_owner,
             status=data.get('status'),
             status_due_date=data.get('status_due_date'),
         )
@@ -145,26 +151,12 @@ def init_routes(app):
     @app.route('/api/project', methods=['PUT'])
     def update_project():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT)
-        # Create or update permit owner with proper data
-        permit_owner_name = data.get('permit_owner', '')
-        permit_owner_address = data.get('permit_owner_address', 'aaaa')
-        permit_owner_phone = data.get('permit_owner_phone', '12345')
-        permit_owner_email = data.get('permit_owner_email', 'a@a.com')
-        
-        # Create the permit owner object with the provided data
-        permit_owner = PermitOwner(
-            name=permit_owner_name,
-            address=permit_owner_address,
-            phone=permit_owner_phone,
-            email=permit_owner_email
-        )
         
         ProjectManager().update(
             project_id=str(data.get('id')),
             name=data.get('name'),
             request_number=data.get('request_number'),
             description=data.get('description'),
-            permit_owner=permit_owner,
             status=data.get('status'),
             status_due_date=data.get('status_due_date'),
             construction_supervision_number=data.get('construction_supervision_number'),
@@ -234,15 +226,17 @@ def init_routes(app):
         file_path = save_file_to_temp(data.get('file'))
         if is_autofill:
             if not is_document_professional_related(project_id=project_id, document_type=document_type):
-                _,required_professionals_values = get_project_professionals_types(document_type=document_type)
-                raise InvalidProjectProfessionalDocument(required_professionals_types=', '.join(required_professionals_values))
+                _,project_required_members_values = get_project_releated_types(document_type=document_type)
+                raise InvalidProjectProfessionalDocument(required_professionals_types=', '.join(project_required_members_values))
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+            team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
             filled_pdf = ProjectDocumentManager.autofill_document(
                 document_type=document_type,
                 professionals=document_professionals,
                 src_pdf_path=file_path,
-                project_id=project_id
+                project_id=project_id,
+                team_members=team_members
             )
         else:
             filled_pdf = file_path
@@ -449,12 +443,12 @@ def init_routes(app):
                     'signature_file_path': team.signature_file_path,
                     'created_at': team.created_at.isoformat() if team.created_at else None,
                     'updated_at': team.updated_at.isoformat() if team.updated_at else None,
-                    'role': team.role,
+                    'role': team.role.value,
                 } for team in teams
             ]
         }).generate_response()
 
-    @app.route('/api/project/team', methods=['POST'])
+    @app.route('/api/project/teams', methods=['POST'])
     def create_project_team():
         data = validate_request(endpoint=Endpoints.CREATE_PROJECT_TEAM)
         team = ProjectTeamManager.create(
@@ -468,7 +462,7 @@ def init_routes(app):
         )
         return SuccessResponse({'id': str(team.id)}).generate_response()
 
-    @app.route('/api/project/team', methods=['PUT'])
+    @app.route('/api/project/teams', methods=['PUT'])
     def update_project_team():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT_TEAM)
         team = ProjectTeamManager.update(
@@ -482,7 +476,7 @@ def init_routes(app):
         )
         return SuccessResponse({'id': str(team.id)}).generate_response()
 
-    @app.route('/api/project/team', methods=['DELETE'])
+    @app.route('/api/project/teams', methods=['DELETE'])
     def delete_project_team():
         data = validate_request(endpoint=Endpoints.DELETE_PROJECT_TEAM)
         ProjectTeamManager.delete(team_id=str(data.get('id')))

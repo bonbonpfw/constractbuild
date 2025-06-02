@@ -49,7 +49,29 @@ export interface ProjectDocument {
   created_at: string;
 }
 
-// Permit Owner Data
+// Project Team Member Types
+export enum ProjectTeamRole {
+  PERMIT_OWNER = 'permit_owner',
+  REQUEST_EDITOR = 'request_editor', 
+  CONTRACTOR_REPRESENTATIVE = 'contractor_representative',
+  PROJECT_MANAGER = 'project_manager',
+  PERMIT_OWNER_REPRESENTATIVE = 'permit_owner_representative'
+}
+
+export interface ProjectTeamMember {
+  id: string;
+  project_id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email?: string;
+  signature_file_path?: string;
+  role: ProjectTeamRole;
+  created_at: string;
+  updated_at: string;
+}
+
+// Permit Owner Data - keeping for backward compatibility
 export interface PermitOwnerData {
   name: string;
   address: string;
@@ -81,18 +103,13 @@ export interface Project {
   engineering_coordinator_number: string;
   firefighting_number: string;
   description: string;
-  permit_owner: string;
-  permit_owner_name?: string;
-  permit_owner_address?: string;
-  permit_owner_phone?: string;
-  permit_owner_email?: string;
-  permit_owner_data?: PermitOwnerData;
   status_due_date?: string;
   status?: string;
   is_warning?: boolean;
   is_expired?: boolean;
   professionals: Professional[];
   documents?: ProjectDocument[];
+  team_members?: ProjectTeamMember[];
 }
 
 export interface ProjectCreationFormData extends Omit<Project, 'id'> {}

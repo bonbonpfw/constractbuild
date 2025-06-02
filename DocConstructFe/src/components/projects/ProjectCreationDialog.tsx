@@ -27,7 +27,6 @@ export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   engineering_coordinator_number: '',
   firefighting_number: '',
   description: '',
-  permit_owner: '',
   status: ProjectStatus.PRE_PERMIT,
   professionals: []
 };
@@ -70,15 +69,6 @@ const ProjectCreationDialog: React.FC<{
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </FullWidthField>
-            <FullWidthField>
-              <Label>בעל ההיתר *</Label>
-              <Input
-                type="text"
-                value={formData.permit_owner}
-                onChange={e => setFormData({ ...formData, permit_owner: e.target.value })}
                 required
               />
             </FullWidthField>
