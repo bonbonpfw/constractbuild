@@ -85,3 +85,7 @@ volumes:
     driver: local
   app_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ubuntu/doc-construct-app

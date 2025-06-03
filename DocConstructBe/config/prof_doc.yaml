@@ -50,15 +50,15 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       general_contractor_license_expiration_date: [460, 330]
       general_contractor_phone: [430, 315]
       general_contractor_mail: [300, 315]
-      general_contractor_address: [430, 295]
+      general_contractor_address: [390, 295]
 
       structural_engineer_name: [130, 280]
       structural_engineer_id: [450, 270]
       structural_engineer_license_number: [300, 270]
       structural_engineer_phone: [420, 250]
       structural_engineer_mail: [300, 250]
-      structural_engineer_address: [450, 235]
-      general_contractor_name_for_signed: [120, 185]
+      structural_engineer_address: [390, 235]
+      general_contractor_name_for_signed: [100, 185]
       date_for_signed: [100, 160]
     2:
       structural_engineer_name: [395, 727]
@@ -68,7 +68,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       structural_engineer_mail: [30, 712]
       structural_engineer_address: [350, 680]
       structural_engineer_name_for_signed: [120, 455]
-      date_for_signed: [100, 425]
+      date_for_signed: [90, 425]
 
   EXECUTION_INSPECTION:
     1:
@@ -78,7 +78,7 @@ DOCUMENT_FIELD_COORDINATE_MAP:
       general_contractor_license_number: [430, 355]
       general_contractor_phone: [430, 338]
       general_contractor_mail: [320, 338]
-      general_contractor_address: [430, 320]
+      general_contractor_address: [390, 320]
       permit_owner_name_for_signed: [90, 255]
       date_for_signed: [90, 230]
     2:
@@ -109,23 +109,23 @@ DOCUMENT_FIELD_COORDINATE_MAP:
   CONTRACTOR_OWNER:
     1:
       permit_owner_name: [395, 390]
-      general_contractor_name: [355, 370]
+      general_contractor_name: [340, 370]
       general_contractor_id: [430, 355]
       general_contractor_license_number: [310, 355]
       general_contractor_phone: [430, 338]
-      general_contractor_mail: [310, 338]
-      general_contractor_address: [430, 320]
+      general_contractor_mail: [290, 338]
+      general_contractor_address: [410, 320]
       permit_owner_name_for_signed: [90, 270]
       date_for_signed: [90, 245]
     2:
-      general_contractor_name: [430, 712]
+      general_contractor_name: [390, 712]
       general_contractor_id: [120, 712]
       general_contractor_license_number: [410, 695]
       general_contractor_license_expiration_date: [200, 695]
       general_contractor_phone: [420, 680]
       general_contractor_mail: [280, 680]
       general_contractor_address: [400, 665]
-      general_contractor_name_for_signed: [120, 480]
+      general_contractor_name_for_signed: [90, 480]
       date_for_signed: [100, 455]
 
   PROJECT_TEAMS:
