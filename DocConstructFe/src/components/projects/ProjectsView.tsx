@@ -123,7 +123,6 @@ const Projects: React.FC = () => {
                   </WarningBadge>
                 )}
                 <CardName><b>{project.name}</b></CardName>
-                <CardInfo><b>בעל ההיתר: {project.permit_owner}</b></CardInfo>
                 <CardInfo><b>תאריך יעד: {formatDate(project.status_due_date)}</b></CardInfo>
               </Card>
             ))}
