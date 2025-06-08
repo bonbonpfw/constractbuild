@@ -670,8 +670,8 @@ const ProjectView: React.FC = () => {
 
   // Prepare filesData for FileArea
   let generalFiles = filesData.filter(f => f.fileType === 'כללי');
-  if (activeDocTab === 'general') {
-    // Always show a missing doc item at the end
+  if (activeDocTab === 'general' && !generalFiles.some(f => f.state === DocumentState.MISSING)) {
+    // Only add a missing slot if there isn't one already
     generalFiles = [
       ...generalFiles,
       {
