@@ -41,7 +41,8 @@ class LicenseExtract:
     def __init__(self):
          self.license_config = {
             "id_pattern": r'(?:מספר ת"ז|מספר ת\.ז|ת\.ז|ת"ז|תעודת זהות|ח\.פ|ID)[\s:]*(\d{9})',
-            "date_pattern": r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{2}/\d{2}/\d{4})',
+            #"date_pattern": r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{2}/\d{2}/\d{4})',
+            'date_pattern': r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{8}|\d{2}[\/]?\d{2}[\/]?\d{4})',
             "name_pattern": r'(?:שם|שם פרטי|שם פרטי ושם משפחה|מרה|שם משפחה)[\s:]*((?:\S+\s+){0,1}\S+)',
             "license_pattern": r'(?:מספר רישיון|רישיון|מס תעודה |מס\' רישיון|מס רישיון)[\s:]*(\d{4,8})',
             "proffessional_type_pattern": r'רישיון\s+(\S+)'
@@ -109,10 +110,21 @@ class ExtractProfessional:
     def _extract_date(self, text: str):
         date_match = re.search(self.license_extract.date_pattern, text)
         if date_match:
-            date = date_match.group(1) if len(date_match.groups()) > 0 else date_match.group()
-            date = datetime.strptime(date, '%d/%m/%Y')
-            self.license_data.license_expiration_date = date
-            return date
+            date_str = date_match.group(1) if len(date_match.groups()) > 0 else date_match.group()            
+            # Handle different date formats
+            if '/' in date_str:
+                # Format: DD/MM/YYYY
+                extracted_date = datetime.strptime(date_str, '%d/%m/%Y')
+            else:
+                # Format: DDMMYYYY (8 digits)
+                if len(date_str) == 8:
+                    day = date_str[:2]
+                    month = date_str[2:4] 
+                    year = date_str[4:]
+                    extracted_date =  datetime.strptime(f"{day}/{month}/{year}", '%d/%m/%Y')
+    
+            self.license_data.license_expiration_date = extracted_date
+            return extracted_date
         else:
             logging.error(f"לא ניתן למצוא תאריך תפוגה בטקסט: ...")
             return None
