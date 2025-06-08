@@ -207,7 +207,7 @@ const ProjectView: React.FC = () => {
 
   const [formData, setFormData] = useState<Project | null>(null);
   const originalData = useRef<Project | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statuses, setStatuses] = useState<string[]>([]);
 
@@ -236,6 +236,8 @@ const ProjectView: React.FC = () => {
   const [activeDocTab, setActiveDocTab] = useState<'categorized' | 'general'>('categorized');
 
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
 
   const loadData = async () => {
     try {
@@ -440,11 +442,11 @@ const ProjectView: React.FC = () => {
   };
 
   const startEditing = () => {
-    setIsEditing(true);
+    setIsEditingDetails(true);
   };
   const cancelEditing = () => {
     setFormData(originalData.current);
-    setIsEditing(false);
+    setIsEditingDetails(false);
   };
 
   const saveChanges = async () => {
@@ -484,7 +486,7 @@ const ProjectView: React.FC = () => {
         originalData.current = formData;
       }
 
-      setIsEditing(false);
+      setIsEditingDetails(false);
       toast.success('Changes saved')
     } catch (error) {
       errorHandler(error as ErrorResponseData, 'Failed to save changes');
@@ -497,7 +499,7 @@ const ProjectView: React.FC = () => {
     loadData();
   }, [id]);
 
-  console.log('ProjectView render - isEditing:', isEditing, 'activeTab:', activeTab);
+  console.log('ProjectView render - isEditing:', isEditingDetails, 'activeTab:', activeTab);
 
   // Convert ProjectDocument[] to FileAreaDocument[]
   const filesData: FileAreaDocument[] = [];
@@ -744,42 +746,18 @@ const ProjectView: React.FC = () => {
           </TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
-          {!isEditing ? (
-            <>
-              <IconOnlyButton onClick={() => router.back()} title="Back">
-                {renderIcon(FaIcons.FaArrowLeft)}
-              </IconOnlyButton>
-              <IconOnlyButton onClick={startEditing} title="Edit">
-                {renderIcon(FaIcons.FaEdit)}
-              </IconOnlyButton>
-              <IconOnlyButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
-                title="Delete"
-              >
-                {renderIcon(FaIcons.FaTrash)}
-              </IconOnlyButton>
-            </>
-          ) : (
-            <>
-              <IconOnlyButton
-                onClick={saveChanges}
-                title="Save"
-                disabled={saving}
-              >
-                {renderIcon(FaIcons.FaCheck)}
-              </IconOnlyButton>
-              <IconOnlyButton
-                onClick={cancelEditing}
-                title="Cancel"
-                disabled={saving}
-              >
-                {renderIcon(FaIcons.FaTimes)}
-              </IconOnlyButton>
-            </>
-          )}
+          <IconOnlyButton onClick={() => router.back()} title="Back">
+            {renderIcon(FaIcons.FaArrowLeft)}
+          </IconOnlyButton>
+          <IconOnlyButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            title="Delete"
+          >
+            {renderIcon(FaIcons.FaTrash)}
+          </IconOnlyButton>
         </TopPanelGroup>
       </TopPanel>
       <PageContent style={{ padding: '16px 0 0 0' }}>
@@ -820,7 +798,7 @@ const ProjectView: React.FC = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </FullWidthField>
@@ -830,7 +808,7 @@ const ProjectView: React.FC = () => {
                           name="request_number"
                           value={formData.request_number}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -840,7 +818,7 @@ const ProjectView: React.FC = () => {
                           name="permit_number"
                           value={formData.permit_number}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -850,7 +828,7 @@ const ProjectView: React.FC = () => {
                           name="construction_supervision_number"
                           value={formData.construction_supervision_number}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -860,7 +838,7 @@ const ProjectView: React.FC = () => {
                           name="engineering_coordinator_number"
                           value={formData.engineering_coordinator_number}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -870,7 +848,7 @@ const ProjectView: React.FC = () => {
                           name="firefighting_number"
                           value={formData.firefighting_number}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -880,7 +858,7 @@ const ProjectView: React.FC = () => {
                           name="status"
                           value={formData.status}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         >
                           {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
@@ -893,7 +871,7 @@ const ProjectView: React.FC = () => {
                           type="date"
                           value={formData.status_due_date || ''}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
                         />
                       </CompactField>
@@ -903,11 +881,27 @@ const ProjectView: React.FC = () => {
                           name="description"
                           value={formData.description}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingDetails}
                           style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
                         />
                       </FullWidthField>
                     </CompactFormGrid>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                      {!isEditingDetails ? (
+                        <CompactButton onClick={() => setIsEditingDetails(true)}>
+                          {renderIcon(FaIcons.FaEdit)} Edit
+                        </CompactButton>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaCheck)} Save
+                          </CompactButton>
+                          <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaTimes)} Cancel
+                          </CompactButton>
+                        </div>
+                      )}
+                    </div>
                   </TabContent>
                 )}
                 
@@ -982,7 +976,7 @@ const ProjectView: React.FC = () => {
                                     value={teamData[member.key]?.name || ''}
                                     onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], name: e.target.value } }))}
                                     placeholder="שם מלא"
-                                    disabled={!isEditing}
+                                    disabled={!isEditingTeam}
                                   />
                                 </CompactField>
                                 <CompactField>
@@ -991,7 +985,7 @@ const ProjectView: React.FC = () => {
                                     value={teamData[member.key]?.phone || ''}
                                     onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], phone: e.target.value } }))}
                                     placeholder="טלפון"
-                                    disabled={!isEditing}
+                                    disabled={!isEditingTeam}
                                   />
                                 </CompactField>
                                 <CompactField>
@@ -1000,7 +994,7 @@ const ProjectView: React.FC = () => {
                                     value={teamData[member.key]?.email || ''}
                                     onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], email: e.target.value } }))}
                                     placeholder={'דוא"ל'}
-                                    disabled={!isEditing}
+                                    disabled={!isEditingTeam}
                                   />
                                 </CompactField>
                                 <CompactField>
@@ -1009,7 +1003,7 @@ const ProjectView: React.FC = () => {
                                     value={teamData[member.key]?.address || ''}
                                     onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], address: e.target.value } }))}
                                     placeholder="כתובת"
-                                    disabled={!isEditing}
+                                    disabled={!isEditingTeam}
                                   />
                                 </CompactField>
                               </CompactFormGrid>
@@ -1019,15 +1013,20 @@ const ProjectView: React.FC = () => {
                       ))
                     )}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      <CompactButton 
-                        onClick={() => {
-                          console.log('Save team button clicked, isEditing:', isEditing, 'teamData:', teamData);
-                          saveTeam(teamData);
-                        }} 
-                        disabled={!isEditing}
-                      >
-                        Save changes
-                      </CompactButton>
+                      {!isEditingTeam ? (
+                        <CompactButton onClick={() => setIsEditingTeam(true)}>
+                          {renderIcon(FaIcons.FaEdit)} Edit
+                        </CompactButton>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaCheck)} Save
+                          </CompactButton>
+                          <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaTimes)} Cancel
+                          </CompactButton>
+                        </div>
+                      )}
                     </div>
                   </TabContent>
                 )}

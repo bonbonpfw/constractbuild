@@ -30,6 +30,7 @@ import {
   Field,
   FullWidthField,
   FormGrid,
+  Button,
 } from '../../styles/SharedStyles';
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import EmptyStatePlaceholder from "../shared/EmptyState";
@@ -246,42 +247,18 @@ const ProfessionalView: React.FC = () => {
           </TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
-          {!isEditing ? (
-            <>
-              <IconButton onClick={() => router.back()} title="Back">
-                <FaArrowLeftAny />
-              </IconButton>
-              <IconButton onClick={startEditing} title="Edit">
-                <FaEditAny />
-              </IconButton>
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
-                title="Delete"
-              >
-               <FaTrashAny />
-              </IconButton>
-            </>
-          ) : (
-            <>
-              <IconButton
-                onClick={saveChanges}
-                title="Save"
-                disabled={saving}
-              >
-                <FaCheckAny />
-              </IconButton>
-              <IconButton
-                onClick={cancelEditing}
-                title="Cancel"
-                disabled={saving}
-              >
-                <FaTimesAny />
-              </IconButton>
-            </>
-          )}
+          <IconButton onClick={() => router.back()} title="Back">
+            <FaArrowLeftAny />
+          </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            title="Delete"
+          >
+            <FaTrashAny />
+          </IconButton>
         </TopPanelGroup>
       </TopPanel>
       <PageContent>
@@ -394,6 +371,24 @@ const ProfessionalView: React.FC = () => {
                   disabled={!isEditing}
                 />
               </Field>
+              <FullWidthField>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                {!isEditing ? (
+                  <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={startEditing}>
+                    <FaEditAny style={{ marginInlineEnd: 4 }} /> Edit
+                  </Button>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={saveChanges} disabled={saving}>
+                      <FaCheckAny style={{ marginInlineEnd: 4 }} /> Save
+                    </Button>
+                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={cancelEditing} disabled={saving}>
+                      <FaTimesAny style={{ marginInlineEnd: 4 }} /> Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+              </FullWidthField>
             </FormGrid>
 
             {/* Documents area on the right */}
