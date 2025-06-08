@@ -350,7 +350,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                         width: '100%',
                         height: 400,
                         maxWidth: 580,
-                        maxHeight: 800,
+                        maxHeight: 400,
                         overflow: zoom > 1 ? 'scroll' : 'hidden',
                         background: '#fff',
                         borderRadius: 8,
@@ -395,7 +395,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                     <iframe
                       src={imgUrl || undefined}
                       title="PDF Preview"
-                      style={{ width: 594, height: 800, border: 'none', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001' }}
+                      style={{ width: 594, height: 400, border: 'none', background: '#fff', borderRadius: 4, boxShadow: '0 2px 8px #0001' }}
                     />
                   </div>
                 ) : importedFile ? (
