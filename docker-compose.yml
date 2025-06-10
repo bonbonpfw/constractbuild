@@ -44,6 +44,8 @@ services:
       - FLASK_DEBUG=0
       - APP_PATH=/app/data
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@postgres:5432/${DB_NAME:-docconstruct}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - CLAUDE_MODEL_NAME=${CLAUDE_MODEL_NAME}
     env_file:
       - .env
     depends_on:

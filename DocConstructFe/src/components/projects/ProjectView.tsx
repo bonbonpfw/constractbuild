@@ -66,12 +66,46 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const MainLayout = styled.div`
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 200px 1fr 437px;
   grid-template-rows: auto;
-  grid-template-areas: "project documents";
+  grid-template-areas: "sidebar project documents";
   gap: 16px;
   width: 100%;
   overflow: visible;
+`;
+
+const SecondSidebar = styled.div`
+  grid-area: sidebar;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+`;
+
+const SecondSidebarContent = styled.div`
+  margin-top: 60px;
+  padding: 0;
+`;
+
+const SidebarButton = styled.button<{ active: boolean }>`
+  width: 100%;
+  background: transparent;
+  border: none;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  font-size: 16px;
+  font-weight: ${p => p.active ? '600' : '400'};
+  color: #51789f;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: right;
+  
+  &:hover {
+    background-color: rgb(227, 237, 246);
+  }
 `;
 
 const ProjectPanel = styled.div`
@@ -81,37 +115,13 @@ const ProjectPanel = styled.div`
 
 const DocumentsPanel = styled.div`
   grid-area: documents;
-  width: 380px;
+  width: 437px;
   padding: 0 12px;
   border-right: 1px solid #eaeaea;
   overflow-y: visible;
 `;
 
-const TabContainer = styled.div`
-  display: flex;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 16px;
-`;
 
-const TabButton = styled.button<{ active: boolean }>`
-  background: transparent;
-  border: none;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: ${p => p.active ? '700' : '600'};
-  color: ${p => p.active ? '#0071e3' : '#666'};
-  border-bottom: 2px solid ${p => p.active ? '#0071e3' : 'transparent'};
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    color: #0071e3;
-  }
-`;
-
-const TabContent = styled.div`
-  padding: 0;
-`;
 
 const Card = styled.div`
   background: #ffffff;
@@ -765,32 +775,36 @@ const ProjectView: React.FC = () => {
           <EmptyStatePlaceholder msg="Project not found" />
         ) : (
           <MainLayout>
-            {/* Project Panel with Tabs */}
+            {/* Second Sidebar with Navigation */}
+            <SecondSidebar>
+              <SecondSidebarContent>
+                <SidebarButton 
+                  active={activeTab === 'details'} 
+                  onClick={() => setActiveTab('details')}
+                >
+                  פרטי הפרויקט
+                </SidebarButton>
+                <SidebarButton 
+                  active={activeTab === 'professionals'} 
+                  onClick={() => setActiveTab('professionals')}
+                >
+                  בעלי מקצוע
+                </SidebarButton>
+                <SidebarButton
+                  active={activeTab === 'team'}
+                  onClick={() => setActiveTab('team')}
+                >
+                  צוות הפרויקט
+                </SidebarButton>
+              </SecondSidebarContent>
+            </SecondSidebar>
+
+            {/* Project Panel */}
             <ProjectPanel>
-              <Card>
-                <TabContainer>
-                  <TabButton 
-                    active={activeTab === 'details'} 
-                    onClick={() => setActiveTab('details')}
-                  >
-                    פרטי הפרויקט
-                  </TabButton>
-                  <TabButton 
-                    active={activeTab === 'professionals'} 
-                    onClick={() => setActiveTab('professionals')}
-                  >
-                    בעלי מקצוע
-                  </TabButton>
-                  <TabButton
-                    active={activeTab === 'team'}
-                    onClick={() => setActiveTab('team')}
-                  >
-                    צוות הפרויקט
-                  </TabButton>
-                </TabContainer>
+              <Card style={{ marginTop: '60px' }}>
                 
                 {activeTab === 'details' && (
-                  <TabContent>
+                  <div>
                     <CompactFormGrid>
                       <FullWidthField>
                         <CompactLabel>שם הפרויקט</CompactLabel>
@@ -902,11 +916,11 @@ const ProjectView: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </TabContent>
+                  </div>
                 )}
                 
                 {activeTab === 'professionals' && (
-                  <TabContent>
+                  <div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
                       <CompactButton 
                         onClick={handleAddProfessional} 
@@ -952,11 +966,11 @@ const ProjectView: React.FC = () => {
                         ))}
                       </div>
                     )}
-                  </TabContent>
+                  </div>
                 )}
 
                 {activeTab === 'team' && (
-                  <TabContent>
+                  <div>
                     {rolesLoading ? (
                       <div>Loading roles...</div>
                     ) : (
@@ -1028,7 +1042,7 @@ const ProjectView: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </TabContent>
+                  </div>
                 )}
               </Card>
             </ProjectPanel>

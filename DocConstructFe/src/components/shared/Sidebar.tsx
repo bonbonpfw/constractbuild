@@ -8,7 +8,7 @@ import {FaBuilding, FaUserTie} from "react-icons/fa";
 const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
   width: ${props => props.isCollapsed ? '60px' : '250px'};
   height: 100vh;
-  background: #ffffff;
+  background: #f5f5f5;
   color: #51789f;
   transition: width 0.3s ease;
   display: flex;
@@ -16,6 +16,7 @@ const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
   justify-content: space-between;
   direction: rtl;
   flex-shrink: 0;
+  border-right: 1px solid #e0e0e0;
 `;
 
 const SidebarGroup = styled.div`

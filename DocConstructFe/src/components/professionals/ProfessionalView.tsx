@@ -267,133 +267,135 @@ const ProfessionalView: React.FC = () => {
         ) : (
           <div style={{ display: 'flex', width: '100%', gap: '30px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
             {/* Form fields on the left */}
-            <FormGrid style={{ flex: '1', minWidth: '420px', minHeight: 'fit-content', paddingBottom: '20px', marginBottom: '20px' }}>
-              <Label style={{ gridColumn: 'span 2', fontSize: 25, textAlign: 'center', margin: '10px 0 20px 0', display: 'block' }}>General</Label>
-              <Field>
-                <Label>Name</Label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <Field>
-                <Label>Phone</Label>
-                <Input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  pattern='\\d{9,15}'
-                  onInvalid={e => {
-                    const input = e.currentTarget;
-                    // set your custom message…
-                    input.setCustomValidity('Phone number must be 9–15 digits');
-                    // and immediately show the tooltip
-                    input.reportValidity();
-                  }}
-                  onInput={e => {
-                    const input = e.currentTarget;
-                    // clear the message so user can retry
-                    input.setCustomValidity('');
-                  }}
-                />
-              </Field>
-              <Field>
-                <Label>Email</Label>
-                <Input
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <Field>
-                <Label>National ID</Label>
-                <Input
-                  name="national_id"
-                  value={formData.national_id}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <FullWidthField>
-                <Label>Address</Label>
-                <Input
-                  name="address"
-                  value={formData.address || ''}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </FullWidthField>
-              <Field>
-                <Label>License Number</Label>
-                <Input
-                  name="license_number"
-                  value={formData.license_number}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <Field>
-                <Label>Type</Label>
-                <Select
-                  name="professional_type"
-                  value={formData.professional_type}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                >
-                  {types.map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field>
-                <Label>Status</Label>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                >
-                  {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
-                </Select>
-              </Field>
-              <Field>
-                <Label>Expiry Date</Label>
-                <Input
-                  name="license_expiration_date"
-                  type="date"
-                  value={formData.license_expiration_date}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </Field>
-              <FullWidthField>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                {!isEditing ? (
-                  <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={startEditing}>
-                    <FaEditAny style={{ marginInlineEnd: 4 }} /> Edit
-                  </Button>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={saveChanges} disabled={saving}>
-                      <FaCheckAny style={{ marginInlineEnd: 4 }} /> Save
+            <div style={{ flex: '1', minWidth: '420px' }}>
+              <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 20px 0', display: 'block' }}>General</Label>
+              <FormGrid style={{ paddingBottom: '20px', marginBottom: '20px' }}>
+                <Field>
+                  <Label>Name</Label>
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <Field>
+                  <Label>Phone</Label>
+                  <Input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    pattern='\\d{9,15}'
+                    onInvalid={e => {
+                      const input = e.currentTarget;
+                      // set your custom message…
+                      input.setCustomValidity('Phone number must be 9–15 digits');
+                      // and immediately show the tooltip
+                      input.reportValidity();
+                    }}
+                    onInput={e => {
+                      const input = e.currentTarget;
+                      // clear the message so user can retry
+                      input.setCustomValidity('');
+                    }}
+                  />
+                </Field>
+                <Field>
+                  <Label>Email</Label>
+                  <Input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <Field>
+                  <Label>National ID</Label>
+                  <Input
+                    name="national_id"
+                    value={formData.national_id}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <FullWidthField>
+                  <Label>Address</Label>
+                  <Input
+                    name="address"
+                    value={formData.address || ''}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </FullWidthField>
+                <Field>
+                  <Label>License Number</Label>
+                  <Input
+                    name="license_number"
+                    value={formData.license_number}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <Field>
+                  <Label>Type</Label>
+                  <Select
+                    name="professional_type"
+                    value={formData.professional_type}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  >
+                    {types.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field>
+                  <Label>Status</Label>
+                  <Select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  >
+                    {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
+                  </Select>
+                </Field>
+                <Field>
+                  <Label>Expiry Date</Label>
+                  <Input
+                    name="license_expiration_date"
+                    type="date"
+                    value={formData.license_expiration_date}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </Field>
+                <FullWidthField>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                  {!isEditing ? (
+                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={startEditing}>
+                      <FaEditAny style={{ marginInlineEnd: 4 }} /> Edit
                     </Button>
-                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={cancelEditing} disabled={saving}>
-                      <FaTimesAny style={{ marginInlineEnd: 4 }} /> Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-              </FullWidthField>
-            </FormGrid>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={saveChanges} disabled={saving}>
+                        <FaCheckAny style={{ marginInlineEnd: 4 }} /> Save
+                      </Button>
+                      <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={cancelEditing} disabled={saving}>
+                        <FaTimesAny style={{ marginInlineEnd: 4 }} /> Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                </FullWidthField>
+              </FormGrid>
+            </div>
 
             {/* Documents area on the right */}
             <div style={{ flex: '0 0 500px', minWidth: '300px', marginBottom: '20px' }}>
-              <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 40px 0', display: 'block' }}>Documents</Label>
+              <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 38px 0', display: 'block' }}>Documents</Label>
               <FileArea
                 files={filesData}
                 disabled={false}

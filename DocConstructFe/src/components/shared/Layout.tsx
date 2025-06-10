@@ -11,7 +11,7 @@ const LayoutContainer = styled.div`
 
 const MainContent = styled.div`
   flex: 1;
-  padding: 10px 40px 0;
+  padding: 10px 15px 0;
 `;
 
 

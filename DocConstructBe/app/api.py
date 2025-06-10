@@ -6,7 +6,7 @@ import tempfile
 import mimetypes
 from config.sys_config import DOCUMENTS_FOLDER
 from utils.data_extract import ExtractProfessional
-from utils.doc_to_bin import process_pdf_image_to_binary,process_image_to_binary
+from utils.doc_to_bin import process_pdf_image_to_binary,process_image_to_binary,process_pdf_to_binary
 from doc_map.doc_map import DocumentMap
 from app.errors import (
     ProjectDoesNotExist,
@@ -46,7 +46,8 @@ from app.errors import InvalidFileFormat
 class ProjectManager:
     @staticmethod
     def get_all() -> list[Project]:
-        return db_session.query(Project).all()
+        from sqlalchemy.orm import joinedload
+        return db_session.query(Project).options(joinedload(Project.team_members)).all()
 
     @staticmethod
     def get_by_id(project_id: str) -> Project:
@@ -430,17 +431,32 @@ class ProfessionalManager:
     def get_document_types() -> list[str]:
         return [document_type.value for document_type in ProfessionalDocumentType]
     
+
+    def _extact_pdf_data(file_path: str) -> dict:
+        binary_data = process_pdf_image_to_binary(file_path)
+        extract_professional = ExtractProfessional(binary_data,is_llm_enabled=False)
+        license_data = extract_professional.extract_text()
+        if license_data.license_number or license_data.license_expiration_date or license_data.id_number is None:
+            binary_data = process_pdf_to_binary(file_path)
+            extract_professional = ExtractProfessional(binary_data,is_llm_enabled=True)
+            license_data = extract_professional.extract_text(license_data.__str__())
+        return license_data
+        
+
+    def _extract_image_data(file_path: str) -> dict:
+        binary_data = process_image_to_binary(file_path)
+        extract_professional = ExtractProfessional(binary_data)
+        license_data = extract_professional.extract_text()
+        return license_data
+    
     @staticmethod
     def extract_professional_data(file_path: str) -> dict:
         if mimetypes.guess_type(file_path)[0] == 'application/pdf':
-            binary_data = process_pdf_image_to_binary(file_path)
+            license_data = ProfessionalManager._extact_pdf_data(file_path)
         elif mimetypes.guess_type(file_path)[0] == 'image/jpeg' or mimetypes.guess_type(file_path)[0] == 'image/png':
-            binary_data = process_image_to_binary(file_path)
+            license_data = ProfessionalManager._extract_image_data(file_path)
         else:
             raise InvalidFileFormat(file_format=mimetypes.guess_type(file_path)[0])
-        extract_professional = ExtractProfessional(binary_data)
-        license_data = extract_professional.extract_text()
-        # Convert LicenseData object to dict before accessing
         license_dict = license_data.__dict__()
         if license_dict.get('professional_type'):
             license_dict['professional_type'] = ProfessionalType.map_to_value(license_dict.get('professional_type'))

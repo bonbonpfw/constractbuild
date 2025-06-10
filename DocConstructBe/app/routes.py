@@ -15,7 +15,7 @@ from app.api import (
 )
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
-from data_model.enum import enum_to_value, ProjectDocumentType
+from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole
 
 def validate_request(endpoint):
     """Validate request data against schema"""
@@ -87,6 +87,11 @@ def init_routes(app):
                     ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Warning'
                     for prof in ProjectManager.get_project_professionals(project.id)
                 )),
+                'team_members': [{
+                    'id': team.id,
+                    'name': team.name,
+                    'role': ProjectTeamRole.map_to_value(team.role).name,
+                } for team in project.team_members],
             } for project in projects]
         }).generate_response()
 
@@ -286,6 +291,7 @@ def init_routes(app):
                 'email': prof.email,
                 'professional_type': prof.professional_type,
                 'status': prof.status,
+                'license_expiration_date': prof.license_expiration_date.isoformat() if prof.license_expiration_date else None,
             } for prof in professionals]
         }).generate_response()
 

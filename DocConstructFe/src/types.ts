@@ -51,11 +51,11 @@ export interface ProjectDocument {
 
 // Project Team Member Types
 export enum ProjectTeamRole {
-  PERMIT_OWNER = 'permit_owner',
-  REQUEST_EDITOR = 'request_editor', 
-  CONTRACTOR_REPRESENTATIVE = 'contractor_representative',
-  PROJECT_MANAGER = 'project_manager',
-  PERMIT_OWNER_REPRESENTATIVE = 'permit_owner_representative'
+  PERMIT_OWNER = 'PERMIT_OWNER',
+  REQUEST_EDITOR = 'REQUEST_EDITOR', 
+  CONTRACTOR_REPRESENTATIVE = 'CONTRACTOR_REPRESENTATIVE',
+  PROJECT_MANAGER = 'PROJECT_MANAGER',
+  PERMIT_OWNER_REPRESENTATIVE = 'PERMIT_OWNER_REPRESENTATIVE'
 }
 
 export interface ProjectTeamMember {

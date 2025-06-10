@@ -37,6 +37,5 @@ def process_pdf_image_to_binary(pdf_file: str) -> None:
         text += pytesseract.image_to_string(image, lang="heb")
     
     return text
-    
 
 

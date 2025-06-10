@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import datetime
-
+from ai.llm import PromptCreator,JSONParserForLLM,Prompt,FieldNames
 
 class LicenseData:
     def __init__(self):
@@ -41,7 +41,6 @@ class LicenseExtract:
     def __init__(self):
          self.license_config = {
             "id_pattern": r'(?:מספר ת"ז|מספר ת\.ז|ת\.ז|ת"ז|תעודת זהות|ח\.פ|ID)[\s:]*(\d{9})',
-            #"date_pattern": r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{2}/\d{2}/\d{4})',
             'date_pattern': r'(?:תאריך תפוגה|בתוקף עד|תוקף|תפוגה)[\s:]*(\d{8}|\d{2}[\/]?\d{2}[\/]?\d{4})',
             "name_pattern": r'(?:שם|שם פרטי|שם פרטי ושם משפחה|מרה|שם משפחה)[\s:]*((?:\S+\s+){0,1}\S+)',
             "license_pattern": r'(?:מספר רישיון|רישיון|מס תעודה |מס\' רישיון|מס רישיון)[\s:]*(\d{4,8})',
@@ -79,21 +78,31 @@ class LicenseExtract:
         )
 
 class ExtractProfessional:
-    def __init__(self, text: bytes):
+    def __init__(self, text: bytes, is_llm_enabled: bool = True):
         self.text = self._clean_text(text)
         self.license_extract = LicenseExtract()
         self.license_data = LicenseData()
-
+        self.is_llm_enabled = is_llm_enabled
+        if self.is_llm_enabled:  
+            self.prompt_creator = PromptCreator()
+            self.json_parser = JSONParserForLLM()
+          
     def _clean_text(self, text: str) -> str:
         """Remove single quotes and forward slashes from text"""
         return text.replace("'", "").replace("/", "")
 
-    def extract_text(self):
-        id = self._extract_id(self.text)
-        date = self._extract_date(self.text)
-        name = self._extract_name(self.text)
-        license = self._extract_license(self.text)
-        type = self._extract_type(self.text)
+    def extract_text(self,extracted_text: str = None):
+        if self.is_llm_enabled:
+            self.answer = self.prompt_creator.run_openai_prompt(Prompt.format(license_text=self.text,text_already_extracted=extracted_text))
+            for field in FieldNames:
+               field_data = self.json_parser.extract_field(str(self.answer),field)
+               setattr(self.license_data, field, field_data)
+        else:
+            id = self._extract_id(self.text)
+            date = self._extract_date(self.text)
+            name = self._extract_name(self.text)
+            license = self._extract_license(self.text)
+            type = self._extract_type(self.text)
         return self.license_data
 
     def _extract_id(self, text: str):
@@ -135,18 +144,10 @@ class ExtractProfessional:
             name = name_match.group(1) if len(name_match.groups()) > 0 else name_match.group()
             self.license_data.name = name
             return name
-        # elif self.license_extract.id_number:
-        #     # If standard pattern fails, try to find name near ID
-        #     id_position = text.find(self.license_extract.id_number) if self.license_extract.id_number else -1
-        #     if id_position > 0:
-        #         # Look for name before ID (typical format in Israeli documents)
-        #         name_text = text[:id_position].strip().split('\n')[-1]
-        #         if name_text and len(name_text) > 2:
-        #             self.license_data.name = name_text
-        #             return name_text
-            
+        else:
             logging.error(f"לא ניתן למצוא שם בטקסט: ...")
             return None
+
 
     def _extract_license(self, text: str):
         license_match = re.search(self.license_extract.license_pattern, text)

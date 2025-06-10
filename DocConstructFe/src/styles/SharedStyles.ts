@@ -14,8 +14,6 @@ export const PageContainer = styled.div`
   flex: 1;
   font-family: 'Inter', sans-serif;
   direction: rtl;
-  max-width: 1200px;
-  margin: 0 auto;
 `;
 
 export const TopPanel = styled.div`
@@ -67,7 +65,7 @@ export const PageContent = styled.div`
   overflow-y: auto;
   padding-top: 30px;
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
 
   &::-webkit-scrollbar {
     display: none;

@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { getProjects } from '../../api';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPlus, FaExclamationTriangle, FaTh, FaList } from 'react-icons/fa';
 import {
   TopPanel,
   TopPanelLogo,
@@ -15,16 +15,22 @@ import {
   CardGrid,
   Card,
   CardName,
-  CardInfo
+  CardInfo,
+  Table,
+  TableHeader,
+  TableBody
 } from '../../styles/SharedStyles';
-import { Project, ProjectStatus, ProfessionalStatus } from "../../types";
+import { Project, ProjectStatus, ProfessionalStatus, ProjectTeamRole } from "../../types";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import ProjectCreationDialog from "./ProjectCreationDialog";
 
+type ViewMode = 'cards' | 'table';
+
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProjectCreationDialog, setShowProjectCreationDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const router = useRouter();
 
   const fetchProjects = async () => {
@@ -86,6 +92,78 @@ const Projects: React.FC = () => {
     );
   };
 
+  const renderCardView = () => (
+    <CardGrid>
+      {projects.map((project) => (
+        <Card
+          key={project.id}
+          onClick={() => handleProjectClick(project.id)}
+        >
+          <StatusBadge status={project.status || 'draft'}>
+            {getStatusLabel(project.status)}
+          </StatusBadge>
+          {project.is_expired && (
+            <WarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
+              <FaExclamationTriangle />
+            </WarningBadge>
+          )}
+          {!project.is_expired && project.is_warning && (
+            <WarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
+              <FaExclamationTriangle />
+            </WarningBadge>
+          )}
+          <CardName><b>{project.name}</b></CardName>
+          <CardInfo><b>בעל היתר:</b> {project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</CardInfo>
+          <CardInfo><b>מספר היתר:</b> {project.permit_number || 'לא זמין'}</CardInfo>
+        </Card>
+      ))}
+    </CardGrid>
+  );
+
+  const renderTableView = () => (
+    <Table>
+      <thead>
+        <tr>
+          <TableHeader>שם פרויקט</TableHeader>
+          <TableHeader>בעל היתר</TableHeader>
+          <TableHeader>סטטוס</TableHeader>
+          <TableHeader>מספר היתר</TableHeader>
+          <TableHeader>התראות</TableHeader>
+        </tr>
+      </thead>
+      <tbody>
+        {projects.map((project) => (
+          <tr 
+            key={project.id} 
+            onClick={() => handleProjectClick(project.id)}
+            style={{ cursor: 'pointer' }}
+          >
+            <TableBody><b>{project.name}</b></TableBody>
+            <TableBody>{project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</TableBody>
+            <TableBody>
+              <TableStatusBadge status={project.status || 'draft'}>
+                {getStatusLabel(project.status)}
+              </TableStatusBadge>
+            </TableBody>
+            <TableBody>{project.permit_number || 'לא זמין'}</TableBody>
+            <TableBody>
+              {project.is_expired && (
+                <TableWarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
+                  <FaExclamationTriangle />
+                </TableWarningBadge>
+              )}
+              {!project.is_expired && project.is_warning && (
+                <TableWarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
+                  <FaExclamationTriangle />
+                </TableWarningBadge>
+              )}
+            </TableBody>
+          </tr>
+        ))}
+      </tbody>
+    </Table>
+  );
+
   return (
     <PageContainer>
       <TopPanel>
@@ -99,34 +177,33 @@ const Projects: React.FC = () => {
           </IconButton>
         </TopPanelGroup>
       </TopPanel>
-      <PageContent>
+      <PageContent style={{ flexDirection: 'column' }}>
         {projects.length === 0 ? (
           <EmptyStatePlaceholder msg='No projects available' />
         ) : (
-          <CardGrid>
-            {projects.map((project) => (
-              <Card
-                key={project.id}
-                onClick={() => handleProjectClick(project.id)}
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#4b6b8e' }}>פרויקטים ({projects.length})</h2>
+              <button
+                onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+                title={viewMode === 'cards' ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים'}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  padding: '6px 8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
-                <StatusBadge status={project.status || 'draft'}>
-                  {getStatusLabel(project.status)}
-                </StatusBadge>
-                {project.is_expired && (
-                  <WarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
-                    <FaExclamationTriangle />
-                  </WarningBadge>
-                )}
-                {!project.is_expired && project.is_warning && (
-                  <WarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
-                    <FaExclamationTriangle />
-                  </WarningBadge>
-                )}
-                <CardName><b>{project.name}</b></CardName>
-                <CardInfo><b>תאריך יעד: {formatDate(project.status_due_date)}</b></CardInfo>
-              </Card>
-            ))}
-          </CardGrid>
+                {viewMode === 'cards' ? <FaList /> : <FaTh />}
+              </button>
+            </div>
+            {viewMode === 'cards' ? renderCardView() : renderTableView()}
+          </>
         )}
         {showProjectCreationDialog && (
           <ProjectCreationDialog
@@ -187,6 +264,38 @@ const StatusBadge = styled.div<{ status: string }>`
   }};
 `;
 
+const TableStatusBadge = styled.span<{ status: string }>`
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: ${props => {
+    switch (props.status) {
+      case ProjectStatus.PRE_PERMIT:
+        return '#e3f2fd';
+      case ProjectStatus.POST_PERMIT:
+        return '#e8f5e9';
+      case ProjectStatus.FINAL:
+        return '#e0f2f1';
+      default:
+        return '#f5f5f5';
+    }
+  }};
+  color: ${props => {
+    switch (props.status) {
+      case ProjectStatus.PRE_PERMIT:
+        return '#1565c0';
+      case ProjectStatus.POST_PERMIT:
+        return '#2e7d32';
+      case ProjectStatus.FINAL:
+        return '#00695c';
+      default:
+        return '#616161';
+    }
+  }};
+`;
+
 const WarningBadge = styled.div<{ color?: string }>`
   position: absolute;
   top: 15px;
@@ -194,6 +303,16 @@ const WarningBadge = styled.div<{ color?: string }>`
   font-size: 18px;
   color: ${props => props.color || '#f57c00'};
   display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  font-weight: bold;
+`;
+
+const TableWarningBadge = styled.span<{ color?: string }>`
+  font-size: 16px;
+  color: ${props => props.color || '#f57c00'};
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: help;

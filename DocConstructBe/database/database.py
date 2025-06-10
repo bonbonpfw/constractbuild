@@ -9,11 +9,11 @@ from sqlalchemy import String
 def get_db_conn_string():
     if os.environ.get('DATABASE_URL'):
         return os.environ.get('DATABASE_URL')
-    db_name = os.environ.get('DB_NAME')
-    host = os.environ.get('DB_HOST')
-    port = os.environ.get('DB_PORT')
-    user = os.environ.get('DB_USER')
-    password = os.environ.get('DB_PASS')
+    db_name = os.environ.get('DB_NAME','doc_construct')
+    host = os.environ.get('DB_HOST','localhost')
+    port = os.environ.get('DB_PORT','5432')
+    user = os.environ.get('DB_USER','postgres')
+    password = os.environ.get('DB_PASS','postgres')
     
     # Handle None port value
     if port == 'None' or port is None:
