@@ -460,11 +460,15 @@ class ProfessionalManager:
     
     @staticmethod
     def extract_professional_data(file_path: str) -> dict:
+        logger.info(f"Extracting professional data from {file_path}")
         if mimetypes.guess_type(file_path)[0] == 'application/pdf':
+            logger.info(f"Extracting professional data from {file_path} - PDF")
             license_data = ProfessionalManager._extact_pdf_data(file_path)
         elif mimetypes.guess_type(file_path)[0] == 'image/jpeg' or mimetypes.guess_type(file_path)[0] == 'image/png':
+            logger.info(f"Extracting professional data from {file_path} - Image")
             license_data = ProfessionalManager._extract_image_data(file_path)
         else:
+            logger.info(f"Invalid file format: {mimetypes.guess_type(file_path)[0]}")
             raise InvalidFileFormat(file_format=mimetypes.guess_type(file_path)[0])
         license_dict = license_data.__dict__()
         if license_dict.get('professional_type'):
