@@ -439,7 +439,9 @@ class ProfessionalManager:
         if license_data.license_number or license_data.license_expiration_date or license_data.id_number is None:
             binary_data = process_pdf_to_binary(file_path)
             extract_professional = ExtractProfessional(binary_data,is_llm_enabled=True)
-            license_data = extract_professional.extract_text(license_data.__str__())
+            new_license_data = extract_professional.extract_text(license_data.__str__())
+            if new_license_data:
+                license_data = new_license_data
         return license_data
         
 

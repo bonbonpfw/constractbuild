@@ -93,10 +93,14 @@ class ExtractProfessional:
 
     def extract_text(self,extracted_text: str = None):
         if self.is_llm_enabled:
-            self.answer = self.prompt_creator.run_openai_prompt(Prompt.format(license_text=self.text,text_already_extracted=extracted_text))
-            for field in FieldNames:
-               field_data = self.json_parser.extract_field(str(self.answer),field)
-               setattr(self.license_data, field, field_data)
+            try:
+                self.answer = self.prompt_creator.run_openai_prompt(Prompt.format(license_text=self.text,text_already_extracted=extracted_text))
+                for field in FieldNames:
+                    field_data = self.json_parser.extract_field(str(self.answer),field)
+                    setattr(self.license_data, field, field_data)
+            except Exception as e:
+                logging.error(f"Cannot connect to LLM: {e}")
+                return None
         else:
             id = self._extract_id(self.text)
             date = self._extract_date(self.text)
