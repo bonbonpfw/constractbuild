@@ -42,6 +42,10 @@ from data_model.enum import (
 from doc_map.doc_map import DocumentFiller
 from app.errors import InvalidFileFormat
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class ProjectManager:
     @staticmethod
@@ -436,12 +440,15 @@ class ProfessionalManager:
         binary_data = process_pdf_image_to_binary(file_path)
         extract_professional = ExtractProfessional(binary_data,is_llm_enabled=False)
         license_data = extract_professional.extract_text()
+        logger.info(f"License data: {license_data}")
         if license_data.license_number or license_data.license_expiration_date or license_data.id_number is None:
+            logger.info(f"License data is not valid, trying to extract with LLM")
             binary_data = process_pdf_to_binary(file_path)
             extract_professional = ExtractProfessional(binary_data,is_llm_enabled=True)
             new_license_data = extract_professional.extract_text(license_data.__str__())
             if new_license_data:
                 license_data = new_license_data
+        logger.info(f"Final License data: {license_data}")
         return license_data
         
 
