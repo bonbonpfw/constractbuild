@@ -16,6 +16,10 @@ from app.api import (
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
 from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def validate_request(endpoint):
     """Validate request data against schema"""
@@ -342,7 +346,9 @@ def init_routes(app):
 
     @app.route('/api/professional/import', methods=['POST'])
     def import_professional_data():
+        logger.info(f"Importing professional data")
         data = validate_request(endpoint=Endpoints.IMPORT_PROFESSIONAL_FILE)
+        logger.info(f"Data: {data}")
         file = data.get('file')
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, file.filename)
@@ -351,8 +357,9 @@ def init_routes(app):
         # Extract data from the license file
         # Note: license_file_path is included for backward compatibility
         # but license files are now handled as LICENSE document type
+        logger.info(f"Extracting professional data from {temp_path}")
         license_data = ProfessionalManager().extract_professional_data(temp_path)
-        
+        logger.info(f"License data: {license_data}")
         return SuccessResponse(license_data).generate_response()
 
     @app.route('/api/professional', methods=['PUT'])
