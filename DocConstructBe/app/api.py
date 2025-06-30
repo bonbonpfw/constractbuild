@@ -508,16 +508,17 @@ def get_project_releated_types(document_type: str) -> list[str]:
     return doc_required_names, doc_required_values
 
 
-def is_document_professional_related(project_id: str, document_type: ProjectDocumentType) -> bool:
+def is_document_professional_missing(project_id: str, document_type: ProjectDocumentType) -> tuple[bool,list[str]]:
     doc_required_members_names,_ = get_project_releated_types(document_type=document_type)
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
     team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
     project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
     project_team_types = [team_member.role.name for team_member in team_members]
-    for doc_required_member_name in doc_required_members_names:
-        if doc_required_member_name not in project_prof_types+project_team_types:
-            return False
-    return True
+    missing_members = [name for name in doc_required_members_names if name not in project_prof_types + project_team_types]
+    if missing_members:
+        logger.info(f"Missing members: {missing_members}")
+        return True,missing_members
+    return False,[]
 
 
 def save_file_to_temp(file):

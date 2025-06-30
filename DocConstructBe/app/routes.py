@@ -8,7 +8,7 @@ from app.api import (
     ProjectManager,
     ProfessionalManager,
     ProjectDocumentManager,
-    is_document_professional_related,
+    is_document_professional_missing,
     get_project_releated_types,
     save_file_to_temp,
     ProjectTeamManager
@@ -234,9 +234,13 @@ def init_routes(app):
         
         file_path = save_file_to_temp(data.get('file'))
         if is_autofill:
-            if not is_document_professional_related(project_id=project_id, document_type=document_type):
+            is_missing,missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type)
+            if is_missing:
                 _,project_required_members_values = get_project_releated_types(document_type=document_type)
-                raise InvalidProjectProfessionalDocument(required_professionals_types=', '.join(project_required_members_values))
+                raise InvalidProjectProfessionalDocument(
+                    required_professionals_types=', '.join(project_required_members_values),
+                    missing_members=', '.join(missing_members)
+                )
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
