@@ -1,9 +1,15 @@
+import base64
 import os
 import logging
 import re
 import json
 from langchain_anthropic import ChatAnthropic
+import anthropic
 from dotenv import load_dotenv
+import pdf2image
+import io
+
+
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
@@ -49,11 +55,6 @@ we have :
 תוקף: 2026-12-31
 סוג: קבלן בניה
 
-License text:
-{license_text}
-
-if there is text_already_extracted, do a deep double check before overwrite it.
-{text_already_extracted}
 
 Return JSON format:
 {{
@@ -75,18 +76,27 @@ IMPORTANT:
 """
 
 
+class LLM:
+    def __init__(self, model_name=None):
+        self.claude = self.init_models(model_name)
+
+    def init_models(self,model_name):
+        api_key = os.getenv("CLAUDE_API_KEY")
+        if not api_key:
+            raise ValueError("CLAUDE_API_KEY environment variable is not set")
+        if not model_name:
+            model_name = os.getenv('CLAUDE_MODEL_NAME', 'claude-3-5-sonnet-20240620')
+        logging.info(f"Using model: {model_name}")
+        claude = anthropic.Anthropic(api_key=api_key)
+        return claude
+    
+    def run_openai_prompt(self, prompt):
+        return self.claude.invoke(prompt)
+
 
 class PromptCreator:
     def __init__(self):
-        self.claude = self.init_models()
-
-    def init_models(self):
-        api_key = os.getenv("CLAUDE_API_KEY")
-        model_name = os.getenv('CLAUDE_MODEL_NAME', 'claude-3-5-sonnet-20240620')
-        logging.info(f"Using model: {model_name}")
-        logging.info(f"Using api_key: {api_key}")
-        claude = ChatAnthropic(temperature=0.4, api_key=api_key, model_name=model_name)
-        return claude
+        self.claude = LLM().claude
 
     def run_openai_prompt(self, prompt):
         return self.claude.invoke(prompt)
@@ -120,3 +130,34 @@ class JSONParserForLLM:
         output = json.loads(cleaned_text)
         return output
     
+class LlmLicenseExtractor:
+    def __init__(self, model_name=None):
+        self.claude = LLM(model_name).claude
+
+    def extract_text_from_license(self, license_path,file_type):
+        if file_type == 'pdf':
+            pages = pdf2image.convert_from_path(license_path)
+            for i,page in enumerate(pages[:1]):
+                buffer = io.BytesIO()
+                page.save(buffer, format="PNG")
+                image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                buffer.close()
+        if file_type == 'image':
+            with open(license_path, "rb") as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+        return self.extract_text_from_image(image_data=image_data)
+           
+
+    def extract_text_from_image(self, image_data=None):
+        extracted_text = self.claude.messages.create(
+            model="claude-3-5-sonnet-20240620",
+            max_tokens=8192,
+            messages=[{"role": "user", "content": [{"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": image_data}},
+                                                    {"type": "text", "text": Prompt}]}]
+            )
+        return extracted_text.content[0].text
+
+# text =LlmLicenseExtractor().extract_text_from_license("/home/ubuntu/pr_repo/constractbuild/Docs/ProfDocs/a.jpeg","image")
+# for field in FieldNames:
+#     txt = JSONParserForLLM().extract_field(text,field)
+#     print(txt)

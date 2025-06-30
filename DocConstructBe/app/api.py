@@ -435,23 +435,13 @@ class ProfessionalManager:
     def get_document_types() -> list[str]:
         return [document_type.value for document_type in ProfessionalDocumentType]
     
-
+    @staticmethod
     def _extact_pdf_data(file_path: str) -> dict:
         binary_data = process_pdf_image_to_binary(file_path)
-        extract_professional = ExtractProfessional(binary_data,is_llm_enabled=False)
-        license_data = extract_professional.extract_text()
-        logger.info(f"License data: {license_data}")
-        if license_data.license_number or license_data.license_expiration_date or license_data.id_number is None:
-            logger.info(f"License data is not valid, trying to extract with LLM")
-            binary_data = process_pdf_to_binary(file_path)
-            extract_professional = ExtractProfessional(binary_data,is_llm_enabled=True)
-            new_license_data = extract_professional.extract_text(license_data.__str__())
-            if new_license_data:
-                license_data = new_license_data
-        logger.info(f"Final License data: {license_data}")
-        return license_data
-        
+        extract_professional = ExtractProfessional(binary_data)
+        return extract_professional.extract_text()
 
+    @staticmethod
     def _extract_image_data(file_path: str) -> dict:
         binary_data = process_image_to_binary(file_path)
         extract_professional = ExtractProfessional(binary_data)
@@ -459,17 +449,40 @@ class ProfessionalManager:
         return license_data
     
     @staticmethod
+    def llm_extractor(file_path: str,file_type: str) -> dict:
+        llm_extract_professional = ExtractProfessional(file_path=file_path,is_llm_enabled=True)
+        license_data = llm_extract_professional.extract_text(file_type)
+        return license_data
+
+    @staticmethod
+    def use_llm(license_data: dict) -> bool:
+        if license_data.name  is None or license_data.license_number is None or license_data.license_expiration_date is None or license_data.id_number is None:
+            logger.info(f"License data is not valid, trying to extract with LLM")
+            return True
+        return False
+    
+    @staticmethod
     def extract_professional_data(file_path: str) -> dict:
         logger.info(f"Extracting professional data from {file_path}")
         if mimetypes.guess_type(file_path)[0] == 'application/pdf':
             logger.info(f"Extracting professional data from {file_path} - PDF")
+            file_type = 'pdf'
             license_data = ProfessionalManager._extact_pdf_data(file_path)
+        
+        
         elif mimetypes.guess_type(file_path)[0] == 'image/jpeg' or mimetypes.guess_type(file_path)[0] == 'image/png':
             logger.info(f"Extracting professional data from {file_path} - Image")
+            file_type = 'image'
             license_data = ProfessionalManager._extract_image_data(file_path)
+        
+        
         else:
             logger.info(f"Invalid file format: {mimetypes.guess_type(file_path)[0]}")
             raise InvalidFileFormat(file_format=mimetypes.guess_type(file_path)[0])
+        
+        if ProfessionalManager.use_llm(license_data):
+            license_data = ProfessionalManager.llm_extractor(file_path,file_type)
+
         license_dict = license_data.__dict__()
         if license_dict.get('professional_type'):
             license_dict['professional_type'] = ProfessionalType.map_to_value(license_dict.get('professional_type'))

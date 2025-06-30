@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import datetime
-from ai.llm import PromptCreator,JSONParserForLLM,Prompt,FieldNames
+from ai.llm import LlmLicenseExtractor,JSONParserForLLM,FieldNames
 
 class LicenseData:
     def __init__(self):
@@ -78,25 +78,27 @@ class LicenseExtract:
         )
 
 class ExtractProfessional:
-    def __init__(self, text: bytes, is_llm_enabled: bool = True):
-        self.text = self._clean_text(text)
+    def __init__(self, text: bytes=None, file_path: str=None, is_llm_enabled: bool = False):
+        if text:
+            self.text = self._clean_text(text)
         self.license_extract = LicenseExtract()
         self.license_data = LicenseData()
         self.is_llm_enabled = is_llm_enabled
-        if self.is_llm_enabled:  
-            self.prompt_creator = PromptCreator()
-            self.json_parser = JSONParserForLLM()
+        if self.is_llm_enabled and file_path:  
+            self.llm_extractor = LlmLicenseExtractor()
+            self.file_path = file_path
+
           
     def _clean_text(self, text: str) -> str:
         """Remove single quotes and forward slashes from text"""
         return text.replace("'", "").replace("/", "")
 
-    def extract_text(self,extracted_text: str = None):
+    def extract_text(self,file_type: str=None):
         if self.is_llm_enabled:
             try:
-                self.answer = self.prompt_creator.run_openai_prompt(Prompt.format(license_text=self.text,text_already_extracted=extracted_text))
+                answer = self.llm_extractor.extract_text_from_license(self.file_path,file_type)
                 for field in FieldNames:
-                    field_data = self.json_parser.extract_field(str(self.answer),field)
+                    field_data = JSONParserForLLM().extract_field(str(answer),field)
                     setattr(self.license_data, field, field_data)
             except Exception as e:
                 logging.error(f"Cannot connect to LLM: {e}")
@@ -151,7 +153,6 @@ class ExtractProfessional:
         else:
             logging.error(f"לא ניתן למצוא שם בטקסט: ...")
             return None
-
 
     def _extract_license(self, text: str):
         license_match = re.search(self.license_extract.license_pattern, text)
