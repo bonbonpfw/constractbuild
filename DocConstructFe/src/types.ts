@@ -107,6 +107,7 @@ export interface Project {
   status?: string;
   is_warning?: boolean;
   is_expired?: boolean;
+  missing_start_work_docs?: number;
   professionals: Professional[];
   documents?: ProjectDocument[];
   team_members?: ProjectTeamMember[];

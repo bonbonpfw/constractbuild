@@ -13,6 +13,20 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
 
+  /* Global scrollbar styles */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #e0e0e0 #fafafa;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    background: #fafafa;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 6px;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     color: #0A2540;  // Dark navy for headings
     font-weight: ${props => props.theme.fonts.weights.bold};

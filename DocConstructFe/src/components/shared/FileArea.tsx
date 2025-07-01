@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from 'styled-components';
-import { FaTrash, FaUpload, FaDownload, FaEye, FaEnvelope, FaPlus, FaFileAlt } from "react-icons/fa";
+import { FaTrash, FaUpload, FaEye, FaFileAlt } from "react-icons/fa";
 import {
   DialogOverlay,
   DialogContainer,
@@ -9,8 +9,7 @@ import {
   DialogCloseButton,
   DialogActions,
   Button
-} from '../../styles/SharedStyles';
-import { toast } from 'react-toastify';
+  } from '../../styles/SharedStyles';
 import { DocumentState } from "../../types";
 
 export interface FileAreaDocument {
@@ -27,26 +26,32 @@ const FileAreaContainer = styled.div`
   flex-direction: column;
   background-color: #fff;
   border-radius: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
 `;
 
 // Main file area with tabs
 const FileAreaContent = styled.div`
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 `;
 
-// Container for the file list - modified to remove scrolling
+// Container for the file list - גלילה פנימית בלבד
 const FileListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 0;
-  overflow-y: visible;
-`;
+  overflow-y: auto;
+  min-height: 0;
+  height: 400px; /* Fixed height for scrolling */
 
-const BatchActions = styled.div`
-  display: flex;
-  gap: 8px;
+  @media (min-width: 1024px) {
+    height: auto; /* Larger screens */
+    overflow-y: visible; /* Remove scrollbar if not needed */
+  }
 `;
 
 // Individual file item with Apple design influence
@@ -118,7 +123,7 @@ const FileTypeBadge = styled.span<{ state: DocumentState }>`
 const FileName = styled.span<{ state: DocumentState }>`
   font-size: 13px;
   font-weight: 500;
-  color: ${p => p.state === DocumentState.MISSING ? '#ff6b6b' : '#333'};
+  color: ${p => p.state === DocumentState.MISSING ? '#ff6b6b' : '#4b6b8e'};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,43 +157,6 @@ const ActionButton = styled.button<{ disabled: boolean; danger?: boolean }>`
       : p.danger ? '#fff5f5' 
       : '#f0f7ff'};
   }
-`;
-
-// Upload area - more compact
-const UploadArea = styled.div<{ isDragging: boolean; disabled: boolean }>`
-  border: 2px dashed ${p => p.isDragging ? '#0071e3' : '#e0e0e0'};
-  border-radius: 10px;
-  padding: 16px;
-  margin: 0 16px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: ${p => p.isDragging ? '#f0f7ff' : '#f9f9f9'};
-  transition: all 0.2s ease;
-  cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
-  opacity: ${p => p.disabled ? 0.6 : 1};
-  
-  &:hover {
-    background-color: ${p => p.disabled ? '#f9f9f9' : '#f0f7ff'};
-    border-color: ${p => p.disabled ? '#e0e0e0' : '#0071e3'};
-  }
-`;
-
-const UploadContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`;
-
-const UploadIcon = styled.div`
-  font-size: 20px;
-  color: #0071e3;
-`;
-
-const UploadText = styled.p`
-  margin: 0;
-  font-size: 13px;
-  color: #666;
 `;
 
 // PDF Preview Dialog with Apple-style design

@@ -258,7 +258,27 @@ class ProjectDocumentManager:
         )
         filled_pdf_path = document_filler.fill_document()
         return filled_pdf_path
-
+    
+    @staticmethod
+    def get_missing_documents(project_id: str) -> list[ProjectDocument]:
+         # Get all start work document types (excluding GENERAL)
+        start_work_doc_types = [doc_type for doc_type in ProjectDocumentType if doc_type != ProjectDocumentType.GENERAL]
+        
+        # Get existing documents for this project
+        existing_documents = db_session.query(ProjectDocument).filter(
+            ProjectDocument.project_id == project_id
+        ).all()
+        
+        # Get the document types that already exist
+        existing_doc_types = {doc.document_type for doc in existing_documents}
+        
+        # Count missing documents
+        missing_count = 0
+        for doc_type in start_work_doc_types:
+            if doc_type.value not in existing_doc_types:
+                missing_count += 1
+        
+        return missing_count
 
 class ProfessionalManager:
     @staticmethod

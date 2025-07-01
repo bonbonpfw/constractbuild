@@ -45,6 +45,7 @@ import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import theme from '../../styles/theme';
 
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
@@ -66,17 +67,18 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const MainLayout = styled.div`
   display: grid;
-  grid-template-columns: 200px 1fr 437px;
-  grid-template-rows: auto;
+  grid-template-columns: 200px 1fr 350px;
+  grid-template-rows: 1fr;
   grid-template-areas: "sidebar project documents";
   gap: 16px;
   width: 100%;
-  overflow: visible;
+  height: calc(100vh - 120px);
+  overflow: hidden;
 `;
 
 const SecondSidebar = styled.div`
   grid-area: sidebar;
-  width: 200px;
+  width: 150px;
   display: flex;
   flex-direction: column;
   direction: rtl;
@@ -97,14 +99,14 @@ const SidebarButton = styled.button<{ active: boolean }>`
   padding: 12px 15px;
   font-size: 16px;
   font-weight: ${p => p.active ? '600' : '400'};
-  color: #51789f;
+  color: #4b87c3;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   text-align: right;
   
   &:hover {
-    background-color: rgb(227, 237, 246);
+    background-color: #f3f4f6;
   }
 `;
 
@@ -115,30 +117,32 @@ const ProjectPanel = styled.div`
 
 const DocumentsPanel = styled.div`
   grid-area: documents;
-  width: 437px;
-  padding: 0 12px;
+  width: 350px;
+  height: calc(100vh - 120px);
+  padding: 0 8px 0 0;
   border-right: 1px solid #eaeaea;
-  overflow-y: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 `;
-
-
 
 const Card = styled.div`
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 16px;
+  padding: 10px;
   margin-bottom: 16px;
 `;
 
 const CompactFormGrid = styled(FormGrid)`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
 `;
 
 const CompactField = styled(Field)`
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  max-width: 300px;
 `;
 
 const CompactLabel = styled(Label)`
@@ -192,7 +196,7 @@ const ProfessionalInfo = styled.div`
 `;
 
 const ProfessionalName = styled.a`
-  color: #0071e3;
+  color: #4b87c3;
   text-decoration: none;
   font-weight: 500;
   font-size: 13px;
@@ -201,6 +205,23 @@ const ProfessionalName = styled.a`
 const ProfessionalType = styled.span`
   font-size: 12px;
   color: #666;
+`;
+
+const ProjectPanelScrollArea = styled.div`
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  min-height: 100px;
+  scrollbar-width: thin;
+  scrollbar-color: #e0e0e0 #fafafa;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    background: #fafafa;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 6px;
+  }
 `;
 
 const ProjectView: React.FC = () => {
@@ -801,250 +822,251 @@ const ProjectView: React.FC = () => {
 
             {/* Project Panel */}
             <ProjectPanel>
-              <Card style={{ marginTop: '60px' }}>
-                
-                {activeTab === 'details' && (
-                  <div>
-                    <CompactFormGrid>
-                      <FullWidthField>
-                        <CompactLabel>שם הפרויקט</CompactLabel>
-                        <Input
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </FullWidthField>
-                      <CompactField>
-                        <CompactLabel>מספר בקשה</CompactLabel>
-                        <Input
-                          name="request_number"
-                          value={formData.request_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר היתר</CompactLabel>
-                        <Input
-                          name="permit_number"
-                          value={formData.permit_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק טיפול</CompactLabel>
-                        <Input
-                          name="construction_supervision_number"
-                          value={formData.construction_supervision_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיאום הנדסי</CompactLabel>
-                        <Input
-                          name="engineering_coordinator_number"
-                          value={formData.engineering_coordinator_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק כיבוי</CompactLabel>
-                        <Input
-                          name="firefighting_number"
-                          value={formData.firefighting_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>סטטוס הפרויקט</CompactLabel>
-                        <Select
-                          name="status"
-                          value={formData.status}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        >
-                          {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
-                        </Select>
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>תאריך סיום</CompactLabel>
-                        <Input
-                          name="status_due_date"
-                          type="date"
-                          value={formData.status_due_date || ''}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <FullWidthField>
-                        <CompactLabel>תיאור הפרויקט</CompactLabel>
-                        <TextArea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
-                        />
-                      </FullWidthField>
-                    </CompactFormGrid>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      {!isEditingDetails ? (
-                        <CompactButton onClick={() => setIsEditingDetails(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaCheck)} Save
+              <ProjectPanelScrollArea>
+                <Card style={{ marginTop: '60px' }}>
+                  {activeTab === 'details' && (
+                    <div>
+                      <CompactFormGrid>
+                        <FullWidthField>
+                          <CompactLabel>שם הפרויקט</CompactLabel>
+                          <Input
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </FullWidthField>
+                        <CompactField>
+                          <CompactLabel>מספר בקשה</CompactLabel>
+                          <Input
+                            name="request_number"
+                            value={formData.request_number}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>מספר היתר</CompactLabel>
+                          <Input
+                            name="permit_number"
+                            value={formData.permit_number}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>מספר תיק טיפול</CompactLabel>
+                          <Input
+                            name="construction_supervision_number"
+                            value={formData.construction_supervision_number}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>מספר תיאום הנדסי</CompactLabel>
+                          <Input
+                            name="engineering_coordinator_number"
+                            value={formData.engineering_coordinator_number}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>מספר תיק כיבוי</CompactLabel>
+                          <Input
+                            name="firefighting_number"
+                            value={formData.firefighting_number}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>סטטוס הפרויקט</CompactLabel>
+                          <Select
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          >
+                            {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
+                          </Select>
+                        </CompactField>
+                        <CompactField>
+                          <CompactLabel>תאריך סיום</CompactLabel>
+                          <Input
+                            name="status_due_date"
+                            type="date"
+                            value={formData.status_due_date || ''}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
+                          />
+                        </CompactField>
+                        <FullWidthField>
+                          <CompactLabel>תיאור הפרויקט</CompactLabel>
+                          <TextArea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            disabled={!isEditingDetails}
+                            style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
+                          />
+                        </FullWidthField>
+                      </CompactFormGrid>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                        {!isEditingDetails ? (
+                          <CompactButton onClick={() => setIsEditingDetails(true)}>
+                            {renderIcon(FaIcons.FaEdit)} Edit
                           </CompactButton>
-                          <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab === 'professionals' && (
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-                      <CompactButton 
-                        onClick={handleAddProfessional} 
-                      >
-                        {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
-                      </CompactButton>
-                    </div>
-                    
-                    {isLoadingProfessionals ? (
-                      <p style={{ fontSize: '13px', color: '#666' }}>טוען בעלי מקצוע...</p>
-                    ) : professionals.length === 0 ? (
-                      <div style={{ 
-                        padding: '16px 12px', 
-                        textAlign: 'center', 
-                        backgroundColor: '#f9f9fb',
-                        borderRadius: '8px',
-                        color: '#666',
-                        fontSize: '13px'
-                      }}>
-                        אין בעלי מקצוע מצורפים לפרויקט
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {professionals.map(professional => (
-                          <ProfessionalCard className='professional-card' key={professional.id}>
-                            <ProfessionalInfo className='professional-info'>
-                              <Link href={`/professionals/${professional.id}`} passHref>
-                                <ProfessionalName>
-                                  {professional.name}
-                                </ProfessionalName>
-                              </Link>
-                              <ProfessionalType>{professional.professional_type}</ProfessionalType>
-                              <StatusBadge status={professional.status}>{professional.status}</StatusBadge>
-                            </ProfessionalInfo>
-                            <IconOnlyButton 
-                              onClick={() => handleRemoveProfessional(professional)} 
-                              title="הסר בעל מקצוע"
-                              style={{ margin: '0', width: '24px', height: '24px', fontSize: '12px' }}
-                            >
-                              {renderIcon(FaIcons.FaTrash, 12)}
-                            </IconOnlyButton>
-                          </ProfessionalCard>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === 'team' && (
-                  <div>
-                    {rolesLoading ? (
-                      <div>Loading roles...</div>
-                    ) : (
-                      teamRoles.map(member => (
-                        <Card key={member.key} style={{ marginBottom: 12 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-                            onClick={() => setTeamExpanded(prev => ({ ...prev, [member.key]: !prev[member.key] }))}>
-                            <span style={{ fontWeight: 600 }}>{member.label}</span>
-                            {teamExpanded[member.key] ? <FaChevronUp /> : <FaChevronDown />}
+                        ) : (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
+                              {renderIcon(FaIcons.FaCheck)} Save
+                            </CompactButton>
+                            <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
+                              {renderIcon(FaIcons.FaTimes)} Cancel
+                            </CompactButton>
                           </div>
-                          {teamExpanded[member.key] && (
-                            <div style={{ marginTop: 12 }}>
-                              <CompactFormGrid>
-                                <CompactField>
-                                  <CompactLabel>שם מלא</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.name || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], name: e.target.value } }))}
-                                    placeholder="שם מלא"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>טלפון</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.phone || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], phone: e.target.value } }))}
-                                    placeholder="טלפון"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>דוא"ל</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.email || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], email: e.target.value } }))}
-                                    placeholder={'דוא"ל'}
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>כתובת</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.address || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], address: e.target.value } }))}
-                                    placeholder="כתובת"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                              </CompactFormGrid>
-                            </div>
-                          )}
-                        </Card>
-                      ))
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      {!isEditingTeam ? (
-                        <CompactButton onClick={() => setIsEditingTeam(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {activeTab === 'professionals' && (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                        <CompactButton 
+                          onClick={handleAddProfessional} 
+                        >
+                          {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
                         </CompactButton>
+                      </div>
+                      
+                      {isLoadingProfessionals ? (
+                        <p style={{ fontSize: '13px', color: '#666' }}>טוען בעלי מקצוע...</p>
+                      ) : professionals.length === 0 ? (
+                        <div style={{ 
+                          padding: '16px 12px', 
+                          textAlign: 'center', 
+                          backgroundColor: '#f9f9fb',
+                          borderRadius: '8px',
+                          color: '#666',
+                          fontSize: '13px'
+                        }}>
+                          אין בעלי מקצוע מצורפים לפרויקט
+                        </div>
                       ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaCheck)} Save
-                          </CompactButton>
-                          <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {professionals.map(professional => (
+                            <ProfessionalCard className='professional-card' key={professional.id}>
+                              <ProfessionalInfo className='professional-info'>
+                                <Link href={`/professionals/${professional.id}`} passHref>
+                                  <ProfessionalName>
+                                    {professional.name}
+                                  </ProfessionalName>
+                                </Link>
+                                <ProfessionalType>{professional.professional_type}</ProfessionalType>
+                                <StatusBadge status={professional.status}>{professional.status}</StatusBadge>
+                              </ProfessionalInfo>
+                              <IconOnlyButton 
+                                onClick={() => handleRemoveProfessional(professional)} 
+                                title="הסר בעל מקצוע"
+                                style={{ margin: '0', width: '24px', height: '24px', fontSize: '12px' }}
+                              >
+                                {renderIcon(FaIcons.FaTrash, 12)}
+                              </IconOnlyButton>
+                            </ProfessionalCard>
+                          ))}
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </Card>
+                  )}
+
+                  {activeTab === 'team' && (
+                    <div>
+                      {rolesLoading ? (
+                        <div>Loading roles...</div>
+                      ) : (
+                        teamRoles.map(member => (
+                          <Card key={member.key} style={{ marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                              onClick={() => setTeamExpanded(prev => ({ ...prev, [member.key]: !prev[member.key] }))}>
+                              <span style={{ fontWeight: 600 }}>{member.label}</span>
+                              {teamExpanded[member.key] ? <FaChevronUp /> : <FaChevronDown />}
+                            </div>
+                            {teamExpanded[member.key] && (
+                              <div style={{ marginTop: 12 }}>
+                                <CompactFormGrid>
+                                  <CompactField>
+                                    <CompactLabel>שם מלא</CompactLabel>
+                                    <Input
+                                      value={teamData[member.key]?.name || ''}
+                                      onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], name: e.target.value } }))}
+                                      placeholder="שם מלא"
+                                      disabled={!isEditingTeam}
+                                    />
+                                  </CompactField>
+                                  <CompactField>
+                                    <CompactLabel>טלפון</CompactLabel>
+                                    <Input
+                                      value={teamData[member.key]?.phone || ''}
+                                      onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], phone: e.target.value } }))}
+                                      placeholder="טלפון"
+                                      disabled={!isEditingTeam}
+                                    />
+                                  </CompactField>
+                                  <CompactField>
+                                    <CompactLabel>דוא"ל</CompactLabel>
+                                    <Input
+                                      value={teamData[member.key]?.email || ''}
+                                      onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], email: e.target.value } }))}
+                                      placeholder={'דוא"ל'}
+                                      disabled={!isEditingTeam}
+                                    />
+                                  </CompactField>
+                                  <CompactField>
+                                    <CompactLabel>כתובת</CompactLabel>
+                                    <Input
+                                      value={teamData[member.key]?.address || ''}
+                                      onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], address: e.target.value } }))}
+                                      placeholder="כתובת"
+                                      disabled={!isEditingTeam}
+                                    />
+                                  </CompactField>
+                                </CompactFormGrid>
+                              </div>
+                            )}
+                          </Card>
+                        ))
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                        {!isEditingTeam ? (
+                          <CompactButton onClick={() => setIsEditingTeam(true)}>
+                            {renderIcon(FaIcons.FaEdit)} Edit
+                          </CompactButton>
+                        ) : (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
+                              {renderIcon(FaIcons.FaCheck)} Save
+                            </CompactButton>
+                            <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
+                              {renderIcon(FaIcons.FaTimes)} Cancel
+                            </CompactButton>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </ProjectPanelScrollArea>
             </ProjectPanel>
 
             {/* Documents Panel */}
@@ -1058,8 +1080,8 @@ const ProjectView: React.FC = () => {
                       padding: '8px 16px',
                       fontSize: 14,
                       fontWeight: activeDocTab === 'categorized' ? 700 : 600,
-                      color: activeDocTab === 'categorized' ? '#0071e3' : '#666',
-                      borderBottom: `2px solid ${activeDocTab === 'categorized' ? '#0071e3' : 'transparent'}`,
+                      color: activeDocTab === 'categorized' ? '#4b87c3' : '#666',
+                      borderBottom: `2px solid ${activeDocTab === 'categorized' ? '#4b87c3' : 'transparent'}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -1074,8 +1096,8 @@ const ProjectView: React.FC = () => {
                       padding: '8px 16px',
                       fontSize: 14,
                       fontWeight: activeDocTab === 'general' ? 700 : 600,
-                      color: activeDocTab === 'general' ? '#0071e3' : '#666',
-                      borderBottom: `2px solid ${activeDocTab === 'general' ? '#0071e3' : 'transparent'}`,
+                      color: activeDocTab === 'general' ? '#4b87c3' : '#666',
+                      borderBottom: `2px solid ${activeDocTab === 'general' ? '#4b87c3' : 'transparent'}`,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -1090,7 +1112,7 @@ const ProjectView: React.FC = () => {
                       onClick={handleDownloadAllFiles}
                       disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
                       style={{
-                        background: '#648fbf',
+                        background: theme.colors.primary,
                         color: '#fff',
                         border: 'none',
                         borderRadius: 8,
@@ -1112,7 +1134,7 @@ const ProjectView: React.FC = () => {
                     <button
                       disabled={true}
                       style={{
-                        background: '#648fbf',
+                        background: '#4b87c3',
                         color: '#fff',
                         border: 'none',
                         borderRadius: 8,
@@ -1133,17 +1155,19 @@ const ProjectView: React.FC = () => {
                     </button>
                   </div>
                 )}
-                <FileArea
-                  files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
-                  disabled={false}
-                  onUpload={handleFileUpload}
-                  onDelete={handleFileDelete}
-                  onPreview={handleFilePreview}
-                  isAutoFill={activeDocTab === 'categorized'}
-                  {...(activeDocTab === 'general' && {
-                    onUploadGeneral: handleUploadGeneralFile
-                  })}
-                />
+                <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 300px)', scrollbarWidth: 'thin', scrollbarColor: '#e0e0e0 #fafafa' }}>
+                  <FileArea
+                    files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
+                    disabled={false}
+                    onUpload={handleFileUpload}
+                    onDelete={handleFileDelete}
+                    onPreview={handleFilePreview}
+                    isAutoFill={activeDocTab === 'categorized'}
+                    {...(activeDocTab === 'general' && {
+                      onUploadGeneral: handleUploadGeneralFile
+                    })}
+                  />
+                </div>
               </Card>
             </DocumentsPanel>
           </MainLayout>

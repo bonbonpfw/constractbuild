@@ -91,6 +91,7 @@ def init_routes(app):
                     ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Warning'
                     for prof in ProjectManager.get_project_professionals(project.id)
                 )),
+                'missing_start_work_docs': ProjectDocumentManager.get_missing_documents(project.id),
                 'team_members': [{
                     'id': team.id,
                     'name': team.name,
@@ -236,11 +237,8 @@ def init_routes(app):
         if is_autofill:
             is_missing,missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type)
             if is_missing:
-                _,project_required_members_values = get_project_releated_types(document_type=document_type)
-                raise InvalidProjectProfessionalDocument(
-                    required_professionals_types=', '.join(project_required_members_values),
-                    missing_members=', '.join(missing_members)
-                )
+                members = ','.join(missing_members)
+                raise InvalidProjectProfessionalDocument(members)
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
             document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
@@ -297,7 +295,9 @@ def init_routes(app):
                 'id': prof.id,
                 'name': prof.name,
                 'email': prof.email,
+                'phone': prof.phone,
                 'professional_type': prof.professional_type,
+                'license_number': prof.license_number,
                 'status': prof.status,
                 'license_expiration_date': prof.license_expiration_date.isoformat() if prof.license_expiration_date else None,
             } for prof in professionals]

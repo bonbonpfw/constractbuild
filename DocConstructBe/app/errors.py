@@ -196,9 +196,9 @@ class ProjectDocumentNotFound(ApiError):
 
 
 class InvalidProjectProfessionalDocument(ApiError):
-    def __init__(self, required_professionals_types: str):
+    def __init__(self, missing_members: str):
         super().__init__(
-            msg=f'אנשי מקצוע אינם משוייכים לפרויקט : {required_professionals_types}',
+            msg=f'שייך את בעלי המקצוע כדי להפיק את המסמך: {missing_members}',
             code='invalid_project_professional_document'
         )
 
