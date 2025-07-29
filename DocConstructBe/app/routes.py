@@ -238,8 +238,7 @@ def init_routes(app):
             if is_missing:
                 _,project_required_members_values = get_project_releated_types(document_type=document_type)
                 raise InvalidProjectProfessionalDocument(
-                    required_professionals_types=', '.join(project_required_members_values),
-                    missing_members=', '.join(missing_members)
+                    required_professionals_types=', '.join(project_required_members_values)
                 )
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
