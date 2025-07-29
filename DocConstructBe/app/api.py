@@ -481,7 +481,9 @@ class ProfessionalManager:
             raise InvalidFileFormat(file_format=mimetypes.guess_type(file_path)[0])
         
         if ProfessionalManager.use_llm(license_data):
-            license_data = ProfessionalManager.llm_extractor(file_path,file_type)
+            llm_license_data = ProfessionalManager.llm_extractor(file_path,file_type)
+            if llm_license_data:
+                license_data = llm_license_data
 
         license_dict = license_data.__dict__()
         if license_dict.get('professional_type'):

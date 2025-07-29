@@ -139,7 +139,7 @@ class LlmLicenseExtractor:
             pages = pdf2image.convert_from_path(license_path)
             for i,page in enumerate(pages[:1]):
                 buffer = io.BytesIO()
-                page.save(buffer, format="PNG")
+                page.save(buffer,format="JPEG")
                 image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
                 buffer.close()
         if file_type == 'image':
