@@ -213,7 +213,7 @@ const ProjectView: React.FC = () => {
     );
   }
 
-  const {isDeleteDialogOpen, handleDelete, handleConfirmDelete, handleCancelDelete} = useDeleteProject(id);
+  const {isDeleteDialogOpen, handleDelete, handleConfirmDelete, handleCancelDelete, isDeleting} = useDeleteProject(id);
 
   const [formData, setFormData] = useState<Project | null>(null);
   const originalData = useRef<Project | null>(null);
@@ -1153,6 +1153,7 @@ const ProjectView: React.FC = () => {
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
           message={`האם אתה בטוח שברצונך למחוק את הפרויקט ${formData?.name}?`}
+          isDeleting={isDeleting}
         />
 
         {/* Dialog for removing a professional from the project */}

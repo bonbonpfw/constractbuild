@@ -420,7 +420,7 @@ const ProfessionalView: React.FC = () => {
         isOpen={isDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-        message={`Are you sure you want to delete professional ${formData?.name}?`}
+        message={`האם אתה בטוח שברצונך למחוק את ${formData?.name}?`}
       />
     </PageContainer>
   );

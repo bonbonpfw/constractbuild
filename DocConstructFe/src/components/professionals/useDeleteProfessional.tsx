@@ -19,7 +19,7 @@ const useDeleteProfessional = (id: string | null) => {
       await deleteProfessional(id);
       router.push('/professionals');
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to delete professional');
+      errorHandler(error as ErrorResponseData, 'נכשל במחיקת בעל מקצוע');
     } finally {
       setIsDeleteDialogOpen(false);
     }

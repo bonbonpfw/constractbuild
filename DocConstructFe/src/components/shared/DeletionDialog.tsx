@@ -6,14 +6,23 @@ const DeletionDialog: React.FC<{
   onConfirm: () => void;
   onCancel: () => void;
   message?: string;
-}> = ({isOpen, onConfirm, onCancel, message}) => {
+  isDeleting?: boolean;
+}> = ({isOpen, onConfirm, onCancel, message, isDeleting = false}) => {
+  console.log("DeletionDialog render, isOpen:", isOpen, "isDeleting:", isDeleting);
+  
   if (!isOpen) return null;
+  
+  const handleConfirm = () => {
+    console.log("DeletionDialog: Confirm button clicked");
+    onConfirm();
+  };
 
   return (
     <ConfirmDialog
-      message={message || "Are you sure you want to delete it?"}
-      onConfirm={onConfirm}
+      message={message || "האם ברצונך למחוק את הפרוייקט?"}
+      onConfirm={handleConfirm}
       onCancel={onCancel}
+      isDisabled={isDeleting}
     />
   );
 };

@@ -44,11 +44,23 @@ export const updateProject = async (data: Project): Promise<Project> => {
 };
 
 export const deleteProject = async (id: string) => {
-  const response = await axios.delete(
-    `${API_URL}/project`,
-    {params: {project_id: id}}
-  );
-  return response.data;
+  // Based on the backend code at DocConstructBe/app/routes.py:45-47
+  // DELETE requests are processed using request.args.to_dict()
+  // This means the project_id should be sent as a URL parameter
+  console.log(`Starting deleteProject API call with ID: ${id}`);
+  try {
+    const response = await axios.delete(
+      `${API_URL}/project`,
+      {
+        params: { project_id: id }
+      }
+    );
+    console.log(`deleteProject API call successful:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`deleteProject API call failed:`, error);
+    throw error;
+  }
 };
 
 export const getProjectStatuses = async (): Promise<string[]> => {
