@@ -168,6 +168,7 @@ def init_routes(app):
             description=data.get('description'),
             status=data.get('status'),
             status_due_date=data.get('status_due_date'),
+            permit_number=data.get('permit_number'),
             construction_supervision_number=data.get('construction_supervision_number'),
             engineering_coordinator_number=data.get('engineering_coordinator_number'),
             firefighting_number=data.get('firefighting_number'),

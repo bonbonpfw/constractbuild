@@ -81,7 +81,9 @@ class ProjectManager:
         return project
 
     def update(self, project_id: str, name: str, status: ProjectStatus, description: str = None,
-               status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None, engineering_coordinator_number: str = None, firefighting_number: str = None) -> Project:
+               status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None,
+               engineering_coordinator_number: str = None, firefighting_number: str = None,
+               permit_number: str = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
         project.description = description
@@ -89,6 +91,7 @@ class ProjectManager:
         project.construction_supervision_number = construction_supervision_number
         project.engineering_coordinator_number = engineering_coordinator_number
         project.firefighting_number = firefighting_number
+        project.permit_number = permit_number
         project.status = enum_to_value(status)
         project.status_due_date = status_due_date
         project.updated_at = datetime.datetime.now()
