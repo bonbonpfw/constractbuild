@@ -805,6 +805,22 @@ const ProjectView: React.FC = () => {
                 
                 {activeTab === 'details' && (
                   <div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                      {!isEditingDetails ? (
+                        <CompactButton onClick={() => setIsEditingDetails(true)}>
+                          {renderIcon(FaIcons.FaEdit)} Edit
+                        </CompactButton>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaCheck)} Save
+                          </CompactButton>
+                          <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaTimes)} Cancel
+                          </CompactButton>
+                        </div>
+                      )}
+                    </div>
                     <CompactFormGrid>
                       <FullWidthField>
                         <CompactLabel>שם הפרויקט</CompactLabel>
@@ -900,22 +916,7 @@ const ProjectView: React.FC = () => {
                         />
                       </FullWidthField>
                     </CompactFormGrid>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      {!isEditingDetails ? (
-                        <CompactButton onClick={() => setIsEditingDetails(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaCheck)} Save
-                          </CompactButton>
-                          <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
+
                   </div>
                 )}
                 
