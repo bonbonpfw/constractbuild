@@ -972,6 +972,22 @@ const ProjectView: React.FC = () => {
 
                 {activeTab === 'team' && (
                   <div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                      {!isEditingTeam ? (
+                        <CompactButton onClick={() => setIsEditingTeam(true)}>
+                          {renderIcon(FaIcons.FaEdit)} Edit
+                        </CompactButton>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaCheck)} Save
+                          </CompactButton>
+                          <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
+                            {renderIcon(FaIcons.FaTimes)} Cancel
+                          </CompactButton>
+                        </div>
+                      )}
+                    </div>
                     {rolesLoading ? (
                       <div>Loading roles...</div>
                     ) : (
@@ -1027,22 +1043,6 @@ const ProjectView: React.FC = () => {
                         </Card>
                       ))
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      {!isEditingTeam ? (
-                        <CompactButton onClick={() => setIsEditingTeam(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaCheck)} Save
-                          </CompactButton>
-                          <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </Card>

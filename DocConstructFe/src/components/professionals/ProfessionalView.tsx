@@ -268,6 +268,22 @@ const ProfessionalView: React.FC = () => {
           <div style={{ display: 'flex', width: '100%', gap: '30px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
             {/* Form fields on the left */}
             <div style={{ flex: '1', minWidth: '420px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                {!isEditing ? (
+                  <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={startEditing}>
+                    <FaEditAny style={{ marginInlineEnd: 4 }} /> Edit
+                  </Button>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={saveChanges} disabled={saving}>
+                      <FaCheckAny style={{ marginInlineEnd: 4 }} /> Save
+                    </Button>
+                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={cancelEditing} disabled={saving}>
+                      <FaTimesAny style={{ marginInlineEnd: 4 }} /> Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
               <Label style={{ fontSize: 25, textAlign: 'center', margin: '10px 0 20px 0', display: 'block' }}>General</Label>
               <FormGrid style={{ paddingBottom: '20px', marginBottom: '20px' }}>
                 <Field>
@@ -372,24 +388,6 @@ const ProfessionalView: React.FC = () => {
                     disabled={!isEditing}
                   />
                 </Field>
-                <FullWidthField>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                  {!isEditing ? (
-                    <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={startEditing}>
-                      <FaEditAny style={{ marginInlineEnd: 4 }} /> Edit
-                    </Button>
-                  ) : (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={saveChanges} disabled={saving}>
-                        <FaCheckAny style={{ marginInlineEnd: 4 }} /> Save
-                      </Button>
-                      <Button style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 16, fontSize: 13, padding: '6px 12px', backgroundColor: '#4b87c3', color: '#fff' }} onClick={cancelEditing} disabled={saving}>
-                        <FaTimesAny style={{ marginInlineEnd: 4 }} /> Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                </FullWidthField>
               </FormGrid>
             </div>
 
