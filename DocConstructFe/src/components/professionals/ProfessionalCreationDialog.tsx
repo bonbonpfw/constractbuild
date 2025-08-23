@@ -43,7 +43,6 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
 }) => {
   const [formData, setFormData] = useState<ProfessionalCreationFormData>({
     ...defaultProfessionalCreationFormData,
-    professional_type: professionalTypes[0] || '',
   });
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -276,6 +275,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                     onChange={handleChange}
                     required
                   >
+                    <option value="" disabled>בחר תפקיד</option>
                     {professionalTypes.map(t => (<option key={t} value={t}>{t}</option>))}
                   </Select>
                 </Field>

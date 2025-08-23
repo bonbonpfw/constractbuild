@@ -145,7 +145,7 @@ class ProfessionalDoesNotExist(ApiError):
 class ProfessionalAlreadyExists(ApiError):
     def __init__(self):
         super().__init__(
-            msg='איש מקצוע כבר קיים (תעודת זהות או אימייל חייבים להיות ייחודיים)',
+            msg='איש מקצוע כבר קיים (תעודת זהות חייבת להיות ייחודית)',
             code='professional_already_exists'
         )
 
