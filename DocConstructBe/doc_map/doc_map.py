@@ -302,6 +302,7 @@ class DocumentFiller:
                 
                 page_coords = [coord for coord in coordinates if coord['page'] == page_num]
                 pdfmetrics.registerFont(TTFont("ArialHebrew", TTF_PATH))
+                logger.info(f"Page coords: {page_coords}")
                 for i, coord in enumerate(page_coords):
                     x = coord['x']
                     y = coord['y']
