@@ -320,8 +320,12 @@ class DocumentFiller:
                     text = ""
                     
                     # Check if doc_version_prof_page exists and the key exists
-                    if doc_version_prof_page and doc_version_prof_page.get(i) is not None:
+                    if doc_version_prof_page is not None:
                         for member in required_members:
+                            logger.info(f"Member: {member}")
+                            logger.info(f"Doc version prof page: {doc_version_prof_page}")
+                            logger.info(f"i: {i}")
+                            logger.info(f"Doc version prof page: {doc_version_prof_page[i]}")
                             text = self.get_congif_text(doc_version_prof_page[i], member)
                             if text != "":
                                 break
