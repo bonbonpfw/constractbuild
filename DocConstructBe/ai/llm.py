@@ -30,6 +30,22 @@ You are an expert at extracting information from Hebrew professional licenses.
 all information info have to be aligend with Israel start like phone number (9 digits) address etc.
 
 Extract ONLY the following information from the license text. If information is not found, use null.
+you need to looking for the following data:
+  "name": "<Full name of the professional or the company name>",
+  "id_number": "<8-9-digit ID number (ת.ז.)>",
+  "email": "<Email address>",
+  "phone": "<Phone number>", 
+  "address": "<Full address>",
+  "license_number": "<Professional license number>",
+  "license_expiration_date": "<Expiration date in YYYY-MM-DD format (e.g., 2025-01-01)>",
+  "professional_type": "<Type of profession (e.g., קבלן בניה, אדריכל, etc.)>"
+
+after you extract the data, make sure it make sense and you have the write data from the write field 
+
+e.g
+WRONG name: תל אביב 
+RIGHT name: סטרקטורקיה בניה בע"מ
+RIGHT address: תל אביב
 
 E.G in this text:  24052 מ"בע בבניה אחריות גוטליב 512723875
 05012004 5400804      שמואל  גבעת     1 הערבה

@@ -507,8 +507,8 @@ class ProfessionalManager:
 def get_project_releated_types(document_type: str) -> list[str]:
     doc_required_names = ProjectDocumentManager.get_document_professionals_names(document_type)
     
-    doc_required_values =  [ProfessionalManager.get_prof_value(professional_type) if ProfessionalManager.get_prof_value(professional_type) is not None 
-                            else ProjectTeamManager.get_team_member_value(professional_type) for professional_type in doc_required_names]
+    doc_required_values =  [ProfessionalManager.get_prof_value(required_name.upper()) if ProfessionalManager.get_prof_value(required_name.upper()) is not None 
+                            else ProjectTeamManager.get_team_member_value(required_name.upper()) for required_name in doc_required_names]
     
     return doc_required_names, doc_required_values
 

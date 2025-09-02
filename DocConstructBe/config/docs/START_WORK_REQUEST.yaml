@@ -1,17 +1,17 @@
   TYPES:
-     - construction_inspection_officer
+     - supervisor_engineer
 
   1:
       1:
           - None
           - date
-          - construction_inspection_officer_name
+          - supervisor_engineer_name
           - None
-          - construction_inspection_officer_address
-          - construction_inspection_officer_mail
-          - construction_inspection_officer_phone
-          - construction_inspection_officer_license_number
-          - construction_inspection_officer_id
-          - construction_inspection_officer_name
+          - supervisor_engineer_address
+          - supervisor_engineer_mail
+          - supervisor_engineer_phone
+          - supervisor_engineer_license_number
+          - supervisor_engineer_id
+          - supervisor_engineer_name
         
     

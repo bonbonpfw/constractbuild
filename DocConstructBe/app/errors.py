@@ -194,6 +194,15 @@ class ProjectDocumentNotFound(ApiError):
     def http_code(self):
         return HttpCodes.NOT_FOUND
 
+class NoCoordinatesFound(ApiError):
+    def __init__(self):
+        super().__init__(
+            msg='המסמך אינו נתמך - לא ניתן לחלץ מיקומי השדות במסמך',
+            code='no_coordinates_found'
+        )
+
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
 
 class InvalidProjectProfessionalDocument(ApiError):
     def __init__(self, required_professionals_types: str):

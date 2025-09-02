@@ -1,6 +1,6 @@
 
   TYPES:
-     - construction_inspection_officer
+     - supervisor_engineer
      - permit_owner
 
   3:
@@ -8,21 +8,21 @@
           - None
           - date
           - permit_owner_name
-          - construction_inspection_officer_address
-          - construction_inspection_officer_mail 
-          - construction_inspection_officer_phone
-          - construction_inspection_officer_license_number
-          - construction_inspection_officer_id
-          - construction_inspection_officer_name
+          - supervisor_engineer_address
+          - supervisor_engineer_mail 
+          - supervisor_engineer_phone
+          - supervisor_engineer_license_number
+          - supervisor_engineer_id
+          - supervisor_engineer_name
           - permit_owner_name
       2:
-          - construction_inspection_officer_address
-          - construction_inspection_officer_mail
-          - construction_inspection_officer_phone
-          - construction_inspection_officer_license_number
-          - construction_inspection_officer_id
-          - construction_inspection_officer_name
+          - supervisor_engineer_address
+          - supervisor_engineer_mail
+          - supervisor_engineer_phone
+          - supervisor_engineer_license_number
+          - supervisor_engineer_id
+          - supervisor_engineer_name
       3:
           - None
           - date
-          - construction_inspection_officer_name
+          - supervisor_engineer_name

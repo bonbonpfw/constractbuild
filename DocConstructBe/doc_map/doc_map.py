@@ -11,9 +11,10 @@ import io
 import yaml
 from config.sys_config import PROF_DOC_CONFIG, TTF_PATH
 import os
-from data_model.enum import ProjectTeamRole, enum_to_value
+from data_model.enum import ProjectTeamRole
 import pdfplumber
 from bidi.algorithm import get_display
+from app.errors import NoCoordinatesFound
 
 class DocumentMap:
     _document_professional_map = None
@@ -265,7 +266,7 @@ class DocumentFiller:
         else:
             return self.get_underline_coordinates(pdf_path)
 
-    def overlay_filled_on_original_pdf(self,pdf_path, coordinates, output_path=None):
+    def overlay_filled_on_original_pdf(self,pdf_path, coordinates, page=None, output_path=None):
         if output_path is None:
             base_name = os.path.splitext(pdf_path)[0]
             output_path = f"{base_name}_filled.pdf"
@@ -276,7 +277,7 @@ class DocumentFiller:
         reader = PdfReader(pdf_path)
         writer = PdfWriter()
         with pdfplumber.open(pdf_path) as pdf:
-            pages = pdf.pages
+            pages = pdf.pages if page is None else [pdf.pages[0]]
             doc_version = self.document_positions.get(len(pages))  
             self.fill_pages(pages, reader,writer,coordinates, doc_version,required_members)
         with open(output_path, 'wb') as output_file:
@@ -339,7 +340,12 @@ class DocumentFiller:
     
     def fill_document(self):
         coordinates = self.get_doc_coordinates(self.src_pdf_path)
-        output_path = self.overlay_filled_on_original_pdf(self.src_pdf_path, coordinates)
+        if not coordinates:
+            raise NoCoordinatesFound()  
+        if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name:
+            output_path = self.overlay_filled_on_original_pdf(self.src_pdf_path, coordinates, page=1)
+        else:
+            output_path = self.overlay_filled_on_original_pdf(self.src_pdf_path, coordinates)
         return output_path
 
   

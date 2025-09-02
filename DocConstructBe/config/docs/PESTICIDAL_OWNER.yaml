@@ -18,4 +18,19 @@ TYPES:
         - pesticidal_license_number
         - permit_owner_name
       
-  
+2:
+    1:
+        - pesticidal_id
+        - pesticidal_name
+        - pesticidal_id
+        - pesticidal_name
+        - pesticidal_phone
+        - None
+        - pesticidal_address
+        - pesticidal_mail
+        - None
+        - date
+        - date
+        - pesticidal_license_number
+        - permit_owner_name
+      
