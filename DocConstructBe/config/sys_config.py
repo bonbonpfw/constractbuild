@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set up base application path using environment variables with a default value
-# APP_PATH = "/home/ubuntu/doc-construct/"
+#APP_PATH = "/home/ubuntu/doc-construct/"
 #APP_CODE = 'DocConstructBe'
 APP_PATH = os.getenv('APP_PATH')
 APP_CODE = '/app'
@@ -19,7 +19,7 @@ TTF_PATH = os.path.join(CONFIG, "Alef-Regular.ttf")
 
 CONFIG_FALLBACK = os.path.join(CONFIG,"config.yaml")
 
-PROF_DOC_CONFIG = os.path.join(CONFIG, "prof_doc.yaml")
+PROF_DOC_CONFIG = os.path.join(CONFIG, "docs")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
