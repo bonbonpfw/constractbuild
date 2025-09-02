@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaUpload } from 'react-icons/fa';
+import { FaTimes, FaUpload, FaSpinner, FaBrain, FaCog } from 'react-icons/fa';
 import { Professional } from '../../types';
 import { createProfessional, importProfessionalData } from '../../api';
 import {
@@ -46,9 +46,11 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importStep, setImportStep] = useState<string>('');
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [importedFile, setImportedFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -121,16 +123,62 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      // Create a fake event object to reuse the existing handleFileChange function
+      const fakeEvent = {
+        target: { files: [file] }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleFileChange(fakeEvent);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setImporting(true);
+    setImportStep('מאתחל תצוגה מקדימה של הקובץ...');
+    
     try {
+      // First, initialize the file preview
       setImportedFile(file);
       setFileUrl(URL.createObjectURL(file));
+      
+      // Wait for preview to be ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setImportStep('תצוגה מקדימה מוכנה - מתחיל ניתוח בינה מלאכותית...');
+      
+      // Now start AI processing steps
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setImportStep('מנתח מבנה המסמך...');
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setImportStep('מחלץ נתוני איש מקצוע...');
 
       const importedData = await importProfessionalData(file);
+      
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setImportStep('מעבד ומאמת מידע...');
+      
       // Convert ISO date string to YYYY-MM-DD format for input
       const formattedData = {
         ...importedData,
@@ -138,6 +186,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
           new Date(importedData.license_expiration_date).toISOString().split('T')[0] : ''
       };
       setFormData(formattedData);
+      
       // Handle image preview if present in imported data
       const img = (importedData as any)?.['photo'] || (importedData as any)?.['image'];
       if (img) {
@@ -145,8 +194,24 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
       } else {
         setImagePreviewUrl(null);
       }
+      
+      await new Promise(resolve => setTimeout(resolve, 400));
+      setImportStep('מסיים ייבוא נתונים...');
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setImportStep('ייבוא הושלם בהצלחה!');
+      
+      // Clear the step message after a brief success display
+      setTimeout(() => {
+        setImportStep('');
+      }, 1500);
+      
     } catch (error) {
+      setImportStep('ייבוא נכשל - אנא נסה שוב');
       errorHandler(error as ErrorResponseData, 'Failed to import professional data');
+      setTimeout(() => {
+        setImportStep('');
+      }, 2000);
     } finally {
       setImporting(false);
       // Reset the file input
@@ -189,7 +254,24 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
   };
 
   return (
-    <DialogOverlay onClick={onClose}>
+    <>
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+          }
+          .fa-spin {
+            animation: fa-spin 1s infinite linear;
+          }
+          @keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      <DialogOverlay onClick={onClose}>
       <DialogContainer 
         style={{ 
           width: 1200,
@@ -197,7 +279,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
         }} 
         onClick={e => e.stopPropagation()}>
         <DialogHeader>
-          <DialogTitle>Add Professional</DialogTitle>
+          <DialogTitle>הוספת איש מקצוע</DialogTitle>
           <DialogCloseButton onClick={onClose}>
             <FaTimes />
           </DialogCloseButton>
@@ -214,17 +296,71 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <FormGrid>
                 <FullWidthField>
-                  <Button
-                    variant="text"
-                    onClick={handleImport}
-                    disabled={importing}
+                  <div 
+                    style={{
+                      border: `2px dashed ${isDragOver ? '#34C759' : '#007AFF'}`,
+                      borderRadius: 12,
+                      padding: 24,
+                      textAlign: 'center',
+                      background: importing ? '#F2F2F7' : (isDragOver ? '#F0F9FF' : '#FAFAFA'),
+                      transition: 'all 0.2s ease',
+                      cursor: importing ? 'default' : 'pointer',
+                      transform: isDragOver ? 'scale(1.02)' : 'scale(1)',
+                      boxShadow: isDragOver ? '0 8px 25px rgba(0, 122, 255, 0.15)' : 'none'
+                    }}
+                    onClick={importing ? undefined : handleImport}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
-                    {importing ? 'Importing...' : 'Import from File'}
-                    <FaUpload style={{ marginRight: 8 }} />
-                  </Button>
+                    {importing ? (
+                      <div>
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          margin: '0 auto 16px',
+                          background: '#007AFF',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <FaSpinner className="fa-spin" style={{ color: 'white', fontSize: 16 }} />
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 500, color: '#1D1D1F', marginBottom: 8 }}>
+                          בינה מלאכותית מנתחת את המסמך
+                        </div>
+                        <div style={{ fontSize: 14, color: '#86868B' }}>
+                          {importStep}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          margin: '0 auto 16px',
+                          background: isDragOver ? '#34C759' : '#007AFF',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease'
+                        }}>
+                          <FaUpload style={{ color: 'white', fontSize: 16 }} />
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 500, color: '#1D1D1F', marginBottom: 8 }}>
+                          {isDragOver ? 'שחרר כאן!' : 'העלאת מסמך'}
+                        </div>
+                        <div style={{ fontSize: 14, color: '#86868B' }}>
+                          {isDragOver ? 'הקובץ יועלה אוטומטית' : 'גרור ושחרר או לחץ לבחירה'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </FullWidthField>
                 <FullWidthField>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">שם מלא</Label>
                   <Input
                     id="name"
                     name="name"
@@ -234,7 +370,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   />
                 </FullWidthField>
                 <FullWidthField>
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">כתובת</Label>
                   <Input
                     id="address"
                     name="address"
@@ -244,7 +380,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   />
                 </FullWidthField>
                 <Field>
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">טלפון</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -256,7 +392,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   />
                 </Field>
                 <Field>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">אימייל</Label>
                   <Input
                     id="email"
                     name="email"
@@ -267,7 +403,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   />
                 </Field>
                 <Field>
-                  <Label htmlFor="professional_type">Type</Label>
+                  <Label htmlFor="professional_type">תפקיד</Label>
                   <Select
                     id="professional_type"
                     name="professional_type"
@@ -280,7 +416,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   </Select>
                 </Field>
                 <Field>
-                  <Label htmlFor="national_id">National ID</Label>
+                  <Label htmlFor="national_id">תעודת זהות</Label>
                   <Input
                     id="national_id"
                     name="national_id"
@@ -290,7 +426,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   />
                 </Field>
                 <Field>
-                  <Label htmlFor="license_number">License Number</Label>
+                  <Label htmlFor="license_number">מספר רישיון</Label>
                   <Input
                     id="license_number"
                     name="license_number"
@@ -301,7 +437,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                 </Field>
                 <Field>
                   <Label htmlFor="license_expiration_date">
-                    License Expiration Date
+                    תאריך פג תוקף רישיון
                   </Label>
                   <Input
                     id="license_expiration_date"
@@ -324,12 +460,12 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: '#f7fafd',
-                  border: '1.5px solid #e3e8f0',
-                  borderRadius: 12,
+                  background: '#FFFFFF',
+                  border: '1px solid #E5E5E7',
+                  borderRadius: 16,
                   minHeight: 500,
                   maxHeight: 820,
-                  boxShadow: '0 2px 16px #0001',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                   margin: '0 0 0 0',
                   padding: 24,
                   flexDirection: 'column',
@@ -338,11 +474,60 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                 {/* Enhanced image preview with zoom and pan */}
                 {isImage ? (
                   <>
-                    <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
-                      <Button variant="contained" disabled={zoom === 1} onClick={handleZoomOut}>-</Button>
-                      <span style={{ marginTop: 7, minWidth: 40, textAlign: 'center', fontWeight: 500 }}>{Math.round(zoom * 100)}%</span>
-                      <Button variant="contained" onClick={handleZoomIn} disabled={zoom >= maxZoom}>+</Button>
-                      {/*<Button variant="text" onClick={handleReset} disabled={zoom === 1 && position.x === 0 && position.y === 0}>Reset</Button>*/}
+                    <div style={{ 
+                      marginBottom: 16, 
+                      display: 'flex', 
+                      gap: 8, 
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#F8F9FA',
+                      padding: '8px 16px',
+                      borderRadius: 20,
+                      border: '1px solid #E9ECEF'
+                    }}>
+                      <Button 
+                        variant="text" 
+                        disabled={zoom === 1} 
+                        onClick={handleZoomOut}
+                        style={{
+                          minWidth: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: zoom === 1 ? '#F8F9FA' : '#007AFF',
+                          color: zoom === 1 ? '#ADB5BD' : 'white',
+                          border: 'none',
+                          fontSize: 16,
+                          fontWeight: 600
+                        }}
+                      >
+                        −
+                      </Button>
+                      <span style={{ 
+                        minWidth: 50, 
+                        textAlign: 'center', 
+                        fontWeight: 500,
+                        fontSize: 14,
+                        color: '#495057'
+                      }}>
+                        {Math.round(zoom * 100)}%
+                      </span>
+                      <Button 
+                        variant="text" 
+                        onClick={handleZoomIn} 
+                        disabled={zoom >= maxZoom}
+                        style={{
+                          minWidth: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: zoom >= maxZoom ? '#F8F9FA' : '#007AFF',
+                          color: zoom >= maxZoom ? '#ADB5BD' : 'white',
+                          border: 'none',
+                          fontSize: 16,
+                          fontWeight: 600
+                        }}
+                      >
+                        +
+                      </Button>
                     </div>
                     <div
                       ref={imgContainerRef}
@@ -352,9 +537,9 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                         maxWidth: 580,
                         maxHeight: 400,
                         overflow: zoom > 1 ? 'scroll' : 'hidden',
-                        background: '#fff',
-                        borderRadius: 8,
-                        boxShadow: '0 2px 8px #0001',
+                        background: '#FFFFFF',
+                        borderRadius: 12,
+                        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
                         cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'default',
                         position: 'relative',
                         userSelect: 'none',
@@ -362,6 +547,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        border: '1px solid #F1F3F4'
                       }}
                       onMouseDown={handleMouseDown}
                       onMouseMove={handleMouseMove}
@@ -373,7 +559,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                     >
                       <img
                         src={imgUrl || undefined}
-                        alt="Professional Preview"
+                        alt="תצוגה מקדימה של איש המקצוע"
                         draggable={false}
                         style={{
                           transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)` ,
@@ -381,9 +567,9 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                           maxHeight: '100%',
                           objectFit: 'contain',
                           borderRadius: 8,
-                          background: '#fff',
-                          boxShadow: '0 2px 8px #0001',
-                          transition: dragging ? 'none' : 'transform 0.2s',
+                          background: '#FFFFFF',
+                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+                          transition: dragging ? 'none' : 'transform 0.2s ease',
                           cursor: zoom > 1 ? (dragging ? 'grabbing' : 'grab') : 'default',
                           userSelect: 'none',
                         }}
@@ -391,32 +577,61 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
                     </div>
                   </>
                 ) : isPdf ? (
-                  <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ 
+                    width: '100%', 
+                    display: 'flex', 
+                    justifyContent: 'center',
+                    background: '#FFFFFF',
+                    borderRadius: 12,
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #F1F3F4',
+                    overflow: 'hidden'
+                  }}>
                     <iframe
                       src={imgUrl || undefined}
-                      title="PDF Preview"
-                      style={{ width: 594, height: 400, border: 'none', background: '#fff', borderRadius: 4, boxShadow: '0 2px 8px #0001' }}
+                      title="תצוגה מקדימה של PDF"
+                      style={{ 
+                        width: 594, 
+                        height: 400, 
+                        border: 'none', 
+                        background: '#FFFFFF', 
+                        borderRadius: 8
+                      }}
                     />
                   </div>
                 ) : importedFile ? (
-                  <div style={{ textAlign: 'center', color: '#888', fontSize: 16, width: '100%' }}>
-                    <span role="img" aria-label="file" style={{ fontSize: 60 }}>📄</span>
-                    <p style={{ margin: '16px 0 0 0', fontWeight: 600 }}>{importedFile.name}</p>
-                    <p style={{ margin: 0 }}>Preview not available</p>
+                  <div style={{ 
+                    textAlign: 'center', 
+                    color: '#86868B', 
+                    fontSize: 16, 
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    background: '#F8F9FA',
+                    borderRadius: 12,
+                    border: '1px solid #E9ECEF'
+                  }}>
+                    <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.7 }}>📄</div>
+                    <div style={{ fontWeight: 500, marginBottom: 8, color: '#495057' }}>{importedFile.name}</div>
+                    <div style={{ fontSize: 14, color: '#6C757D' }}>תצוגה מקדימה לא זמינה</div>
                   </div>
                 ) : null}
               </div>
             )}
           </div>
           <DialogActions>
-            <Button variant='text' onClick={onClose}>Cancel</Button>
+            <Button variant='text' onClick={onClose}>ביטול</Button>
             <Button variant='contained' type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? 'שומר...' : 'שמור'}
             </Button>
           </DialogActions>
         </Form>
       </DialogContainer>
     </DialogOverlay>
+    </>
   );
 };
 
