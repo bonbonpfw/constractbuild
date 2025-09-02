@@ -31,6 +31,7 @@ class DocumentMap:
     @staticmethod    
     def get_document_professional_map():
         doc_professional_map = {}
+        logger.info(f"Prof doc config: {PROF_DOC_CONFIG}")
         for conf_file in glob.glob(PROF_DOC_CONFIG + "/*.yaml"):
             with open(conf_file, 'r') as file:
                 doc_map = yaml.safe_load(file)
