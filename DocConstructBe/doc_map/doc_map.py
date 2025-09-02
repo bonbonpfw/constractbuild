@@ -322,6 +322,8 @@ class DocumentFiller:
                     
                     # Check if doc_version_prof_page exists and the key exists
                     if doc_version_prof_page is not None:
+                        logger.info(f"Doc version prof is not none")
+                        logger.info(f" required members: {required_members}")
                         for member in required_members:
                             logger.info(f"Member: {member}")
                             logger.info(f"Doc version prof page: {doc_version_prof_page}")
