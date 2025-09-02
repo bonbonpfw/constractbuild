@@ -33,3 +33,5 @@ pytesseract
 Pillow
 pdfminer.six
 reportlab
+pdfplumber
+python-bidi
