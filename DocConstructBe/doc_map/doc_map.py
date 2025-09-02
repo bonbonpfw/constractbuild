@@ -15,6 +15,9 @@ from data_model.enum import ProjectTeamRole
 import pdfplumber
 from bidi.algorithm import get_display
 from app.errors import NoCoordinatesFound
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class DocumentMap:
     _document_professional_map = None
@@ -288,7 +291,9 @@ class DocumentFiller:
     def fill_pages(self,pages, reader,writer,coordinates, doc_version,required_members):
        
             for page_num, (page, pdf_page) in enumerate(zip(pages, reader.pages), start=1):
+                logger.info(f"Filling page {page_num}")
                 doc_version_prof_page = doc_version.get(page_num)
+                logger.info(f"Doc version prof page: {doc_version_prof_page}")
                 page_width = page.width
                 page_height = page.height
                 
@@ -311,16 +316,25 @@ class DocumentFiller:
                         c.setFillColorRGB(1, 0, 0)  # אדום
                     else:
                         c.setFillColorRGB(0, 0, 1)  # כחול
-                    for member in required_members:
-                        text = self.get_congif_text(doc_version_prof_page[i],member)
-                        if text != "":
-                            break
-                    text = get_display(text)
-                    text_width = c.stringWidth(text, "ArialHebrew", font_size)
-                    text_x = x + (width - text_width) / 2  # מרכוז
-                    text_y = y + 5
+                    # Initialize text with empty string to avoid UnboundLocalError
+                    text = ""
                     
-                    c.drawString(text_x, text_y, text)
+                    # Check if doc_version_prof_page exists and the key exists
+                    if doc_version_prof_page and doc_version_prof_page.get(i) is not None:
+                        for member in required_members:
+                            text = self.get_congif_text(doc_version_prof_page[i], member)
+                            if text != "":
+                                break
+                    
+                    # Only proceed with display and drawing if we have text
+                    if text:
+                        logger.info(f"Text: {text}")
+                        text = get_display(text)
+                        text_width = c.stringWidth(text, "ArialHebrew", font_size)
+                        text_x = x + (width - text_width) / 2  # מרכוז
+                        text_y = y + 5
+                        
+                        c.drawString(text_x, text_y, text)
                     
                     c.setStrokeColorRGB(0.5, 0.5, 0.5)
                     #c.setLineWidth(0.5)
