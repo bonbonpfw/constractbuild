@@ -248,7 +248,6 @@ def init_routes(app):
                 document_type=document_type,
                 professionals=document_professionals,
                 src_pdf_path=file_path,
-                project_id=project_id,
                 team_members=team_members
             )
         else:

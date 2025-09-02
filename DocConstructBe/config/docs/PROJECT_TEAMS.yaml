@@ -1,0 +1,55 @@
+TYPES:
+  - permit_owner
+  - permit_owner_representative
+  - request_editor
+  - structural_engineer
+  - general_contractor
+  - contractor_representative
+  - project_manager
+
+1:  
+  1:
+    - project_manager_address
+    - None
+    - project_manager_mail
+    - project_manager_phone
+    - project_manager_name
+    - None
+    - contractor_representative_address
+    - None
+    - contractor_representative_mail
+    - contractor_representative_phone
+    - contractor_representative_name
+    - None
+    - general_contractor_address
+    - None
+    - general_contractor_mail
+    - general_contractor_phone
+    - general_contractor_name
+    - None
+    - structural_engineer_address
+    - None
+    - structural_engineer_mail
+    - structural_engineer_phone
+    - structural_engineer_name
+    - None
+    - request_editor_address
+    - None
+    - request_editor_mail
+    - request_editor_phone
+    - request_editor_name
+    - None
+    - permit_owner_representative_address
+    - None
+    - permit_owner_representative_mail
+    - permit_owner_representative_phone
+    - permit_owner_representative_name
+    - None
+    - permit_owner_address
+    - None
+    - permit_owner_mail
+    - permit_owner_phone
+    - permit_owner_name
+    - None
+
+

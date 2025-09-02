@@ -1,0 +1,26 @@
+  TYPES:
+      - structural_engineer
+      - permit_owner
+
+  2:
+      1:
+          - None
+          - date
+          - permit_owner_name
+          - structural_engineer_address
+          - structural_engineer_mail
+          - structural_engineer_phone
+          - structural_engineer_license_number
+          - structural_engineer_id
+          - structural_engineer_name
+          - permit_owner_name
+      2:
+          - None
+          - date
+          - structural_engineer_name
+          - structural_engineer_address
+          - structural_engineer_mail
+          - structural_engineer_phone
+          - structural_engineer_id
+          - structural_engineer_name
+        

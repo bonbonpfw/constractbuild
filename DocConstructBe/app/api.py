@@ -224,7 +224,7 @@ class ProjectDocumentManager:
     @staticmethod
     def get_document_project_professionals(project_id: str, document_type: ProjectDocumentType):
         professionals = []
-        doc_professionals = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
+        doc_professionals = DocumentMap.document_professional_map.get(document_type.name, [])
         doc_professionals_types = [professional.value for professional in doc_professionals]
         project_professionals = db_session.query(ProjectProfessional).filter(ProjectProfessional.project_id == project_id).all()
         for project_professional in project_professionals:
@@ -235,8 +235,9 @@ class ProjectDocumentManager:
     
     @staticmethod
     def get_document_professionals_names(document_type: ProjectDocumentType):
-        doc_professionals_types = DocumentMap.DOCUMENT_PROFESSIONAL_MAP.get(document_type.name, [])
-        return doc_professionals_types
+        doc_professionals_types = DocumentMap().document_professional_map
+        required_professionals_types = doc_professionals_types.get(document_type.name, [])
+        return required_professionals_types
   
     
     @staticmethod
@@ -245,12 +246,12 @@ class ProjectDocumentManager:
         document_professionals = []
         for professional in professionals:
             prof_name = ProfessionalManager.get_prof_name(professional.professional_type)
-            if prof_name in doc_professionals_types:
+            if prof_name.lower() in doc_professionals_types:
                 document_professionals.append(professional)
         return document_professionals
 
     @staticmethod
-    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional],team_members: list[ProjectTeamMember], src_pdf_path: str, project_id: str):
+    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional],team_members: list[ProjectTeamMember], src_pdf_path: str):
         for professional in professionals:
             professional.role =ProfessionalManager.get_role(professional.professional_type)
         document_filler = DocumentFiller(
@@ -518,7 +519,7 @@ def is_document_professional_missing(project_id: str, document_type: ProjectDocu
     team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
     project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
     project_team_types = [team_member.role.name for team_member in team_members]
-    missing_members = [name for name in doc_required_members_names if name not in project_prof_types + project_team_types]
+    missing_members = [name for name in doc_required_members_names if name.upper() not in project_prof_types + project_team_types]
     if missing_members:
         logger.info(f"Missing members: {missing_members}")
         return True,missing_members

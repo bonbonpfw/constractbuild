@@ -1,0 +1,38 @@
+  TYPES:
+     - structural_engineer
+     - general_contractor
+
+  2:
+      1:
+          - None
+          - date
+          - general_contractor_name
+          - structural_engineer_address
+          - structural_engineer_mail
+          - structural_engineer_phone
+          - structural_engineer_license_number
+          - structural_engineer_id
+          - structural_engineer_name
+          - general_contractor_address
+          - general_contractor_mail
+          - general_contractor_phone
+          - general_contractor_license_expiration_date
+          - general_contractor_license_number
+          - general_contractor_id
+          - general_contractor_name
+          - None
+
+
+
+      2:
+          - None
+          - date
+          - structural_engineer_name
+          - structural_engineer_address
+          - None
+          - structural_engineer_mail
+          - structural_engineer_phone
+          - structural_engineer_license_number
+          - structural_engineer_id
+          - structural_engineer_name
+    

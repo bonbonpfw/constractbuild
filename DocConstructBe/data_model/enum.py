@@ -1,4 +1,7 @@
 from enum import Enum
+import os
+from config.sys_config import CONFIG
+
 
 class ProjectStatus(Enum):
     PRE_PERMIT = 'Pre permit'
@@ -15,6 +18,16 @@ class ProjectDocumentType(Enum):
     CONTRACTOR_OWNER = 'מינוי קבלן רשום'
     PROJECT_TEAMS = 'רשימת בעלי תפקידים'
     GENERAL = 'כללי'
+
+class ProjectDocPath(Enum):
+    TRASH_INSPECTION = os.path.join(CONFIG, "docs", "TRASH_INSPECTION.yaml")
+    ADAPTER_AGREEMENT = os.path.join(CONFIG, "docs", "ADAPTER_AGREEMENT.yaml")
+    START_WORK_REQUEST = os.path.join(CONFIG, "docs", "START_WORK_REQUEST.yaml")
+    STRUCTURAL_SUPERVISOR = os.path.join(CONFIG, "docs", "STRUCTURAL_SUPERVISOR.yaml")
+    EXECUTION_INSPECTION = os.path.join(CONFIG, "docs", "EXECUTION_INSPECTION.yaml")
+    PESTICIDAL_OWNER = os.path.join(CONFIG, "docs", "PESTICIDAL_OWNER.yaml")
+    CONTRACTOR_OWNER = os.path.join(CONFIG, "docs", "CONTRACTOR_OWNER.yaml")
+    PROJECT_TEAMS = os.path.join(CONFIG, "docs", "PROJECT_TEAMS.yaml")
 
 class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
