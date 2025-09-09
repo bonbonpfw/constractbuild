@@ -55,7 +55,22 @@ class DocumentFiller:
         self.doc_required_members = professionals + team_members
         self.src_pdf_path = src_pdf_path
        
-    
+    def _adjust_green_build_doc(self, coordinates):
+        PHONE= "מספר טלפון"
+        cords = {}
+        for i, coord in enumerate(coordinates):
+            if coord['text'][::-1] == PHONE:
+                coordinates.append({
+                    'page': coord['page'],
+                    'x': coord['x'] + 60,
+                    'y': coord['y']+ 25,
+                    'width': coord['width'],
+                    'text': get_display("הכשרה"),
+                    'type': coord['type']
+                })
+                break
+        return coordinates
+
     def _adjust_pesticidal_doc(self, coordinates):
         ID = "מספר זהות"
         ADDRESS = "כתובת"
@@ -81,7 +96,7 @@ class DocumentFiller:
 
         return coordinates
     
-    def get_doc_coordinates_by_field(self, pdf_path):
+    def get_doc_coordinates_by_field(self, pdf_path,type):
         DATE = "תאריך"
         coordinates = []
         field_labels = [
@@ -135,7 +150,11 @@ class DocumentFiller:
                                 })
         except Exception as e:
             print(f"שגיאה בחילוץ קואורדינטות: {e}")
+        
         coordinates = self._adjust_pesticidal_doc(coordinates)
+        if type == ProjectDocumentType.GREEN_BUILD.name:
+            coordinates = self._adjust_green_build_doc(coordinates)
+      
         return coordinates
     
     def get_table_cell_coordinates(self,pdf_path):
@@ -264,7 +283,7 @@ class DocumentFiller:
 
     def get_doc_coordinates(self,pdf_path):
         if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.GREEN_BUILD.name:
-            return self.get_doc_coordinates_by_field(pdf_path)
+            return self.get_doc_coordinates_by_field(pdf_path,self.document_name)
         elif self.document_name == ProjectDocumentType.PROJECT_TEAMS.name:
             return self.get_table_cell_coordinates(pdf_path)
         else:
@@ -382,6 +401,8 @@ class DocumentFiller:
             return required_member.name or ""
         elif i == f"{prefix}_id":
             return required_member.national_id or ""
+        elif i == f"{prefix}_professional_type":
+            return required_member.professional_type or ""
         elif i == f"{prefix}_address":
             return required_member.address or ""
         elif i == f"{prefix}_phone":
