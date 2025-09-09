@@ -263,7 +263,7 @@ class DocumentFiller:
         return coordinates
 
     def get_doc_coordinates(self,pdf_path):
-        if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name:
+        if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.GREEN_BUILD.name:
             return self.get_doc_coordinates_by_field(pdf_path)
         elif self.document_name == ProjectDocumentType.PROJECT_TEAMS.name:
             return self.get_table_cell_coordinates(pdf_path)

@@ -17,6 +17,7 @@ class ProjectDocumentType(Enum):
     PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
     CONTRACTOR_OWNER = 'מינוי קבלן רשום'
     PROJECT_TEAMS = 'רשימת בעלי תפקידים'
+    GREEN_BUILD = 'מינוי בניה ירוקה'
     GENERAL = 'כללי'
 
 class ProjectDocPath(Enum):
@@ -28,6 +29,7 @@ class ProjectDocPath(Enum):
     PESTICIDAL_OWNER = os.path.join(CONFIG, "docs", "PESTICIDAL_OWNER.yaml")
     CONTRACTOR_OWNER = os.path.join(CONFIG, "docs", "CONTRACTOR_OWNER.yaml")
     PROJECT_TEAMS = os.path.join(CONFIG, "docs", "PROJECT_TEAMS.yaml")
+    GREEN_BUILD = os.path.join(CONFIG, "docs", "GREEN_BUILD.yaml")
 
 class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'

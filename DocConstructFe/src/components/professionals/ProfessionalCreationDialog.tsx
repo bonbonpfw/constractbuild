@@ -271,7 +271,7 @@ const ProfessionalCreationDialog: React.FC<AddProfessionalDialogProps> = ({
           }
         `}
       </style>
-      <DialogOverlay onClick={onClose}>
+      <DialogOverlay>
       <DialogContainer 
         style={{ 
           width: 1200,
