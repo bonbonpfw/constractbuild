@@ -5,7 +5,7 @@
   2:
       1:
           - None
-          - date
+          - None
           - permit_owner_name
           - structural_engineer_address
           - structural_engineer_mail
@@ -16,7 +16,7 @@
           - permit_owner_name
       2:
           - None
-          - date
+          - None
           - structural_engineer_name
           - structural_engineer_address
           - structural_engineer_mail

@@ -13,8 +13,8 @@ TYPES:
         - pesticidal_address
         - pesticidal_mail
         - None
-        - date
-        - date
+        - None
+        - None
         - pesticidal_license_number
         - permit_owner_name
       
@@ -29,8 +29,8 @@ TYPES:
         - pesticidal_address
         - pesticidal_mail
         - None
-        - date
-        - date
+        - None
+        - None
         - pesticidal_license_number
         - permit_owner_name
       

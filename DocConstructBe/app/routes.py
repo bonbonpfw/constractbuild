@@ -78,6 +78,7 @@ def init_routes(app):
                 'id': project.id,
                 'name': project.name,
                 'request_number': project.request_number,
+                'permit_number': project.permit_number,
                 'status': project.status,
                 'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
                 'is_expired': any(

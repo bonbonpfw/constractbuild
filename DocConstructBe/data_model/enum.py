@@ -33,7 +33,7 @@ class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
     SUPERVISOR_ENGINEER_CONSTRUCTION = 'אחראי ביקורת - קונסטרוקציה'
     SUPERVISOR_ENGINEER_ARCHITECTURE = 'אחראי ביקורת - אדריכלות'
-    STRUCTURAL_ENGINEER = 'מהנדס אחראי שלד'
+    STRUCTURAL_ENGINEER = 'אחראי לביצוע שלד'
     CONSTRUCTION_INSPECTION_OFFICER = 'אחראי לביקורת על ביצוע'
     ARCHITECT = 'אדריכל'
     PESTICIDAL = 'מדביר'
@@ -52,7 +52,7 @@ class ProfessionalType(Enum):
             return ProfessionalType.SUPERVISOR_ENGINEER_CONSTRUCTION
         elif "אחראי ביקורת - אדריכלות" in value:
             return ProfessionalType.SUPERVISOR_ENGINEER_ARCHITECTURE
-        elif "מהנדס אחראי שלד" in value:
+        elif "אחראי לביצוע שלד" in value:
             return ProfessionalType.STRUCTURAL_ENGINEER
         elif "אחראי לביקורת על ביצוע" in value:
             return ProfessionalType.CONSTRUCTION_INSPECTION_OFFICER
