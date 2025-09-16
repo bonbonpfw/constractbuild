@@ -280,13 +280,14 @@ export const downloadProjectDocument = async (projectId: string, documentId: str
   return response.data;
 };
 
-export const deleteProjectDocument = async (projectId: string, documentId: string) => {
+export const deleteProjectDocument = async (projectId: string, documentId: string, status: string) => {
   const response = await axios.delete(
     `${API_URL}/project/document`,
     {
       params: {
         project_id: projectId,
-        document_id: documentId
+        document_id: documentId,
+        status: status
       }
     }
   );
@@ -322,5 +323,26 @@ export const updateProjectTeamMember = async (data: any) => {
 
 export const deleteProjectTeamMember = async (id: string) => {
   const response = await axios.delete(`${API_URL}/project/teams`, { data: { id } });
+  return response.data;
+};
+
+// Auto fill document
+export const autoFillDocument = async (
+  projectId: string,
+  documentId: string,
+  documentType: string,
+  file: File
+) => {
+  const formData = new FormData();
+  formData.append('project_id', projectId);
+  formData.append('document_id', documentId);
+  formData.append('document_type', documentType);
+  formData.append('file', file);
+  
+  const response = await axios.put(`${API_URL}/project/document`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };

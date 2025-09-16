@@ -89,9 +89,11 @@ export enum ProjectStatus {
 export enum DocumentState {
   PENDING = 'Pending',
   SIGNED = 'Signed',
+  FILLED = 'Filled',
   DELIVERED = 'Delivered',
   MISSING = 'Missing',
-  UPLOADED = 'Uploaded'
+  UPLOADED = 'Uploaded',
+  GENERAL = 'General'
 }
 
 export interface Project {

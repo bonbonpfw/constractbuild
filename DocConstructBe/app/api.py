@@ -161,7 +161,7 @@ class ProjectManager:
         if not os.path.exists(project_dir):
             os.makedirs(project_dir, exist_ok=True)
         # Generate a unique filename
-        filename = f"{document_type}_{document_name}"
+        filename = f"{document_status}_{document_name}"
         dest_path = os.path.join(project_dir, filename)
         # Copy the file to the destination
         if os.path.exists(file_path):
@@ -191,10 +191,11 @@ class ProjectManager:
         ).filter(ProjectProfessional.project_id == project_id).all()
     
     @staticmethod
-    def remove_document(project_id: str, document_id: str) -> None:
+    def remove_document(project_id: str, document_id: str,status: DocumentStatus) -> None:
         document = db_session.query(ProjectDocument).filter(
             ProjectDocument.id == document_id,
-            ProjectDocument.project_id == project_id
+            ProjectDocument.project_id == project_id,
+            ProjectDocument.status == status
         ).first()
         if not document:
             raise ProjectDocumentNotFound()

@@ -33,7 +33,8 @@ import {
   getProjectTeamMembers,
   createProjectTeamMember,
   updateProjectTeamMember,
-  deleteProjectTeamMember
+  deleteProjectTeamMember,
+  autoFillDocument
 } from "../../api";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
@@ -66,17 +67,17 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const MainLayout = styled.div`
   display: grid;
-  grid-template-columns: 200px 1fr 437px;
+  grid-template-columns: 180px 0.8fr 400px;
   grid-template-rows: auto;
   grid-template-areas: "sidebar project documents";
   gap: 16px;
   width: 100%;
-  overflow: visible;
+  overflow: hidden;
 `;
 
 const SecondSidebar = styled.div`
   grid-area: sidebar;
-  width: 200px;
+  width: 180px;
   display: flex;
   flex-direction: column;
   direction: rtl;
@@ -111,14 +112,15 @@ const SidebarButton = styled.button<{ active: boolean }>`
 const ProjectPanel = styled.div`
   grid-area: project;
   padding: 0 0px;
+  overflow: hidden;
 `;
 
 const DocumentsPanel = styled.div`
   grid-area: documents;
-  width: 437px;
+  width: 540px;
   padding: 0 12px;
   border-right: 1px solid #eaeaea;
-  overflow-y: visible;
+  overflow: hidden;
 `;
 
 
@@ -231,6 +233,7 @@ const ProjectView: React.FC = () => {
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [autoFillingDocId, setAutoFillingDocId] = useState<string | null>(null);
 
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
@@ -532,17 +535,35 @@ const ProjectView: React.FC = () => {
           fileId: generalDoc.id,
           fileName: generalDoc.name,
           state: DocumentState.UPLOADED,
-          fileType: type
+          fileType: type,
+          status: generalDoc.status,
+          created_at: generalDoc.created_at,
+          versions: [] // General files don't have versions
         });
       });
     } else {
-      // For other document types, only add the most recent document
-      const doc = docs[0]; // Assuming the first document is the most recent
+      // For other document types, sort by created_at and take the most recent
+      const sortedDocs = docs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const doc = sortedDocs[0]; // Take the most recent document
+      
+      // Create versions array from all documents of this type
+      const versions = docs.map(versionDoc => ({
+        id: versionDoc.id,
+        name: versionDoc.name,
+        status: versionDoc.status,
+        created_at: versionDoc.created_at
+      }));
+      
+      console.log(`Document ${type} has ${versions.length} versions:`, versions);
+      
       filesData.push({
         fileId: doc.id,
         fileName: doc.name,
         state: DocumentState.UPLOADED,
-        fileType: type
+        fileType: type,
+        status: doc.status,
+        created_at: doc.created_at,
+        versions: versions
       });
     }
   });
@@ -555,20 +576,46 @@ const ProjectView: React.FC = () => {
         fileId: '',
         fileName: null,
         state: DocumentState.MISSING,
-        fileType: type
+        fileType: type,
+        versions: []
       });
     }
   });
 
-  const handleFileUpload = async (fileType: string, file: File, mode: 'auto' | 'manual') => {
+  const handleFileUpload = async (fileType: string, file: File, mode: 'auto' | 'manual', status: string = DocumentState.UPLOADED) => {
     if (!id || !file) return;
     try {
-      await uploadProjectDocument(id, fileType, file.name, file, DocumentState.UPLOADED, mode);
+      console.log(`Uploading document with status: ${status}`);
+      await uploadProjectDocument(id, fileType, file.name, file, status, mode);
       await loadData();
-      toast.success(`${fileType} uploaded successfully`);
+      toast.success(`${fileType} uploaded successfully with status: ${status}`);
     } catch (error) {
       console.error("File upload error details:", error);
       errorHandler(error as ErrorResponseData, `Failed to upload ${fileType}`);
+    }
+  };
+
+  const handleAutoFill = async (fileId: string, documentType: string, fileName: string) => {
+    if (!id || !fileId) return;
+    
+    // Set loading state for this document
+    setAutoFillingDocId(fileId);
+    
+    try {
+      // Download the current file
+      const blob = await downloadProjectDocument(id, fileId);
+      const file = new File([blob], fileName, { type: blob.type });
+      
+      // Update the document with auto-fill
+      await autoFillDocument(id, fileId, documentType, file);
+      await loadData();
+      toast.success('Document auto-filled successfully');
+    } catch (error) {
+      console.error("Auto fill error details:", error);
+      errorHandler(error as ErrorResponseData, 'Failed to auto-fill document');
+    } finally {
+      // Clear loading state
+      setAutoFillingDocId(null);
     }
   };
 
@@ -587,12 +634,86 @@ const ProjectView: React.FC = () => {
       errorHandler(error as ErrorResponseData, 'Failed to download file');
     }
   };
+  
+  // Handler for downloading a specific version of a document
+  const handleVersionDownload = async (versionId: string) => {
+    console.log(`handleVersionDownload called with versionId: ${versionId}`);
+    
+    if (!id) {
+      console.error("Project ID is missing");
+      toast.error("שגיאה: מזהה פרויקט חסר");
+      return;
+    }
+    
+    if (!versionId) {
+      console.error("Version ID is missing");
+      toast.error("שגיאה: מזהה גרסה חסר");
+      return;
+    }
+    
+    try {
+      // Find the document version details
+      let fileName = '';
+      let foundVersion = false;
+      
+      for (const file of filesData) {
+        if (file.versions) {
+          const version = file.versions.find(v => v.id === versionId);
+          if (version) {
+            fileName = version.name;
+            foundVersion = true;
+            console.log(`Found version with name: ${fileName}`);
+            break;
+          }
+        }
+      }
+      
+      if (!foundVersion) {
+        console.warn(`Could not find version with ID: ${versionId} in local data`);
+      }
+      
+      console.log(`Downloading document with projectId: ${id}, versionId: ${versionId}`);
+      
+      // Download the specific version
+      try {
+        const blob = await downloadProjectDocument(id, versionId);
+        console.log(`Document downloaded successfully, blob size: ${blob.size} bytes`);
+        
+        if (blob.size === 0) {
+          console.error("Downloaded blob is empty");
+          toast.error("הקובץ שהורד ריק");
+          return;
+        }
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || `document-${versionId}.pdf`;
+        document.body.appendChild(a);
+        console.log(`Triggering download for: ${a.download}`);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('הגרסה הורדה בהצלחה');
+      } catch (downloadError) {
+        console.error(`Error in downloadProjectDocument: ${downloadError}`);
+        throw downloadError;
+      }
+    } catch (error) {
+      console.error(`Error downloading version ${versionId}:`, error);
+      errorHandler(error as ErrorResponseData, 'Failed to download document version');
+    }
+  };
 
   const handleFileDelete = async (fileId: string) => {
     if (!id || !fileId) return;
 
+    // Find the file to get its status
+    const fileToDelete = filesData.find(file => file.fileId === fileId);
+    const status = fileToDelete?.status || DocumentState.UPLOADED;
+
     try {
-      await deleteProjectDocument(id, fileId);
+      await deleteProjectDocument(id, fileId, status);
       await loadData();
       toast.success('File deleted successfully');
     } catch (error) {
@@ -624,8 +745,8 @@ const ProjectView: React.FC = () => {
 
     try {
       const fileName = file.name;
-      console.log(`Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.UPLOADED}`);
-      await uploadProjectDocument(id, 'כללי', fileName, file, DocumentState.UPLOADED);
+      console.log(`Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.GENERAL}`);
+      await uploadProjectDocument(id, 'כללי', fileName, file, DocumentState.GENERAL);
       await loadData();
       toast.success('File uploaded successfully');
     } catch (error) {
@@ -770,7 +891,7 @@ const ProjectView: React.FC = () => {
           </IconOnlyButton>
         </TopPanelGroup>
       </TopPanel>
-      <PageContent style={{ padding: '16px 0 0 0' }}>
+      <PageContent style={{ padding: '16px 0 0 0', overflow: 'hidden' }}>
         {!formData ? (
           <EmptyStatePlaceholder msg="Project not found" />
         ) : (
@@ -805,6 +926,109 @@ const ProjectView: React.FC = () => {
                 
                 {activeTab === 'details' && (
                   <div>
+                    {/* Document Status Indicator - Moved to project details section */}
+                    <div style={{ 
+                      marginBottom: 20, 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '10px',
+                      border: '1px solid #e0e0e0'
+                    }}>
+                      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>סטטוס מסמכי תחילת עבודה</div>
+                      
+                      {/* Progress Bar Container */}
+                      <div style={{ 
+                        display: 'flex', 
+                        height: '12px', 
+                        borderRadius: '6px', 
+                        overflow: 'hidden',
+                        marginBottom: '10px'
+                      }}>
+                        {/* Calculate document counts by status */}
+                        {(() => {
+                          const categorizedDocs = filesData.filter(f => f.fileType !== 'כללי');
+                          const totalDocs = categorizedDocs.length;
+                          
+                          const missingCount = categorizedDocs.filter(f => f.state === DocumentState.MISSING).length;
+                          const uploadedCount = categorizedDocs.filter(f => f.status === DocumentState.UPLOADED && f.state !== DocumentState.MISSING).length;
+                          const filledCount = categorizedDocs.filter(f => f.status === DocumentState.FILLED).length;
+                          const signedCount = categorizedDocs.filter(f => f.status === DocumentState.SIGNED).length;
+                          
+                          // Calculate percentages
+                          const missingPercent = totalDocs > 0 ? (missingCount / totalDocs) * 100 : 0;
+                          const uploadedPercent = totalDocs > 0 ? (uploadedCount / totalDocs) * 100 : 0;
+                          const filledPercent = totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
+                          const signedPercent = totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
+                          
+                          return (
+                            <>
+                              {/* Missing segment */}
+                              {missingCount > 0 && (
+                                <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>
+                              )}
+                              
+                              {/* Uploaded segment */}
+                              {uploadedCount > 0 && (
+                                <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>
+                              )}
+                              
+                              {/* Filled segment */}
+                              {filledCount > 0 && (
+                                <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>
+                              )}
+                              
+                              {/* Signed segment */}
+                              {signedCount > 0 && (
+                                <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                      
+                      {/* Legend */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px' }}>
+                        {/* Calculate document counts by status */}
+                        {(() => {
+                          const categorizedDocs = filesData.filter(f => f.fileType !== 'כללי');
+                          const totalDocs = categorizedDocs.length;
+                          
+                          const missingCount = categorizedDocs.filter(f => f.state === DocumentState.MISSING).length;
+                          const uploadedCount = categorizedDocs.filter(f => f.status === DocumentState.UPLOADED && f.state !== DocumentState.MISSING).length;
+                          const filledCount = categorizedDocs.filter(f => f.status === DocumentState.FILLED).length;
+                          const signedCount = categorizedDocs.filter(f => f.status === DocumentState.SIGNED).length;
+                          
+                          return (
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div style={{ width: '10px', height: '10px', backgroundColor: '#ff6b6b', borderRadius: '2px' }}></div>
+                                <span>חסרים: {missingCount}</span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div style={{ width: '10px', height: '10px', backgroundColor: '#0071e3', borderRadius: '2px' }}></div>
+                                <span>ריקים: {uploadedCount}</span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div style={{ width: '10px', height: '10px', backgroundColor: '#b0851f', borderRadius: '2px' }}></div>
+                                <span>מלאים: {filledCount}</span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div style={{ width: '10px', height: '10px', backgroundColor: '#1d8450', borderRadius: '2px' }}></div>
+                                <span>חתומים: {signedCount}</span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginRight: 'auto' }}>
+                                <span>סה"כ: {totalDocs}</span>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
                       {!isEditingDetails ? (
                         <CompactButton onClick={() => setIsEditingDetails(true)}>
@@ -1050,7 +1274,7 @@ const ProjectView: React.FC = () => {
 
             {/* Documents Panel */}
             <DocumentsPanel>
-              <Card style={{ height: 'auto' }}>
+              <Card style={{ height: 'auto', padding: '20px' }}>
                 <div style={{ display: 'flex', borderBottom: '1px solid #e0e0e0', marginBottom: 16 }}>
                   <button
                     style={{
@@ -1086,53 +1310,56 @@ const ProjectView: React.FC = () => {
                   </button>
                 </div>
                 {activeDocTab === 'categorized' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12, gap: 8 }}>
-                    <button
-                      onClick={handleDownloadAllFiles}
-                      disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
-                      style={{
-                        background: '#648fbf',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '8px 16px',
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 'not-allowed' : 'pointer',
-                        opacity: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 0.5 : 1,
-                        marginBottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8
-                      }}
-                    >
-                      {renderIcon(FaIcons.FaDownload, 16)}
-                      הורד הכל
-                    </button>
-                    <button
-                      disabled={true}
-                      style={{
-                        background: '#648fbf',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '8px 16px',
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: 'not-allowed',
-                        opacity: 0.5,
-                        marginBottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8
-                      }}
-                    >
-                      {renderIcon(FaIcons.FaEnvelope, 16)}
-                      שלח במייל
-                    </button>
-                  </div>
+                  <>
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16, gap: 8 }}>
+                      <button
+                        onClick={handleDownloadAllFiles}
+                        disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
+                        style={{
+                          background: '#648fbf',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 16px',
+                          fontWeight: 600,
+                          fontSize: 14,
+                          cursor: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 'not-allowed' : 'pointer',
+                          opacity: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 0.5 : 1,
+                          marginBottom: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 8
+                        }}
+                      >
+                        {renderIcon(FaIcons.FaDownload, 16)}
+                        הורד הכל
+                      </button>
+                      <button
+                        disabled={true}
+                        style={{
+                          background: '#648fbf',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 16px',
+                          fontWeight: 600,
+                          fontSize: 14,
+                          cursor: 'not-allowed',
+                          opacity: 0.5,
+                          marginBottom: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 8
+                        }}
+                      >
+                        {renderIcon(FaIcons.FaEnvelope, 16)}
+                        שלח במייל
+                      </button>
+                    </div>
+                  </>
                 )}
                 <FileArea
                   files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
@@ -1140,7 +1367,10 @@ const ProjectView: React.FC = () => {
                   onUpload={handleFileUpload}
                   onDelete={handleFileDelete}
                   onPreview={handleFilePreview}
+                  onAutoFill={handleAutoFill}
+                  onDownloadVersion={handleVersionDownload}
                   isAutoFill={activeDocTab === 'categorized'}
+                  autoFillingDocId={autoFillingDocId}
                   {...(activeDocTab === 'general' && {
                     onUploadGeneral: handleUploadGeneralFile
                   })}

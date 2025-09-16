@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableBody
 } from '../../styles/SharedStyles';
-import { Project, ProjectStatus, ProfessionalStatus, ProjectTeamRole } from "../../types";
+import { Project, ProjectStatus, ProfessionalStatus, ProjectTeamRole, DocumentState } from "../../types";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import ProjectCreationDialog from "./ProjectCreationDialog";
@@ -115,6 +115,7 @@ const Projects: React.FC = () => {
           <CardName><b>{project.name}</b></CardName>
           <CardInfo><b>בעל היתר:</b> {project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</CardInfo>
           <CardInfo><b>מספר היתר:</b> {project.permit_number || 'לא זמין'}</CardInfo>
+          <DocumentStatusBar project={project} />
         </Card>
       ))}
     </CardGrid>
@@ -157,6 +158,55 @@ const Projects: React.FC = () => {
                   <FaExclamationTriangle />
                 </TableWarningBadge>
               )}
+              {/* Document status indicator in table view */}
+              <div style={{ 
+                display: 'flex', 
+                height: '4px', 
+                width: '80px',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginTop: '4px'
+              }}
+              title={project.documents ? `מסמכים: ${project.documents.length}` : 'אין מסמכים'}>
+                {(() => {
+                  // For testing purposes, we'll create mock document counts
+                  const mockDocuments = [
+                    { status: 'Missing' },
+                    { status: 'Missing' },
+                    { status: 'Uploaded' },
+                    { status: 'Uploaded' },
+                    { status: 'Uploaded' },
+                    { status: 'Filled' },
+                    { status: 'Filled' },
+                    { status: 'Signed' },
+                  ];
+                  
+                  // Use real documents if available, otherwise use mock data
+                  const docs = project.documents && project.documents.length > 0 ? project.documents : mockDocuments;
+                  const total = docs.length;
+                  
+                  if (total === 0) return null;
+                  
+                  const missing = docs.filter(doc => doc.status === 'Missing' || !doc.id).length;
+                  const uploaded = docs.filter(doc => doc.status === 'Uploaded').length;
+                  const filled = docs.filter(doc => doc.status === 'Filled').length;
+                  const signed = docs.filter(doc => doc.status === 'Signed').length;
+                  
+                  const missingPercent = total > 0 ? (missing / total) * 100 : 0;
+                  const uploadedPercent = total > 0 ? (uploaded / total) * 100 : 0;
+                  const filledPercent = total > 0 ? (filled / total) * 100 : 0;
+                  const signedPercent = total > 0 ? (signed / total) * 100 : 0;
+                  
+                  return (
+                    <>
+                      {missing > 0 && <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>}
+                      {uploaded > 0 && <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>}
+                      {filled > 0 && <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>}
+                      {signed > 0 && <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>}
+                    </>
+                  );
+                })()}
+              </div>
             </TableBody>
           </tr>
         ))}
@@ -318,3 +368,126 @@ const TableWarningBadge = styled.span<{ color?: string }>`
   cursor: help;
   font-weight: bold;
 `;
+
+// Component for document status bar with tooltip
+const DocumentStatusBar: React.FC<{ project: Project }> = ({ project }) => {
+  // Debug: Log project data
+  console.log('DocumentStatusBar - Project:', project);
+  console.log('DocumentStatusBar - Has documents?', Boolean(project.documents));
+  
+  // If no documents available, show empty indicator
+  if (!project.documents || project.documents.length === 0) {
+    console.log('No documents found, showing empty indicator');
+    
+    return (
+      <div 
+        style={{ 
+          position: 'absolute',
+          bottom: '12px',
+          left: '10px',
+          right: '10px',
+          height: '4px',
+          display: 'flex',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          backgroundColor: '#f0f0f0' // Light gray background to show it's there
+        }}
+        title="אין נתוני מסמכים זמינים"
+      />
+    );
+  }
+  
+  // Calculate document counts by status
+  const getDocumentCounts = () => {
+    const documents = project.documents || [];
+    console.log('Documents:', documents);
+    
+    // For testing purposes, we'll create mock document counts
+    // In a real scenario, this would come from the API
+    const mockDocuments = [
+      { status: 'Missing' },
+      { status: 'Missing' },
+      { status: 'Uploaded' },
+      { status: 'Uploaded' },
+      { status: 'Uploaded' },
+      { status: 'Filled' },
+      { status: 'Filled' },
+      { status: 'Signed' },
+    ];
+    
+    // Use real documents if available, otherwise use mock data
+    const docsToUse = documents.length > 0 ? documents : mockDocuments;
+    
+    const categorizedDocs = docsToUse;
+    const total = categorizedDocs.length;
+    
+    if (total === 0) return { missing: 0, uploaded: 0, filled: 0, signed: 0, total: 0 };
+    
+    // Count documents by status
+    const missing = categorizedDocs.filter(doc => doc.status === 'Missing' || !doc.id).length;
+    const uploaded = categorizedDocs.filter(doc => doc.status === 'Uploaded').length;
+    const filled = categorizedDocs.filter(doc => doc.status === 'Filled').length;
+    const signed = categorizedDocs.filter(doc => doc.status === 'Signed').length;
+    
+    console.log('Document counts:', { missing, uploaded, filled, signed, total });
+    
+    return { missing, uploaded, filled, signed, total };
+  };
+  
+  const { missing, uploaded, filled, signed, total } = getDocumentCounts();
+  
+  // If no documents, show at least a placeholder
+  if (total === 0) {
+    return (
+      <div 
+        style={{ 
+          position: 'absolute',
+          bottom: '12px',
+          left: '10px',
+          right: '10px',
+          height: '4px',
+          display: 'flex',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          backgroundColor: '#f0f0f0' // Light gray background
+        }}
+        title="אין מסמכים מקוטלגים"
+      />
+    );
+  }
+  
+  // Calculate percentages
+  const missingPercent = total > 0 ? (missing / total) * 100 : 0;
+  const uploadedPercent = total > 0 ? (uploaded / total) * 100 : 0;
+  const filledPercent = total > 0 ? (filled / total) * 100 : 0;
+  const signedPercent = total > 0 ? (signed / total) * 100 : 0;
+  
+  return (
+    <div 
+      style={{ 
+        position: 'absolute',
+        bottom: '12px',
+        left: '10px',
+        right: '10px',
+        height: '4px',
+        display: 'flex',
+        borderRadius: '2px',
+        overflow: 'hidden'
+      }}
+      title={`מסמכים: חסרים: ${missing}, ריקים: ${uploaded}, מלאים: ${filled}, חתומים: ${signed}, סה"כ: ${total}`}
+    >
+      {missing > 0 && (
+        <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>
+      )}
+      {uploaded > 0 && (
+        <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>
+      )}
+      {filled > 0 && (
+        <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>
+      )}
+      {signed > 0 && (
+        <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>
+      )}
+    </div>
+  );
+};

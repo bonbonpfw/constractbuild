@@ -75,9 +75,9 @@ class ProfessionalDocumentType(Enum):
     LICENSE = 'license'
 
 class DocumentStatus(Enum):
-    PENDING = 'Pending'
+    GENERAL = 'General'
     SIGNED = 'Signed'
-    DELIVERED = 'Delivered'
+    FILLED = 'Filled'
     MISSING = 'Missing'
     UPLOADED = 'Uploaded'
 

@@ -1,6 +1,6 @@
 import os
 import tempfile
-
+from data_model.enum import DocumentStatus
 from flask import send_file, request
 
 from app.errors import ValidationError, InvalidProjectProfessionalDocument
@@ -271,9 +271,60 @@ def init_routes(app):
         data = validate_request(endpoint=Endpoints.REMOVE_PROJECT_DOCUMENT)
         ProjectManager().remove_document(
             project_id=str(data.get('project_id')),
-            document_id=str(data.get('document_id'))
+            document_id=str(data.get('document_id')),
+            status=data.get('status')
         )
         return SuccessResponse().generate_response()
+
+    @app.route('/api/project/document', methods=['PUT'])
+    def update_project_document():
+        data = validate_request(endpoint=Endpoints.UPDATE_PROJECT_DOCUMENT)
+        project_id = str(data.get('project_id'))
+        document_id = str(data.get('document_id'))
+        document_type = data.get('document_type')
+        
+        # Get the existing document
+        project_document = ProjectManager().get_document(project_id=project_id, document_id=document_id)
+        if not project_document:
+            raise Exception("Document not found")
+        
+        # Save the new file
+        file_path = save_file_to_temp(data.get('file'))
+        
+        # Check if professionals are missing for auto-fill
+        is_missing, missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type)
+        if is_missing:
+            _, project_required_members_values = get_project_releated_types(document_type=document_type)
+            raise InvalidProjectProfessionalDocument(
+                required_professionals_types=', '.join(project_required_members_values)
+            )
+        
+        # Get project data for auto-fill
+        project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
+        team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
+        document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type, professionals=project_professionals)
+        
+        # Auto-fill the document
+        filled_pdf = ProjectDocumentManager.autofill_document(
+            document_type=document_type,
+            professionals=document_professionals,
+            src_pdf_path=file_path,
+            team_members=team_members
+        )
+        
+        # Update the document with the filled version
+        ProjectManager().add_document(
+            file_path=filled_pdf,
+            project_id=project_id,
+            document_type=document_type,
+            document_name=project_document.name,
+            document_status=DocumentStatus.FILLED.value
+        )
+        
+        return SuccessResponse({
+            'id': document_id,
+            'project_id': project_id,
+        }).generate_response()
 
     @app.route('/api/project/document/types', methods=['GET'])
     def get_project_document_types():

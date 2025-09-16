@@ -75,6 +75,14 @@ class ProjectDocumentUploadSchema(Schema):
 class ProjectDocumentRemoveSchema(Schema):
     project_id = fields.UUID(required=True)
     document_id = fields.UUID(required=True)
+    status = fields.Str(required=True)
+
+class ProjectDocumentUpdateSchema(Schema):
+    project_id = fields.UUID(required=True)
+    document_id = fields.UUID(required=True)
+    document_type = fields.Enum(ProjectDocumentType, by_value=True, required=True)
+    file = fields.Raw(required=True)
+
 
 
 class ProjectDocumentTypesSchema(Schema):
@@ -210,6 +218,7 @@ class Endpoints:
     DOWNLOAD_PROJECT_DOCUMENT = "download_project_document"
     UPLOAD_PROJECT_DOCUMENT = "upload_project_document"
     REMOVE_PROJECT_DOCUMENT = "remove_project_document"
+    UPDATE_PROJECT_DOCUMENT = "update_project_document"
     GET_PROJECT_DOCUMENT_TYPES = "get_project_document_types"
 
     GET_PROFESSIONALS = "get_professionals"
@@ -288,6 +297,11 @@ API_ENDPOINTS = {
         'method': 'DELETE',
         'schema': ProjectDocumentRemoveSchema,
         'description': 'Remove a document from a project'
+    },
+    Endpoints.UPDATE_PROJECT_DOCUMENT: {
+        'method': 'PUT',
+        'schema': ProjectDocumentUpdateSchema,
+        'description': 'Update an existing project document'
     },
     Endpoints.GET_PROJECT_DOCUMENT_TYPES: {
         'method': 'GET',

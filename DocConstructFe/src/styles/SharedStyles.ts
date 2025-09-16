@@ -449,6 +449,7 @@ export const Card = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 24px;
+  padding-bottom: 32px; /* Extra padding for status bar */
   margin-bottom: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
