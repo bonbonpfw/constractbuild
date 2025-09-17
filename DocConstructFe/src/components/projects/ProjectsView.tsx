@@ -171,14 +171,14 @@ const Projects: React.FC = () => {
                 {(() => {
                   // For testing purposes, we'll create mock document counts
                   const mockDocuments = [
-                    { status: 'Missing' },
-                    { status: 'Missing' },
-                    { status: 'Uploaded' },
-                    { status: 'Uploaded' },
-                    { status: 'Uploaded' },
-                    { status: 'Filled' },
-                    { status: 'Filled' },
-                    { status: 'Signed' },
+                    { id: '1', status: 'Missing' },
+                    { id: '2', status: 'Missing' },
+                    { id: '3', status: 'Uploaded' },
+                    { id: '4', status: 'Uploaded' },
+                    { id: '5', status: 'Uploaded' },
+                    { id: '6', status: 'Filled' },
+                    { id: '7', status: 'Filled' },
+                    { id: '8', status: 'Signed' },
                   ];
                   
                   // Use real documents if available, otherwise use mock data
@@ -187,7 +187,7 @@ const Projects: React.FC = () => {
                   
                   if (total === 0) return null;
                   
-                  const missing = docs.filter(doc => doc.status === 'Missing' || !doc.id).length;
+                  const missing = docs.filter(doc => doc.status === 'Missing' ).length;
                   const uploaded = docs.filter(doc => doc.status === 'Uploaded').length;
                   const filled = docs.filter(doc => doc.status === 'Filled').length;
                   const signed = docs.filter(doc => doc.status === 'Signed').length;
@@ -424,7 +424,7 @@ const DocumentStatusBar: React.FC<{ project: Project }> = ({ project }) => {
     if (total === 0) return { missing: 0, uploaded: 0, filled: 0, signed: 0, total: 0 };
     
     // Count documents by status
-    const missing = categorizedDocs.filter(doc => doc.status === 'Missing' || !doc.id).length;
+    const missing = categorizedDocs.filter(doc => doc.status === 'Missing').length;
     const uploaded = categorizedDocs.filter(doc => doc.status === 'Uploaded').length;
     const filled = categorizedDocs.filter(doc => doc.status === 'Filled').length;
     const signed = categorizedDocs.filter(doc => doc.status === 'Signed').length;
