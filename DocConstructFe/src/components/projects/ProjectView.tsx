@@ -393,51 +393,17 @@ const ProjectView: React.FC = () => {
 
   const confirmRemoveProfessional = async () => {
     if (!professionalToRemove || !id) return;
-
+    setProfessionalToRemove(null);
     try {
+      const professional_id = professionalToRemove.id.toString()
       await removeProfessionalFromProject({
         project_id: id,
-        professional_id: professionalToRemove.id.toString() // Convert to string if the API expects a string
+        professional_id: professional_id
       });
-
-      // Reload the project data to get the updated professionals list
-      try {
-        const updatedProject = await getProjectById(id);
-        setFormData(updatedProject);
-        originalData.current = updatedProject;
-
-        // Update professionals list from the updated project data
-        if (updatedProject.professionals && Array.isArray(updatedProject.professionals)) {
-          const projectProfessionals = updatedProject.professionals.map(prof => ({
-            id: prof.id,
-            name: prof.name,
-            email: prof.email,
-            professional_type: prof.professional_type,
-            status: prof.status,
-            // Add default values for required fields that might not be in the API response
-            national_id: '',
-            phone: '',
-            license_number: '',
-            license_expiration_date: '',
-            address: ''
-          }));
-          setProfessionals(projectProfessionals);
-        } else {
-          setProfessionals([]);
-        }
-      } catch (error) {
-        errorHandler(error as ErrorResponseData, 'Failed to reload project data');
-        // If we can't reload, at least update the local state
-        setProfessionals(prevProfessionals => 
-          prevProfessionals.filter(p => p.id !== professionalToRemove.id)
-        );
-      }
-
+      await loadData()
       toast.success('Professional removed from project');
     } catch (error) {
       errorHandler(error as ErrorResponseData, 'Failed to remove professional from project');
-    } finally {
-      setProfessionalToRemove(null);
     }
   };
 
@@ -571,6 +537,10 @@ const ProjectView: React.FC = () => {
   // Add missing document types
   const existingTypes = Object.keys(documentsByType);
   documentTypes?.forEach(type => {
+    // Do not create a missing placeholder for general documents
+    if (type === 'כללי') {
+      return;
+    }
     if (!existingTypes.includes(type)) {
       filesData.push({
         fileId: '',
@@ -801,18 +771,16 @@ const ProjectView: React.FC = () => {
 
   // Prepare filesData for FileArea
   let generalFiles = filesData.filter(f => f.fileType === 'כללי');
-  if (activeDocTab === 'general' && !generalFiles.some(f => f.state === DocumentState.MISSING)) {
-    // Only add a missing slot if there isn't one already
-    generalFiles = [
-      ...generalFiles,
-      {
-        fileId: '',
-        fileName: null,
-        state: DocumentState.MISSING,
-        fileType: 'כללי',
-      },
-    ];
-  }
+  // Sort general files by file name (ascending). Missing placeholders always last.
+  generalFiles = generalFiles.sort((a, b) => {
+    const aMissing = a.state === DocumentState.MISSING;
+    const bMissing = b.state === DocumentState.MISSING;
+    if (aMissing && !bMissing) return 1;
+    if (bMissing && !aMissing) return -1;
+    const an = (a.fileName || '').toString();
+    const bn = (b.fileName || '').toString();
+    return an.localeCompare(bn, undefined, { numeric: true, sensitivity: 'base' });
+  });
 
   const saveTeam = async (data: typeof teamData) => {
     if (!id) return;
@@ -1360,6 +1328,42 @@ const ProjectView: React.FC = () => {
                       </button>
                     </div>
                   </>
+                )}
+                {activeDocTab === 'general' && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12, gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.multiple = true;
+                        input.accept = '.pdf,.jpg,.jpeg,.png';
+                        input.onchange = (e: Event) => {
+                          const files = (e.target as HTMLInputElement).files;
+                          if (!files || files.length === 0) return;
+                          Array.from(files).forEach(f => handleUploadGeneralFile(f));
+                        };
+                        input.click();
+                      }}
+                      style={{
+                        background: '#648fbf',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 16px',
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        marginBottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      {renderIcon(FaIcons.FaUpload, 16)}
+                      העלאת קבצים
+                    </button>
+                  </div>
                 )}
                 <FileArea
                   files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
