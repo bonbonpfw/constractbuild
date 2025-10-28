@@ -70,6 +70,13 @@ export const getProjectStatuses = async (): Promise<string[]> => {
   return response.data.statuses;
 }
 
+export const getProjectCities = async (): Promise<{ value: string; name: string }[]> => {
+  const response = await axios.get(
+    `${API_URL}/project/cities`
+  );
+  return response.data.cities;
+}
+
 // Professionals API
 export const getProfessionals = async (): Promise<Professional[]> => {
   const response = await axios.get(
@@ -241,7 +248,8 @@ export const uploadProjectDocument = async (
   documentName: string,
   file: File,
   status: string = DocumentState.UPLOADED,
-  mode?: 'auto' | 'manual'
+  mode?: 'auto' | 'manual',
+  city?: string
 ) => {
   const formData = new FormData();
   formData.append('project_id', projectId);
@@ -253,6 +261,9 @@ export const uploadProjectDocument = async (
   formData.append('status', status);
   if (mode) {
     formData.append('mode', mode);
+  }
+  if (city) {
+    formData.append('city', city);
   }
   const response = await axios.post(
     `${API_URL}/project/document`,
@@ -331,13 +342,15 @@ export const autoFillDocument = async (
   projectId: string,
   documentId: string,
   documentType: string,
-  file: File
+  file: File,
+  city: string
 ) => {
   const formData = new FormData();
   formData.append('project_id', projectId);
   formData.append('document_id', documentId);
   formData.append('document_type', documentType);
   formData.append('file', file);
+  formData.append('city', city);
   
   const response = await axios.put(`${API_URL}/project/document`, formData, {
     headers: {

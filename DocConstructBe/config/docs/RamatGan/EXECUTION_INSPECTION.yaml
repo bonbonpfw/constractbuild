@@ -1,0 +1,9 @@
+
+  TYPES:
+     - construction_inspection_officer
+
+  1:
+      1:
+          - construction_inspection_officer_license_number
+          - construction_inspection_officer_name
+          - None

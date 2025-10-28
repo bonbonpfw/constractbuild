@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import {ProjectCreationFormData, ProjectStatus} from '../../types';
 import {
@@ -17,10 +17,11 @@ import {
   Select, TextArea,
 } from "../../styles/SharedStyles";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
-import {createProject} from "../../api";
+import {createProject, getProjectCities} from "../../api";
 
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   name: '',
+  city: '',
   construction_supervision_number: '',
   permit_number: '',
   request_number: '',
@@ -37,6 +38,25 @@ const ProjectCreationDialog: React.FC<{
 }> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ProjectCreationFormData>(DefaultProjectCreationFormData);
+  const [cities, setCities] = useState<{ value: string; name: string }[]>([]);
+
+  const CITY_LABELS: Record<string, string> = {
+    TeLAviv: 'תל אביב',
+    RamatGan: 'רמת גן',
+    Raanana: 'רעננה',
+    RamatHasharon: 'רמת השרון',
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getProjectCities();
+        setCities(data);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
 
   const handleSubmit= async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +91,19 @@ const ProjectCreationDialog: React.FC<{
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 required
               />
+            </FullWidthField>
+            <FullWidthField>
+              <Label>עיר *</Label>
+              <Select
+                value={formData.city}
+                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                required
+              >
+                <option value="" disabled>בחר עיר</option>
+                {cities.map((c) => (
+                  <option key={c.value} value={c.value}>{CITY_LABELS[c.value] ?? c.name}</option>
+                ))}
+              </Select>
             </FullWidthField>
             <FullWidthField>
               <Label>מספר בקשה *</Label>

@@ -1,5 +1,5 @@
 import glob
-from data_model.enum import ProjectDocumentType, ProjectDocPath
+from data_model.enum import ProjectDocumentType, ProjectDocPath, City, project_doc_path_for_city
 from data_model.models import Professional, ProjectTeamMember
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
@@ -22,17 +22,16 @@ logger = logging.getLogger(__name__)
 class DocumentMap:
     _document_professional_map = None
     
-    @property
-    def document_professional_map(self):
+    def document_professional_map(self, city: str):
         if self._document_professional_map is None:
-            self._document_professional_map = self.get_document_professional_map()
+            self._document_professional_map = self.get_document_professional_map(city)
         return self._document_professional_map
-    
+
     @staticmethod    
-    def get_document_professional_map():
+    def get_document_professional_map(city: str):
         doc_professional_map = {}
         logger.info(f"Prof doc config: {PROF_DOC_CONFIG}")
-        for conf_file in glob.glob(PROF_DOC_CONFIG + "/*.yaml"):
+        for conf_file in glob.glob(PROF_DOC_CONFIG + "/" + city + "/*.yaml"):
             with open(conf_file, 'r') as file:
                 doc_map = yaml.safe_load(file)
                 prof_types = doc_map.get('TYPES')
@@ -289,12 +288,12 @@ class DocumentFiller:
         else:
             return self.get_underline_coordinates(pdf_path)
 
-    def overlay_filled_on_original_pdf(self,pdf_path, coordinates, page=None, output_path=None):
+    def overlay_filled_on_original_pdf(self,city,pdf_path, coordinates, page=None, output_path=None):
         if output_path is None:
             base_name = os.path.splitext(pdf_path)[0]
             output_path = f"{base_name}_filled.pdf"
-        
-        self.document_positions = DocumentMap.load_prof_doc_config(ProjectDocPath[self.document_name].value)
+        path  = project_doc_path_for_city(city=city,doc=self.document_name)
+        self.document_positions = DocumentMap.load_prof_doc_config(path)
         required_members = [member for member in self.doc_required_members if member.role.name.lower() in self.document_positions.get("TYPES")]
         
         reader = PdfReader(pdf_path)
@@ -379,14 +378,14 @@ class DocumentFiller:
                 writer.add_page(pdf_page)
             
     
-    def fill_document(self):
+    def fill_document(self,city):
         coordinates = self.get_doc_coordinates(self.src_pdf_path)
         if not coordinates:
             raise NoCoordinatesFound()  
         if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name:
-            output_path = self.overlay_filled_on_original_pdf(self.src_pdf_path, coordinates, page=1)
+            output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates, page=1)
         else:
-            output_path = self.overlay_filled_on_original_pdf(self.src_pdf_path, coordinates)
+            output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates)
         return output_path
 
   

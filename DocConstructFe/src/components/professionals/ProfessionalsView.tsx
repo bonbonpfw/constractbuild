@@ -28,6 +28,8 @@ import ProfessionalCreationDialog from "./ProfessionalCreationDialog";
 import {useRouter} from "next/router";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
+import SortableTableHeader from "../shared/SortableTableHeader";
+import useSort from "../../hooks/useSort";
 
 type ViewMode = 'cards' | 'table';
 
@@ -101,6 +103,9 @@ const ProfessionalsView: React.FC = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const { push } = useRouter();
+  
+  // Sorting functionality
+  const { sortKey, sortDirection, handleSort, sortData } = useSort('name');
 
   useEffect(() => {
     fetchProfessionals();
@@ -150,29 +155,86 @@ const ProfessionalsView: React.FC = () => {
     </CardGrid>
   );
 
-  const renderTableView = () => (
-    <Table>
-      <thead>
-        <tr>
-          <TableHeader>שם</TableHeader>
-          <TableHeader>אימייל</TableHeader>
-          <TableHeader>מקצוע</TableHeader>
-          <TableHeader>תפוגת רישיון</TableHeader>
-          <TableHeader>סטטוס</TableHeader>
-          <TableHeader />
-        </tr>
-      </thead>
-      <tbody>
-        {professionals.map(p => (
-          <Row
-            key={p.id}
-            professional={p}
-            types={Types}
-          />
-        ))}
-      </tbody>
-    </Table>
-  );
+  const renderTableView = () => {
+    // Sort professionals based on current sort settings
+    const sortedProfessionals = sortData(professionals, (professional, key) => {
+      switch (key) {
+        case 'name':
+          return professional.name;
+        case 'email':
+          return professional.email;
+        case 'professional_type':
+          return professional.professional_type;
+        case 'license_expiration_date':
+          return professional.license_expiration_date ? new Date(professional.license_expiration_date) : null;
+        case 'status':
+          return professional.status;
+        default:
+          return '';
+      }
+    });
+
+    return (
+      <Table>
+        <thead>
+          <tr>
+            <SortableTableHeader
+              sortKey="name"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              שם
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="email"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              אימייל
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="professional_type"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              מקצוע
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="license_expiration_date"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              תפוגת רישיון
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="status"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              סטטוס
+            </SortableTableHeader>
+            <SortableTableHeader sortable={false}>
+              {/* Actions column - not sortable */}
+            </SortableTableHeader>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedProfessionals.map(p => (
+            <Row
+              key={p.id}
+              professional={p}
+              types={Types}
+            />
+          ))}
+        </tbody>
+      </Table>
+    );
+  };
 
   return (
     <PageContainer>

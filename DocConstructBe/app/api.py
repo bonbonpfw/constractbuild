@@ -62,7 +62,7 @@ class ProjectManager:
 
     @staticmethod
     def create(name: str,  request_number: str, status: ProjectStatus, description: str = None,
-               status_due_date: date = None) -> Project:
+               status_due_date: date = None, city: str | None = None) -> Project:
         existing_project = db_session.query(Project).filter(
             (Project.name == name) | (Project.request_number == request_number)
         ).first()
@@ -74,6 +74,7 @@ class ProjectManager:
             description=description,
             status=enum_to_value(status),
             status_due_date=status_due_date,
+            city=city,
         )
         project.created_at = project.updated_at = datetime.datetime.now()
         db_session.add(project)
@@ -235,15 +236,15 @@ class ProjectDocumentManager:
         return professionals
     
     @staticmethod
-    def get_document_professionals_names(document_type: ProjectDocumentType):
-        doc_professionals_types = DocumentMap().document_professional_map
+    def get_document_professionals_names(document_type: ProjectDocumentType, city: str):
+        doc_professionals_types = DocumentMap().document_professional_map(city=city)
         required_professionals_types = doc_professionals_types.get(document_type.name, [])
         return required_professionals_types
   
     
     @staticmethod
-    def get_document_professionals(document_type: ProjectDocumentType,professionals: list[Professional]):
-        doc_professionals_types = ProjectDocumentManager.get_document_professionals_names(document_type)
+    def get_document_professionals(document_type: ProjectDocumentType,professionals: list[Professional], city: str):
+        doc_professionals_types = ProjectDocumentManager.get_document_professionals_names(document_type, city)
         document_professionals = []
         for professional in professionals:
             prof_name = ProfessionalManager.get_prof_name(professional.professional_type)
@@ -252,7 +253,7 @@ class ProjectDocumentManager:
         return document_professionals
 
     @staticmethod
-    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional],team_members: list[ProjectTeamMember], src_pdf_path: str):
+    def autofill_document(document_type: ProjectDocumentType, professionals: list[Professional],team_members: list[ProjectTeamMember], src_pdf_path: str, city: str):
         for professional in professionals:
             professional.role =ProfessionalManager.get_role(professional.professional_type)
         document_filler = DocumentFiller(
@@ -261,7 +262,7 @@ class ProjectDocumentManager:
             src_pdf_path=src_pdf_path,
             team_members=team_members
         )
-        filled_pdf_path = document_filler.fill_document()
+        filled_pdf_path = document_filler.fill_document(city)
         return filled_pdf_path
 
 
@@ -505,22 +506,22 @@ class ProfessionalManager:
             return ProfessionalStatus.ACTIVE
         
    
-def get_project_releated_types(document_type: str) -> list[str]:
-    doc_required_names = ProjectDocumentManager.get_document_professionals_names(document_type)
+def get_project_releated_types(document_type: str, city: str):
+    doc_required_names = ProjectDocumentManager.get_document_professionals_names(document_type, city)
     
-    doc_required_values =  [ProfessionalManager.get_prof_value(required_name.upper()) if ProfessionalManager.get_prof_value(required_name.upper()) is not None 
-                            else ProjectTeamManager.get_team_member_value(required_name.upper()) for required_name in doc_required_names]
+    doc_required_map = {required_name: ProfessionalManager.get_prof_value(required_name.upper()) if ProfessionalManager.get_prof_value(required_name.upper()) is not None 
+                          else ProjectTeamManager.get_team_member_value(required_name.upper()) for required_name in doc_required_names}
     
-    return doc_required_names, doc_required_values
+    return doc_required_map
 
 
-def is_document_professional_missing(project_id: str, document_type: ProjectDocumentType) -> tuple[bool,list[str]]:
-    doc_required_members_names,_ = get_project_releated_types(document_type=document_type)
+def is_document_professional_missing(project_id: str, document_type: ProjectDocumentType, city: str) -> tuple[bool,list[str]]:
+    doc_required_members_map = get_project_releated_types(document_type=document_type, city=city)
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
     team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
     project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
     project_team_types = [team_member.role.name for team_member in team_members]
-    missing_members = [name for name in doc_required_members_names if name.upper() not in project_prof_types + project_team_types]
+    missing_members = [(name,value) for name,value in doc_required_members_map.items() if name.upper() not in project_prof_types + project_team_types]
     if missing_members:
         logger.info(f"Missing members: {missing_members}")
         return True,missing_members

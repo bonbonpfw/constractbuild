@@ -16,6 +16,7 @@ class ProjectCreateSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1))
     request_number = fields.Str(required=True)
     permit_number = fields.Str(required=False)
+    city = fields.Str(required=False)
     construction_supervision_number = fields.Str(required=False)
     engineering_coordinator_number = fields.Str(required=False)
     firefighting_number = fields.Str(required=False)
@@ -48,6 +49,9 @@ class ProjectGetStatusesSchema(Schema):
     pass
 
 
+class ProjectGetCitiesSchema(Schema):
+    pass
+
 class ProjectProfessionalAddSchema(Schema):
     project_id = fields.UUID(required=True)
     professional_id = fields.UUID(required=True)
@@ -69,6 +73,7 @@ class ProjectDocumentUploadSchema(Schema):
     document_name = fields.Str(required=True)
     status = fields.Str(required=True)
     mode = fields.Str(required=False, validate=validate.OneOf(['auto', 'manual']))
+    city = fields.Str(required=False)
 
     file = fields.Raw(required=True)
 
@@ -82,6 +87,7 @@ class ProjectDocumentUpdateSchema(Schema):
     document_id = fields.UUID(required=True)
     document_type = fields.Enum(ProjectDocumentType, by_value=True, required=True)
     file = fields.Raw(required=True)
+    city = fields.Str(required=False)
 
 
 
@@ -211,6 +217,7 @@ class Endpoints:
     UPDATE_PROJECT = "update_project"
     DELETE_PROJECT = "delete_project"
     GET_PROJECT_STATUSES = "get_project_statuses"
+    GET_PROJECT_CITIES = "get_project_cities"
 
     ADD_PROJECT_PROFESSIONAL = "add_project_professional"
     REMOVE_PROJECT_PROFESSIONAL = "remove_project_professional"
@@ -272,6 +279,11 @@ API_ENDPOINTS = {
         'method': 'GET',
         'schema': ProjectGetStatusesSchema,
         'description': 'Get all project statuses'
+    },
+    Endpoints.GET_PROJECT_CITIES: {
+        'method': 'GET',
+        'schema': ProjectGetCitiesSchema,
+        'description': 'Get all project cities'
     },
     Endpoints.ADD_PROJECT_PROFESSIONAL: {
         'method': 'POST',

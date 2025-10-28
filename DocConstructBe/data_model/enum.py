@@ -1,3 +1,4 @@
+from ast import Dict
 from enum import Enum
 import os
 from config.sys_config import CONFIG
@@ -20,16 +21,21 @@ class ProjectDocumentType(Enum):
     GREEN_BUILD = 'מינוי בניה ירוקה'
     GENERAL = 'כללי'
 
+class City(Enum):
+    TLV = 'TelAviv'
+    RG = 'RamatGan'
+
 class ProjectDocPath(Enum):
     TRASH_INSPECTION = os.path.join(CONFIG, "docs", "TRASH_INSPECTION.yaml")
     ADAPTER_AGREEMENT = os.path.join(CONFIG, "docs", "ADAPTER_AGREEMENT.yaml")
     START_WORK_REQUEST = os.path.join(CONFIG, "docs", "START_WORK_REQUEST.yaml")
     STRUCTURAL_SUPERVISOR = os.path.join(CONFIG, "docs", "STRUCTURAL_SUPERVISOR.yaml")
     EXECUTION_INSPECTION = os.path.join(CONFIG, "docs", "EXECUTION_INSPECTION.yaml")
-    PESTICIDAL_OWNER = os.path.join(CONFIG, "docs", "PESTICIDAL_OWNER.yaml")
+    PESTICIDAL_OWNER = "PESTICIDAL_OWNER.yaml"
     CONTRACTOR_OWNER = os.path.join(CONFIG, "docs", "CONTRACTOR_OWNER.yaml")
     PROJECT_TEAMS = os.path.join(CONFIG, "docs", "PROJECT_TEAMS.yaml")
     GREEN_BUILD = os.path.join(CONFIG, "docs", "GREEN_BUILD.yaml")
+    
 
 class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
@@ -113,3 +119,13 @@ class ProjectTeamRole(Enum):
 
 def enum_to_value(enum_member_or_value):
     return enum_member_or_value.value if hasattr(enum_member_or_value, "value") else enum_member_or_value
+
+def project_doc_path_for_city(*, city: str, doc: str) -> str:
+   
+    return os.path.join(CONFIG, "docs", city,doc+".yaml")
+
+# def all_project_doc_paths_for_city(*, city: City) -> Dict[ProjectDocPath, str]:
+#     return {d: project_doc_path_for_city(city=city, doc=d) for d in ProjectDocPath}
+
+# def project_doc_path_for_city_by_name(*, city: City, document_name: str) -> str:
+#     return project_doc_path_for_city(city=city, doc=ProjectDocPath[document_name])

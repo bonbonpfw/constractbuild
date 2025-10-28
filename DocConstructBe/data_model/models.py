@@ -16,6 +16,7 @@ class Project(Base):
     __tablename__ = 'projects'
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
     name = Column(String, nullable=False)
+    city = Column(String, nullable=False)
     request_number = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, nullable=True)

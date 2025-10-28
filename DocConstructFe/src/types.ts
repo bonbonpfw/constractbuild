@@ -43,6 +43,7 @@ export interface ProjectDocument {
   id: string;
   project_id: string;
   document_type: string;
+  city: string;
   name: string;
   file_path: string;
   status: string;
@@ -99,6 +100,7 @@ export enum DocumentState {
 export interface Project {
   id: string;
   name: string;
+  city: string;
   request_number: string;
   permit_number: string;
   construction_supervision_number: string;

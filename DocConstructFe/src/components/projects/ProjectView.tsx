@@ -556,7 +556,7 @@ const ProjectView: React.FC = () => {
     if (!id || !file) return;
     try {
       console.log(`Uploading document with status: ${status}`);
-      await uploadProjectDocument(id, fileType, file.name, file, status, mode);
+      await uploadProjectDocument(id, fileType, file.name, file, status, mode, formData?.city || '');
       await loadData();
       toast.success(`${fileType} uploaded successfully with status: ${status}`);
     } catch (error) {
@@ -576,8 +576,8 @@ const ProjectView: React.FC = () => {
       const blob = await downloadProjectDocument(id, fileId);
       const file = new File([blob], fileName, { type: blob.type });
       
-      // Update the document with auto-fill
-      await autoFillDocument(id, fileId, documentType, file);
+      // Update the document with auto-fill and forward city
+      await autoFillDocument(id, fileId, documentType, file,formData?.city || '');
       await loadData();
       toast.success('Document auto-filled successfully');
     } catch (error) {

@@ -24,6 +24,8 @@ import { Project, ProjectStatus, ProfessionalStatus, ProjectTeamRole, DocumentSt
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import ProjectCreationDialog from "./ProjectCreationDialog";
+import SortableTableHeader from "../shared/SortableTableHeader";
+import useSort from "../../hooks/useSort";
 
 type ViewMode = 'cards' | 'table';
 
@@ -32,6 +34,9 @@ const Projects: React.FC = () => {
   const [showProjectCreationDialog, setShowProjectCreationDialog] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const router = useRouter();
+  
+  // Sorting functionality
+  const { sortKey, sortDirection, handleSort, sortData } = useSort('name');
 
   const fetchProjects = async () => {
     try {
@@ -121,98 +126,156 @@ const Projects: React.FC = () => {
     </CardGrid>
   );
 
-  const renderTableView = () => (
-    <Table>
-      <thead>
-        <tr>
-          <TableHeader>שם פרויקט</TableHeader>
-          <TableHeader>בעל היתר</TableHeader>
-          <TableHeader>סטטוס</TableHeader>
-          <TableHeader>מספר היתר</TableHeader>
-          <TableHeader>התראות</TableHeader>
-        </tr>
-      </thead>
-      <tbody>
-        {projects.map((project) => (
-          <tr 
-            key={project.id} 
-            onClick={() => handleProjectClick(project.id)}
-            style={{ cursor: 'pointer' }}
-          >
-            <TableBody><b>{project.name}</b></TableBody>
-            <TableBody>{project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</TableBody>
-            <TableBody>
-              <TableStatusBadge status={project.status || 'draft'}>
-                {getStatusLabel(project.status)}
-              </TableStatusBadge>
-            </TableBody>
-            <TableBody>{project.permit_number || 'לא זמין'}</TableBody>
-            <TableBody>
-              {project.is_expired && (
-                <TableWarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
-                  <FaExclamationTriangle />
-                </TableWarningBadge>
-              )}
-              {!project.is_expired && project.is_warning && (
-                <TableWarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
-                  <FaExclamationTriangle />
-                </TableWarningBadge>
-              )}
-              {/* Document status indicator in table view */}
-              <div style={{ 
-                display: 'flex', 
-                height: '4px', 
-                width: '80px',
-                borderRadius: '2px',
-                overflow: 'hidden',
-                marginTop: '4px'
-              }}
-              title={project.documents ? `מסמכים: ${project.documents.length}` : 'אין מסמכים'}>
-                {(() => {
-                  // For testing purposes, we'll create mock document counts
-                  const mockDocuments = [
-                    { id: '1', status: 'Missing' },
-                    { id: '2', status: 'Missing' },
-                    { id: '3', status: 'Uploaded' },
-                    { id: '4', status: 'Uploaded' },
-                    { id: '5', status: 'Uploaded' },
-                    { id: '6', status: 'Filled' },
-                    { id: '7', status: 'Filled' },
-                    { id: '8', status: 'Signed' },
-                  ];
-                  
-                  // Use real documents if available, otherwise use mock data
-                  const docs = project.documents && project.documents.length > 0 ? project.documents : mockDocuments;
-                  const total = docs.length;
-                  
-                  if (total === 0) return null;
-                  
-                  const missing = docs.filter(doc => doc.status === 'Missing' ).length;
-                  const uploaded = docs.filter(doc => doc.status === 'Uploaded').length;
-                  const filled = docs.filter(doc => doc.status === 'Filled').length;
-                  const signed = docs.filter(doc => doc.status === 'Signed').length;
-                  
-                  const missingPercent = total > 0 ? (missing / total) * 100 : 0;
-                  const uploadedPercent = total > 0 ? (uploaded / total) * 100 : 0;
-                  const filledPercent = total > 0 ? (filled / total) * 100 : 0;
-                  const signedPercent = total > 0 ? (signed / total) * 100 : 0;
-                  
-                  return (
-                    <>
-                      {missing > 0 && <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>}
-                      {uploaded > 0 && <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>}
-                      {filled > 0 && <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>}
-                      {signed > 0 && <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>}
-                    </>
-                  );
-                })()}
-              </div>
-            </TableBody>
+  const renderTableView = () => {
+    // Sort projects based on current sort settings
+    const sortedProjects = sortData(projects, (project, key) => {
+      switch (key) {
+        case 'name':
+          return project.name;
+        case 'permit_owner':
+          return project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין';
+        case 'status':
+          return getStatusLabel(project.status);
+        case 'permit_number':
+          return project.permit_number || 'לא זמין';
+        case 'warnings':
+          // Sort by warning status (expired first, then warning, then none)
+          if (project.is_expired) return 0;
+          if (project.is_warning) return 1;
+          return 2;
+        default:
+          return '';
+      }
+    });
+
+    return (
+      <Table>
+        <thead>
+          <tr>
+            <SortableTableHeader
+              sortKey="name"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              שם פרויקט
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="permit_owner"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              בעל היתר
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="status"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              סטטוס
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="permit_number"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              מספר היתר
+            </SortableTableHeader>
+            <SortableTableHeader
+              sortKey="warnings"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              התראות
+            </SortableTableHeader>
           </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
+        </thead>
+        <tbody>
+          {sortedProjects.map((project) => (
+            <tr 
+              key={project.id} 
+              onClick={() => handleProjectClick(project.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <TableBody><b>{project.name}</b></TableBody>
+              <TableBody>{project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</TableBody>
+              <TableBody>
+                <TableStatusBadge status={project.status || 'draft'}>
+                  {getStatusLabel(project.status)}
+                </TableStatusBadge>
+              </TableBody>
+              <TableBody>{project.permit_number || 'לא זמין'}</TableBody>
+              <TableBody>
+                {project.is_expired && (
+                  <TableWarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
+                    <FaExclamationTriangle />
+                  </TableWarningBadge>
+                )}
+                {!project.is_expired && project.is_warning && (
+                  <TableWarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
+                    <FaExclamationTriangle />
+                  </TableWarningBadge>
+                )}
+                {/* Document status indicator in table view */}
+                <div style={{ 
+                  display: 'flex', 
+                  height: '4px', 
+                  width: '80px',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                  marginTop: '4px'
+                }}
+                title={project.documents ? `מסמכים: ${project.documents.length}` : 'אין מסמכים'}>
+                  {(() => {
+                    // For testing purposes, we'll create mock document counts
+                    const mockDocuments = [
+                      { id: '1', status: 'Missing' },
+                      { id: '2', status: 'Missing' },
+                      { id: '3', status: 'Uploaded' },
+                      { id: '4', status: 'Uploaded' },
+                      { id: '5', status: 'Uploaded' },
+                      { id: '6', status: 'Filled' },
+                      { id: '7', status: 'Filled' },
+                      { id: '8', status: 'Signed' },
+                    ];
+                    
+                    // Use real documents if available, otherwise use mock data
+                    const docs = project.documents && project.documents.length > 0 ? project.documents : mockDocuments;
+                    const total = docs.length;
+                    
+                    if (total === 0) return null;
+                    
+                    const missing = docs.filter(doc => doc.status === 'Missing' ).length;
+                    const uploaded = docs.filter(doc => doc.status === 'Uploaded').length;
+                    const filled = docs.filter(doc => doc.status === 'Filled').length;
+                    const signed = docs.filter(doc => doc.status === 'Signed').length;
+                    
+                    const missingPercent = total > 0 ? (missing / total) * 100 : 0;
+                    const uploadedPercent = total > 0 ? (uploaded / total) * 100 : 0;
+                    const filledPercent = total > 0 ? (filled / total) * 100 : 0;
+                    const signedPercent = total > 0 ? (signed / total) * 100 : 0;
+                    
+                    return (
+                      <>
+                        {missing > 0 && <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>}
+                        {uploaded > 0 && <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>}
+                        {filled > 0 && <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>}
+                        {signed > 0 && <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>}
+                      </>
+                    );
+                  })()}
+                </div>
+              </TableBody>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
+  };
 
   return (
     <PageContainer>

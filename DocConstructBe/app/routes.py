@@ -15,7 +15,7 @@ from app.api import (
 )
 from app.response import SuccessResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
-from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole
+from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole, City
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -109,6 +109,7 @@ def init_routes(app):
             'project': {
                 'id': project.id,
                 'name': project.name,
+                'city': project.city,
                 'request_number': project.request_number,
                 'status': enum_to_value(project.status),
                 'description': project.description,
@@ -155,6 +156,7 @@ def init_routes(app):
             description=data.get('description'),
             status=data.get('status'),
             status_due_date=data.get('status_due_date'),
+            city=data.get('city'),
         )
         return SuccessResponse({'id': str(project.id)}).generate_response()
 
@@ -188,6 +190,12 @@ def init_routes(app):
         return SuccessResponse({
             'statuses': ProjectManager().get_statuses()
         }).generate_response()
+
+    @app.route('/api/project/cities', methods=['GET'])
+    def get_project_cities():
+        validate_request(endpoint=Endpoints.GET_PROJECT_CITIES)
+        cities = [{'value': city.value, 'name': city.name} for city in City]
+        return SuccessResponse({'cities': cities}).generate_response()
 
     @app.route('/api/project/professionals', methods=['POST'])
     def add_professional_to_project():
@@ -231,25 +239,26 @@ def init_routes(app):
         document_type = data.get('document_type')
         document_status = data.get('status')
         is_autofill = data.get('mode', 'auto') == 'auto'
+        city = data.get('city')
         if document_type == ProjectDocumentType.GENERAL:
             is_autofill = False
         
         file_path = save_file_to_temp(data.get('file'))
         if is_autofill:
-            is_missing,missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type)
+            is_missing,missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type,city=city)
             if is_missing:
-                _,project_required_members_values = get_project_releated_types(document_type=document_type)
-                raise InvalidProjectProfessionalDocument(
-                    required_professionals_types=', '.join(project_required_members_values)
-                )
+                for member,value in missing_members:
+                    required_professionals_types += f"{value} "
+                raise InvalidProjectProfessionalDocument(required_professionals_types=required_professionals_types)
             project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
             team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
-            document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals)
+            document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type,professionals=project_professionals,city=city)
             filled_pdf = ProjectDocumentManager.autofill_document(
                 document_type=document_type,
                 professionals=document_professionals,
                 src_pdf_path=file_path,
-                team_members=team_members
+                team_members=team_members,
+                city=city
             )
         else:
             filled_pdf = file_path
@@ -282,6 +291,7 @@ def init_routes(app):
         project_id = str(data.get('project_id'))
         document_id = str(data.get('document_id'))
         document_type = data.get('document_type')
+        city = data.get('city')
         
         # Get the existing document
         project_document = ProjectManager().get_document(project_id=project_id, document_id=document_id)
@@ -292,24 +302,28 @@ def init_routes(app):
         file_path = save_file_to_temp(data.get('file'))
         
         # Check if professionals are missing for auto-fill
-        is_missing, missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type)
+        is_missing, missing_members = is_document_professional_missing(project_id=project_id, document_type=document_type, city=city)
         if is_missing:
-            _, project_required_members_values = get_project_releated_types(document_type=document_type)
+            required_professionals_types = ""
+            for member_name in missing_members:
+                _,value = member_name
+                required_professionals_types += f"{value} "
             raise InvalidProjectProfessionalDocument(
-                required_professionals_types=', '.join(project_required_members_values)
+                required_professionals_types=required_professionals_types
             )
         
         # Get project data for auto-fill
         project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
         team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
-        document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type, professionals=project_professionals)
+        document_professionals = ProjectDocumentManager.get_document_professionals(document_type=document_type, professionals=project_professionals,city=city)
         
         # Auto-fill the document
         filled_pdf = ProjectDocumentManager.autofill_document(
             document_type=document_type,
             professionals=document_professionals,
             src_pdf_path=file_path,
-            team_members=team_members
+            team_members=team_members,
+            city=city
         )
         
         # Update the document with the filled version
