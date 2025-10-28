@@ -41,7 +41,7 @@ const ProjectCreationDialog: React.FC<{
   const [cities, setCities] = useState<{ value: string; name: string }[]>([]);
 
   const CITY_LABELS: Record<string, string> = {
-    TeLAviv: 'תל אביב',
+    TelAviv: 'תל אביב',
     RamatGan: 'רמת גן',
     Raanana: 'רעננה',
     RamatHasharon: 'רמת השרון',
@@ -134,7 +134,7 @@ const ProjectCreationDialog: React.FC<{
               </Select>
             </FullWidthField>
             <FullWidthField>
-              <Label>תאריך סיום הסטטוס</Label>
+              <Label>תאריך תחילת עבודות</Label>
               <Input
                 type="date"
                 value={formData.status_due_date}

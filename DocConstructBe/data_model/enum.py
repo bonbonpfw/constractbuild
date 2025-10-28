@@ -10,15 +10,17 @@ class ProjectStatus(Enum):
     FINAL = 'Final'
 
 class ProjectDocumentType(Enum):
-    TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
-    ADAPTER_AGREEMENT = 'אחראי לתיאום עם מכון בקרה'
-    START_WORK_REQUEST = 'בקשה לתחילת עבודות'
-    STRUCTURAL_SUPERVISOR = 'מינוי אחראי לביצוע שלד (101)'
-    EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
-    PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
-    CONTRACTOR_OWNER = 'מינוי קבלן רשום'
-    PROJECT_TEAMS = 'רשימת בעלי תפקידים'
-    GREEN_BUILD = 'מינוי בניה ירוקה'
+    TLV_TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
+    TLV_ADAPTER_AGREEMENT = 'אחראי לתיאום עם מכון בקרה'
+    TLV_START_WORK_REQUEST = 'בקשה לתחילת עבודות'
+    TLV_STRUCTURAL_SUPERVISOR = 'מינוי אחראי לביצוע שלד (101)'
+    TLV_EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
+    TLV_PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
+    TLV_CONTRACTOR_OWNER = 'מינוי קבלן רשום'
+    TLV_GREEN_BUILD = 'מינוי בניה ירוקה'
+    TLV_PROJECT_TEAMS = 'רשימת בעלי תפקידים'
+    RG_TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
+    RG_EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
     GENERAL = 'כללי'
 
 class City(Enum):

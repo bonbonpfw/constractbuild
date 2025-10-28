@@ -254,14 +254,16 @@ const ProjectView: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [proj, statuses, docTypes] = await Promise.all([
+      const [proj, statuses] = await Promise.all([
         getProjectById(id),
-        getProjectStatuses(),
-        getProjectDocumentTypes()
+        getProjectStatuses()
       ]);
       setFormData(proj);
       originalData.current = proj;
       setStatuses(statuses);
+      
+      // Fetch document types based on project's city
+      const docTypes = await getProjectDocumentTypes(proj.city || '');
       setDocumentTypes([...docTypes]); 
 
       // Extract professionals data directly from the project
@@ -1087,7 +1089,7 @@ const ProjectView: React.FC = () => {
                         </Select>
                       </CompactField>
                       <CompactField>
-                        <CompactLabel>תאריך סיום</CompactLabel>
+                        <CompactLabel>תאריך תחילת עבודות</CompactLabel>
                         <Input
                           name="status_due_date"
                           type="date"

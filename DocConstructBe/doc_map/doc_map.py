@@ -1,5 +1,5 @@
 import glob
-from data_model.enum import ProjectDocumentType, ProjectDocPath, City, project_doc_path_for_city
+from data_model.enum import ProjectDocumentType, project_doc_path_for_city
 from data_model.models import Professional, ProjectTeamMember
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
@@ -151,7 +151,7 @@ class DocumentFiller:
             print(f"שגיאה בחילוץ קואורדינטות: {e}")
         
         coordinates = self._adjust_pesticidal_doc(coordinates)
-        if type == ProjectDocumentType.GREEN_BUILD.name:
+        if type == ProjectDocumentType.TLV_GREEN_BUILD.name:
             coordinates = self._adjust_green_build_doc(coordinates)
       
         return coordinates
@@ -281,7 +281,7 @@ class DocumentFiller:
         return coordinates
 
     def get_doc_coordinates(self,pdf_path):
-        if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.GREEN_BUILD.name:
+        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.TLV_GREEN_BUILD.name:
             return self.get_doc_coordinates_by_field(pdf_path,self.document_name)
         elif self.document_name == ProjectDocumentType.PROJECT_TEAMS.name:
             return self.get_table_cell_coordinates(pdf_path)
@@ -382,7 +382,7 @@ class DocumentFiller:
         coordinates = self.get_doc_coordinates(self.src_pdf_path)
         if not coordinates:
             raise NoCoordinatesFound()  
-        if self.document_name == ProjectDocumentType.PESTICIDAL_OWNER.name:
+        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name:
             output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates, page=1)
         else:
             output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates)

@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+For FE development 
+1. Always prefer reuse component than create new one    
+2. force a layout of pages to be the same

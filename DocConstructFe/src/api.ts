@@ -305,9 +305,14 @@ export const deleteProjectDocument = async (projectId: string, documentId: strin
   return response.data;
 };
 
-export const getProjectDocumentTypes = async (): Promise<string[]> => {
+export const getProjectDocumentTypes = async (city: string): Promise<string[]> => {
   const response = await axios.get(
-    `${API_URL}/project/document/types`
+    `${API_URL}/project/document/types`,
+    {
+      params: {
+        city: city
+      }
+    }
   );
   return response.data.document_types;
 };

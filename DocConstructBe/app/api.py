@@ -37,10 +37,10 @@ from data_model.enum import (
     enum_to_value,
     DocumentStatus,
     ProjectTeamRole,
-    
+    City,
 )
 from doc_map.doc_map import DocumentFiller
-from app.errors import InvalidFileFormat
+from app.errors import InvalidFileFormat, InvalidCityError
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -213,8 +213,13 @@ class ProjectManager:
         db_session.commit()
 
     @staticmethod
-    def get_document_types() -> list[str]:
-        return [document_type.value for document_type in ProjectDocumentType]
+    def get_document_types(city: str) -> list[str]:
+        if city == City.TLV.value:
+            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('TLV_')]
+        elif city == City.RG.value:
+            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RG_')]
+        else:
+            raise InvalidCityError(city=city)
     
     @staticmethod
     def get_document_statuses() -> list[str]:

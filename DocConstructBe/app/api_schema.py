@@ -92,7 +92,7 @@ class ProjectDocumentUpdateSchema(Schema):
 
 
 class ProjectDocumentTypesSchema(Schema):
-    pass
+    city = fields.Str(required=True)
 
 
 # Professional Schemas
@@ -317,7 +317,7 @@ API_ENDPOINTS = {
     },
     Endpoints.GET_PROJECT_DOCUMENT_TYPES: {
         'method': 'GET',
-        # 'schema': ProjectDocumentTypesSchema,
+        'schema': ProjectDocumentTypesSchema,
         'description': 'Get all project document types'
     },
     Endpoints.GET_PROFESSIONALS: {

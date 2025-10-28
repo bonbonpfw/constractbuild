@@ -3,13 +3,12 @@ import tempfile
 from data_model.enum import DocumentStatus
 from flask import send_file, request
 
-from app.errors import ValidationError, InvalidProjectProfessionalDocument
+from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError
 from app.api import (
     ProjectManager,
     ProfessionalManager,
     ProjectDocumentManager,
     is_document_professional_missing,
-    get_project_releated_types,
     save_file_to_temp,
     ProjectTeamManager
 )
@@ -342,8 +341,12 @@ def init_routes(app):
 
     @app.route('/api/project/document/types', methods=['GET'])
     def get_project_document_types():
+        data = validate_request(endpoint=Endpoints.GET_PROJECT_DOCUMENT_TYPES)
+        city = data.get('city')
+        if city and city not in [City.TLV.value, City.RG.value]:
+            raise InvalidCityError(city=city)
         return SuccessResponse({
-            'document_types': ProjectManager().get_document_types()
+            'document_types': ProjectManager().get_document_types(city=city)
         }).generate_response()
 
     @app.route('/api/project/document/statuses', methods=['GET'])

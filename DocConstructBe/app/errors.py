@@ -141,7 +141,15 @@ class ProfessionalDoesNotExist(ApiError):
     def http_code(self):
         return HttpCodes.NOT_FOUND
 
+class InvalidCityError(ApiError):
+    def __init__(self, city: str):
+        super().__init__(
+            msg=f'עיר לא נתמכת: {city}',
+            code='unsupported_city'
+        )
 
+    def http_code(self):
+        return HttpCodes.BAD_REQUEST
 class ProfessionalAlreadyExists(ApiError):
     def __init__(self):
         super().__init__(
