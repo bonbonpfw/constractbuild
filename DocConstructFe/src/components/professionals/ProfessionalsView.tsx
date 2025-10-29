@@ -218,7 +218,13 @@ const ProfessionalsView: React.FC = () => {
             >
               סטטוס
             </SortableTableHeader>
-            <SortableTableHeader sortable={false}>
+            <SortableTableHeader
+              sortKey="actions"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+              sortable={false}
+            >
               {/* Actions column - not sortable */}
             </SortableTableHeader>
           </tr>
