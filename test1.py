@@ -1,62 +1,23 @@
-import glob
-from data_model.enum import ProjectDocumentType, project_doc_path_for_city
-from data_model.models import Professional, ProjectTeamMember
+from ast import List
+from typing import Any
+import pdfplumber
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+import os
+import io
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from datetime import datetime
-import io
-import yaml
-from config.sys_config import PROF_DOC_CONFIG, TTF_PATH
-import os
-from data_model.enum import ProjectTeamRole
-import pdfplumber
+from DocConstructBe.config.sys_config import TTF_PATH
 from bidi.algorithm import get_display
-from app.errors import NoCoordinatesFound
+import glob
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
-TEAM_PROJECT_TYPES = [ProjectDocumentType.TLV_PROJECT_TEAMS.name,
-                ProjectDocumentType.RG_PROJECT_TEAMS.name]
-class DocumentMap:
-    _document_professional_map = None
-    
-    def document_professional_map(self, city: str):
-        if self._document_professional_map is None:
-            self._document_professional_map = self.get_document_professional_map(city)
-        return self._document_professional_map
-
-    @staticmethod    
-    def get_document_professional_map(city: str):
-        doc_professional_map = {}
-        logger.info(f"Prof doc config: {PROF_DOC_CONFIG}")
-        for conf_file in glob.glob(PROF_DOC_CONFIG + "/" + city + "/*.yaml"):
-            with open(conf_file, 'r') as file:
-                doc_map = yaml.safe_load(file)
-                prof_types = doc_map.get('TYPES')
-                name = os.path.basename(conf_file).replace('.yaml', '')
-                doc_professional_map[name] = prof_types
-        return doc_professional_map
-    
-    @staticmethod
-    def load_prof_doc_config(doc_path: str):
-        with open(doc_path, 'r') as file:
-            return yaml.safe_load(file)
         
 
-class DocumentFiller:
-    def __init__(self, document_type: ProjectDocumentType, professionals: list[Professional],
-                 team_members: list[ProjectTeamMember], src_pdf_path: str):
-        self.document_name = document_type.name
-        self.team_members = team_members
-        self.permit_owner = next((member for member in team_members if member.role == ProjectTeamRole.PERMIT_OWNER), None)
-        self.doc_required_members = professionals + team_members
-        self.src_pdf_path = src_pdf_path
-       
+class PDFFiller:
+   
+    @classmethod
     def _adjust_green_build_doc(self, coordinates):
         PHONE= "מספר טלפון"
         cords = {}
@@ -73,7 +34,8 @@ class DocumentFiller:
                 break
         return coordinates
 
-    def _adjust_pesticidal_doc(self, coordinates):
+    @classmethod
+    def _adjust_pesticidal_doc(cls, coordinates):
         ID = "מספר זהות"
         ADDRESS = "כתובת"
         cords = {}
@@ -98,7 +60,8 @@ class DocumentFiller:
 
         return coordinates
     
-    def get_doc_coordinates_by_field(self, pdf_path,type):
+    @classmethod
+    def get_doc_coordinates_by_field(cls, pdf_path,type):
         DATE = "תאריך"
         coordinates = []
         field_labels = [
@@ -153,13 +116,14 @@ class DocumentFiller:
         except Exception as e:
             print(f"שגיאה בחילוץ קואורדינטות: {e}")
         
-        coordinates = self._adjust_pesticidal_doc(coordinates)
-        if type == ProjectDocumentType.TLV_GREEN_BUILD.name:
-            coordinates = self._adjust_green_build_doc(coordinates)
+        coordinates = cls._adjust_pesticidal_doc(coordinates)
+        if type == "GREEN_BUILD":
+            coordinates = cls._adjust_green_build_doc(coordinates)
       
         return coordinates
     
-    def get_table_cell_coordinates(self,pdf_path):
+    @classmethod
+    def get_table_cell_coordinates(cls,pdf_path):
         
         coordinates = []
         roles = [
@@ -206,7 +170,8 @@ class DocumentFiller:
         
         return coordinates
     
-    def get_underline_coordinates(self,pdf_path):
+    @classmethod
+    def get_underline_coordinates(cls,pdf_path):
         coordinates = []
         with pdfplumber.open(pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
@@ -283,39 +248,30 @@ class DocumentFiller:
                     })
         return coordinates
 
-    def get_doc_coordinates(self,pdf_path):
-        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.TLV_GREEN_BUILD.name:
-            return self.get_doc_coordinates_by_field(pdf_path,self.document_name)
-        elif self.document_name in TEAM_PROJECT_TYPES:
-            return self.get_table_cell_coordinates(pdf_path)
-        else:
-            return self.get_underline_coordinates(pdf_path)
+    @classmethod
+    def get_doc_coordinates(cls,pdf_path,document_name="ALL"):
+        if document_name == "TABLE":
+            return cls.get_table_cell_coordinates(pdf_path)
+        
+        return cls.get_underline_coordinates(pdf_path)
 
-    def overlay_filled_on_original_pdf(self,city,pdf_path, coordinates, page=None, output_path=None):
+   
+    @classmethod
+    def overlay_filled_on_original_pdf(cls,pdf_path, coordinates, output_path=None):
+        """
+        מוסיף "XXX" ישירות על ה-PDF המקורי במקום ליצור קובץ חדש.
+        """
         if output_path is None:
             base_name = os.path.splitext(pdf_path)[0]
             output_path = f"{base_name}_filled.pdf"
-        path  = project_doc_path_for_city(city=city,doc=self.document_name)
-        self.document_positions = DocumentMap.load_prof_doc_config(path)
-        required_members = [member for member in self.doc_required_members if member.role.name.lower() in self.document_positions.get("TYPES")]
         
         reader = PdfReader(pdf_path)
         writer = PdfWriter()
+        
         with pdfplumber.open(pdf_path) as pdf:
-            pages = pdf.pages if page is None else [pdf.pages[0]]
-            doc_version = self.document_positions.get(len(pages))  
-            self.fill_pages(pages, reader,writer,coordinates, doc_version,required_members)
-        with open(output_path, 'wb') as output_file:
-            writer.write(output_file)
+            pages = pdf.pages
             
-        return output_path
-           
-    def fill_pages(self,pages, reader,writer,coordinates, doc_version,required_members):
-       
             for page_num, (page, pdf_page) in enumerate(zip(pages, reader.pages), start=1):
-                logger.info(f"Filling page {page_num}")
-                doc_version_prof_page = doc_version.get(page_num)
-                logger.info(f"Doc version prof page: {doc_version_prof_page}")
                 page_width = page.width
                 page_height = page.height
                 
@@ -324,7 +280,6 @@ class DocumentFiller:
                 
                 page_coords = [coord for coord in coordinates if coord['page'] == page_num]
                 pdfmetrics.registerFont(TTFont("ArialHebrew", TTF_PATH))
-                logger.info(f"Page coords: {page_coords}")
                 for i, coord in enumerate(page_coords):
                     x = coord['x']
                     y = coord['y']
@@ -339,39 +294,22 @@ class DocumentFiller:
                         c.setFillColorRGB(1, 0, 0)  # אדום
                     else:
                         c.setFillColorRGB(0, 0, 1)  # כחול
-                    # Initialize text with empty string to avoid UnboundLocalError
-                    text = ""
                     
-                    # Check if doc_version_prof_page exists and the key exists
-                    if doc_version_prof_page is not None:
-                        logger.info(f"Doc version prof is not none")
-                        logger.info(f" required members: {required_members}")
-         
-                        for member in required_members:
-                            logger.info(f"Member: {member}")
-                            logger.info(f"Doc version prof page: {doc_version_prof_page}")
-                            logger.info(f"i: {i}")
-                            logger.info(f"Doc version prof page: {doc_version_prof_page[i]}")
-                            text = self.get_congif_text(doc_version_prof_page[i], member)
-                            if text != "":
-                                break
+                    text = f"XXX_{i}"
+                    text = get_display(text)
+                    text_width = c.stringWidth(text, "ArialHebrew", font_size)
+                    text_x = x + (width - text_width) / 2  # מרכוז
+                    text_y = y + 5
                     
-                    # Only proceed with display and drawing if we have text
-      
-                    if text:
-                        logger.info(f"Text: {text}")
-                        text = get_display(text)
-                        text_width = c.stringWidth(text, "ArialHebrew", font_size)
-                        text_x = x + (width - text_width) / 2  # מרכוז
-                        text_y = y + 5
-                        
-                        c.drawString(text_x, text_y, text)
+                    c.drawString(text_x, text_y, text)
                     
                     c.setStrokeColorRGB(0.5, 0.5, 0.5)
                     #c.setLineWidth(0.5)
-                    #c.rect(x, y + 5, width, 20)
-            
-               
+                    #c.rect(x, y - 15, width, 20)
+                
+                c.setFont("ArialHebrew", 10)
+                c.setFillColorRGB(0, 0, 0)
+                c.drawString(10, 20, f"עמוד {page_num}")
                 
                 c.save()
                 
@@ -381,46 +319,21 @@ class DocumentFiller:
                 
                 pdf_page.merge_page(overlay_page)
                 writer.add_page(pdf_page)
-            
-    
-    def fill_document(self,city):
-        coordinates = self.get_doc_coordinates(self.src_pdf_path)
-        if not coordinates:
-            raise NoCoordinatesFound()  
-        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name:
-            output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates, page=1)
-        else:
-            output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates)
+        
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+        
         return output_path
 
-  
-    def get_congif_text(self, i, required_member):
-        # Ensure i is a string for comparison
-        if not isinstance(i, str):
-            return ""
-            
-        prefix = required_member.role.name.lower()
-        
-        if i == f"{prefix}_name":
-            return required_member.name or ""
-        elif i == f"{prefix}_id":
-            return required_member.national_id or ""
-        elif i == f"{prefix}_professional_type":
-            return required_member.professional_type or ""
-        elif i == f"{prefix}_address":
-            return required_member.address or ""
-        elif i == f"{prefix}_phone":
-            return required_member.phone or ""
-        elif i == f"{prefix}_mail":
-            return required_member.email or ""
-        elif i == f"{prefix}_license_number":
-            return required_member.license_number or ""
-        elif i == f"{prefix}_license_expiration_date":
-            if required_member.license_expiration_date:
-                return required_member.license_expiration_date.strftime("%d/%m/%Y")
-            return ""
-        elif i == "date":
-            return datetime.now().strftime("%d/%m/%Y")
-        
-        return ""
 
+if __name__ == "__main__":
+    for pdf_path in glob.glob("Docs/RG/RG/*.pdf"):
+        print(f"\n{'='*50}")
+        print(f"Processing: {pdf_path}")
+        print(f"{'='*50}\n")
+        coords = PDFFiller.get_doc_coordinates(pdf_path)
+        print(f"\nTotal found: {len(coords)} occurrences")
+        output_file = PDFFiller.overlay_filled_on_original_pdf(pdf_path=pdf_path, coordinates=coords, output_path=f"out/{os.path.basename(pdf_path)}")
+        print("end process:",output_file)
+
+        print("\n")

@@ -1,0 +1,23 @@
+
+  TYPES:
+     - construction_inspection_officer
+     - permit_owner
+
+  2:
+      1:
+          - None
+          - None
+          - construction_inspection_officer_address
+          - construction_inspection_officer_mail
+          - construction_inspection_officer_phone
+          - construction_inspection_officer_license_number
+          - construction_inspection_officer_id
+          - construction_inspection_officer_name
+          - permit_owner_mail
+          - None
+      2:
+          - None
+          - None
+          - construction_inspection_officer_name
+          - None
+

@@ -19,13 +19,23 @@ class ProjectDocumentType(Enum):
     TLV_CONTRACTOR_OWNER = 'מינוי קבלן רשום'
     TLV_GREEN_BUILD = 'מינוי בניה ירוקה'
     TLV_PROJECT_TEAMS = 'רשימת בעלי תפקידים'
-    RG_TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
-    RG_EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
+    RG_CHARGE_INSPECTION = 'מינוי אחראי לביקורת'
+    RG_CHARGE_STRACTURAL = 'מינוי אחראי לביצוע שלד'
+    RG_CHARGE_CONTRACTOR = 'מינוי קבלן'
+    RG_ADAPTER_AGREEMENT = 'מינוי אחראי לתיאום עם מכון בקרה'
+    RG_ANNOUN_INSPECTION = 'הצהרה אחראי לביקורת'
+    RG_ANNOUN_STRACTURAL = 'הצהרת אחרי שלד'
+    RG_ANNOUN_CONTRACTOR = 'הצהרת קבלן'
+    RG_ANNOUN_STABLE = 'הצהרת אחראי לבקורת ליציבות גדרות'
+    RG_MODED = 'אישור מודד'
+    RG_REQ_START_WORK ='בקשה להתחלת עבודות'
+    RG_PROJECT_TEAMS = 'בפרויקט בעלי תפקידים'
     GENERAL = 'כללי'
 
 class City(Enum):
     TLV = 'TelAviv'
     RG = 'RamatGan'
+
 
 class ProjectDocPath(Enum):
     TRASH_INSPECTION = os.path.join(CONFIG, "docs", "TRASH_INSPECTION.yaml")
@@ -43,11 +53,15 @@ class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
     SUPERVISOR_ENGINEER_CONSTRUCTION = 'אחראי ביקורת - קונסטרוקציה'
     SUPERVISOR_ENGINEER_ARCHITECTURE = 'אחראי ביקורת - אדריכלות'
+    SUPERVISOR_CONTROL_MANAGER = 'אחראי מכון בקרה'
+    SUPERVISOR_GREEN_BUILD = 'אחראי בנייה ירוקה'
     STRUCTURAL_ENGINEER = 'אחראי לביצוע שלד'
+    
     CONSTRUCTION_INSPECTION_OFFICER = 'אחראי לביקורת על ביצוע'
     ARCHITECT = 'אדריכל'
     PESTICIDAL = 'מדביר'
     GENERAL_CONTRACTOR = 'קבלן ראשי'
+
 
     @staticmethod   
     def map_to_value(value) -> 'ProfessionalType':
@@ -62,6 +76,10 @@ class ProfessionalType(Enum):
             return ProfessionalType.SUPERVISOR_ENGINEER_CONSTRUCTION
         elif "אחראי ביקורת - אדריכלות" in value:
             return ProfessionalType.SUPERVISOR_ENGINEER_ARCHITECTURE
+        elif "אחראי מכון בקרה" in value:
+            return ProfessionalType.SUPERVISOR_CONTROL_MANAGER
+        elif "אחראי בנייה ירוקה" in value:
+            return ProfessionalType.SUPERVISOR_GREEN_BUILD
         elif "אחראי לביצוע שלד" in value:
             return ProfessionalType.STRUCTURAL_ENGINEER
         elif "אחראי לביקורת על ביצוע" in value:
@@ -125,9 +143,3 @@ def enum_to_value(enum_member_or_value):
 def project_doc_path_for_city(*, city: str, doc: str) -> str:
    
     return os.path.join(CONFIG, "docs", city,doc+".yaml")
-
-# def all_project_doc_paths_for_city(*, city: City) -> Dict[ProjectDocPath, str]:
-#     return {d: project_doc_path_for_city(city=city, doc=d) for d in ProjectDocPath}
-
-# def project_doc_path_for_city_by_name(*, city: City, document_name: str) -> str:
-#     return project_doc_path_for_city(city=city, doc=ProjectDocPath[document_name])

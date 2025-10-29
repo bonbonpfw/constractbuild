@@ -1,0 +1,19 @@
+
+  TYPES:
+     - general_contractor
+     - permit_owner
+
+  1:
+      1:
+          - None
+          - None
+          - general_contractor_name
+          - general_contractor_address
+          - general_contractor_mail
+          - general_contractor_phone
+          - general_contractor_license_number_expiration_date
+          - general_contractor_license_number
+          - general_contractor_id
+          - general_contractor_name
+          - permit_owner_mail
+          - None

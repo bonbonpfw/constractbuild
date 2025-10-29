@@ -1,0 +1,19 @@
+TYPES:
+  - supervisor_green_build
+  - permit_owner
+
+1:
+    1:
+        - supervisor_green_build_id
+        - supervisor_green_build_name
+        - supervisor_green_build_id
+        - supervisor_green_build_name
+        - supervisor_green_build_phone
+        - supervisor_green_build_mail
+        - supervisor_green_build_address
+        - None
+        - None
+        - None
+        - None
+        - permit_owner_name
+        - אחראי בנייה ירוקה

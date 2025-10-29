@@ -1,0 +1,26 @@
+  TYPES:
+      - supervisor_control_manager
+      - permit_owner
+
+  2:
+      1:
+          - None
+          - None
+          - permit_owner_name
+          - supervisor_control_manager_address
+          - supervisor_control_manager_mail
+          - supervisor_control_manager_phone
+          - supervisor_control_manager_license_number
+          - supervisor_control_manager_id
+          - supervisor_control_manager_name
+          - permit_owner_name
+      2:
+          - None
+          - None
+          - supervisor_control_manager_name
+          - supervisor_control_manager_address
+          - supervisor_control_manager_mail
+          - supervisor_control_manager_phone
+          - supervisor_control_manager_id
+          - supervisor_control_manager_name
+        
