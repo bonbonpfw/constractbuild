@@ -180,7 +180,7 @@ const Projects: React.FC = () => {
           <CardName><b>{project.name}</b></CardName>
           <CardInfo><b>בעל היתר:</b> {project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</CardInfo>
           <CardInfo><b>מספר היתר:</b> {project.permit_number || 'לא זמין'}</CardInfo>
-          <CardInfo><b>עיר:</b> {project.city || 'לא זמין'}</CardInfo>
+          <CardInfo><b>עיר:</b> {project.city ? (CITY_LABELS[project.city] ?? project.city) : 'לא זמין'}</CardInfo>
           <DocumentStatusBar project={project} />
         </Card>
       ))}
