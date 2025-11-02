@@ -76,6 +76,7 @@ def init_routes(app):
             'projects': [{
                 'id': project.id,
                 'name': project.name,
+                'city': project.city,
                 'request_number': project.request_number,
                 'permit_number': project.permit_number,
                 'status': project.status,

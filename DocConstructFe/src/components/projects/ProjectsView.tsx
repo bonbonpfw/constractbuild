@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import { getProjects } from '../../api';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
@@ -24,8 +24,48 @@ import { Project, ProjectStatus, ProfessionalStatus, ProjectTeamRole, DocumentSt
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import ProjectCreationDialog from "./ProjectCreationDialog";
+import { CITY_LABELS } from "./ProjectCreationDialog";
 import SortableTableHeader from "../shared/SortableTableHeader";
 import useSort from "../../hooks/useSort";
+
+const ViewToggleButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
+  padding: 0;
+  border-radius: 8px;
+  background: #f6f9fc;
+  border: 1px solid #dbe4f0;
+  color: #4b6b8e;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  &:hover {
+    background: #eef3f9;
+    border-color: #c6d4e6;
+  }
+  svg { font-size: 16px; }
+  &:active { transform: translateY(0.5px); }
+`;
+
+const CitySelect = styled.select`
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #314a67;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  &:hover { border-color: #c6d4e6; }
+  &:focus {
+    border-color: #9bb4d6;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+`;
 
 type ViewMode = 'cards' | 'table';
 
@@ -33,10 +73,28 @@ const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProjectCreationDialog, setShowProjectCreationDialog] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [selectedCity, setSelectedCity] = useState<string>('all');
   const router = useRouter();
   
   // Sorting functionality
   const { sortKey, sortDirection, handleSort, sortData } = useSort('name');
+
+  // Derive cities and filtered projects
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    projects.forEach((p) => {
+      const city = p.city || '';
+      if (city) set.add(city);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'he'));
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    if (selectedCity === 'all') return projects;
+    return projects.filter((p) => {
+      return (p.city || '') === selectedCity;
+    });
+  }, [projects, selectedCity]);
 
   const fetchProjects = async () => {
     try {
@@ -99,7 +157,9 @@ const Projects: React.FC = () => {
 
   const renderCardView = () => (
     <CardGrid>
-      {projects.map((project) => (
+      {[...filteredProjects]
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'))
+        .map((project) => (
         <Card
           key={project.id}
           onClick={() => handleProjectClick(project.id)}
@@ -120,6 +180,7 @@ const Projects: React.FC = () => {
           <CardName><b>{project.name}</b></CardName>
           <CardInfo><b>בעל היתר:</b> {project.team_members?.find(member => member.role === ProjectTeamRole.PERMIT_OWNER)?.name || 'לא זמין'}</CardInfo>
           <CardInfo><b>מספר היתר:</b> {project.permit_number || 'לא זמין'}</CardInfo>
+          <CardInfo><b>עיר:</b> {project.city || 'לא זמין'}</CardInfo>
           <DocumentStatusBar project={project} />
         </Card>
       ))}
@@ -128,7 +189,7 @@ const Projects: React.FC = () => {
 
   const renderTableView = () => {
     // Sort projects based on current sort settings
-    const sortedProjects = sortData(projects, (project, key) => {
+    const sortedProjects = sortData(filteredProjects, (project, key) => {
       switch (key) {
         case 'name':
           return project.name;
@@ -138,6 +199,8 @@ const Projects: React.FC = () => {
           return getStatusLabel(project.status);
         case 'permit_number':
           return project.permit_number || 'לא זמין';
+        case 'city':
+          return project.city || 'לא זמין';
         case 'warnings':
           // Sort by warning status (expired first, then warning, then none)
           if (project.is_expired) return 0;
@@ -185,6 +248,14 @@ const Projects: React.FC = () => {
               מספר היתר
             </SortableTableHeader>
             <SortableTableHeader
+              sortKey="city"
+              currentSortKey={sortKey}
+              currentSortDirection={sortDirection}
+              onSort={handleSort}
+            >
+              עיר
+            </SortableTableHeader>
+            <SortableTableHeader
               sortKey="warnings"
               currentSortKey={sortKey}
               currentSortDirection={sortDirection}
@@ -209,6 +280,7 @@ const Projects: React.FC = () => {
                 </TableStatusBadge>
               </TableBody>
               <TableBody>{project.permit_number || 'לא זמין'}</TableBody>
+              <TableBody>{project.city || 'לא זמין'}</TableBody>
               <TableBody>
                 {project.is_expired && (
                   <TableWarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
@@ -296,24 +368,25 @@ const Projects: React.FC = () => {
         ) : (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, color: '#4b6b8e' }}>פרויקטים ({projects.length})</h2>
-              <button
-                onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
-                title={viewMode === 'cards' ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים'}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '6px 8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {viewMode === 'cards' ? <FaList /> : <FaTh />}
-              </button>
+              <h2 style={{ margin: 0, color: '#4b6b8e' }}>פרויקטים ({filteredProjects.length})</h2>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <CitySelect
+                  value={selectedCity}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCity(e.target.value)}
+                  title="סנן לפי עיר"
+                >
+                  <option value="all">כל הערים</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>{CITY_LABELS[c] ?? c}</option>
+                  ))}
+                </CitySelect>
+                <ViewToggleButton
+                  onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+                  title={viewMode === 'cards' ? 'עבור לתצוגת טבלה' : 'עבור לתצוגת כרטיסים'}
+                >
+                  {viewMode === 'cards' ? <FaList /> : <FaTh />}
+                </ViewToggleButton>
+              </div>
             </div>
             {viewMode === 'cards' ? renderCardView() : renderTableView()}
           </>
@@ -431,6 +504,8 @@ const TableWarningBadge = styled.span<{ color?: string }>`
   cursor: help;
   font-weight: bold;
 `;
+
+ 
 
 // Component for document status bar with tooltip
 const DocumentStatusBar: React.FC<{ project: Project }> = ({ project }) => {

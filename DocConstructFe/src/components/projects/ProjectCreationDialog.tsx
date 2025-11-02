@@ -19,6 +19,13 @@ import {
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
 import {createProject, getProjectCities} from "../../api";
 
+export const CITY_LABELS: Record<string, string> = {
+  TelAviv: 'תל אביב',
+  RamatGan: 'רמת גן',
+  Raanana: 'רעננה',
+  RamatHasharon: 'רמת השרון',
+};
+
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   name: '',
   city: '',
@@ -40,12 +47,7 @@ const ProjectCreationDialog: React.FC<{
   const [formData, setFormData] = useState<ProjectCreationFormData>(DefaultProjectCreationFormData);
   const [cities, setCities] = useState<{ value: string; name: string }[]>([]);
 
-  const CITY_LABELS: Record<string, string> = {
-    TelAviv: 'תל אביב',
-    RamatGan: 'רמת גן',
-    Raanana: 'רעננה',
-    RamatHasharon: 'רמת השרון',
-  };
+  
 
   useEffect(() => {
     (async () => {
