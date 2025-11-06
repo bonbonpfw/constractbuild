@@ -343,7 +343,8 @@ class DocumentFiller:
                     text = ""
                     
                     # Check if doc_version_prof_page exists and the key exists
-                    if doc_version_prof_page is not None:
+                    if len(doc_version_prof_page) > i and doc_version_prof_page is not None and doc_version_prof_page[i] != "None":
+
                         logger.info(f"Doc version prof is not none")
                         logger.info(f" required members: {required_members}")
          

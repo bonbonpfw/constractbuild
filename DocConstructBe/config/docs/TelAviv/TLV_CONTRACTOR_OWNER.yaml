@@ -36,7 +36,7 @@ TYPES:
 3:
     1:
         - None
-        - date
+        - None
         - permit_owner_name
         - general_contractor_address
         - general_contractor_mail 
@@ -53,7 +53,7 @@ TYPES:
         - None
         - None
         - None
-        - date
+        - None
         - general_contractor_name
         - general_contractor_address
         - general_contractor_mail
@@ -63,6 +63,7 @@ TYPES:
         - general_contractor_id
         - general_contractor_name
     3:
+        - None
         - None
         - general_contractor_name
 
