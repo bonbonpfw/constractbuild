@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import datetime
 from datetime import date, timedelta
 import os
@@ -26,6 +28,7 @@ from data_model.models import (
     ProjectDocument,
     ProfessionalDocument,
     ProjectTeamMember,
+    User,
 )
 from database.database import db_session
 from data_model.enum import (
@@ -40,7 +43,7 @@ from data_model.enum import (
     City,
 )
 from doc_map.doc_map import DocumentFiller
-from app.errors import InvalidFileFormat, InvalidCityError
+from app.errors import InvalidFileFormat, InvalidCityError, UserNotFound
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -613,3 +616,29 @@ def get_permit_owner_for_project(project_id):
         project_id=project_id,
         role=ProjectTeamRole.PERMIT_OWNER.value
     ).first()
+
+
+class UserManager:
+    """Users collection controller."""
+
+    @staticmethod
+    def get_all() -> Iterable[User]:
+        """Return all users."""
+        return db_session.query(User)
+
+    @staticmethod
+    def get_by_id(user_id: str) -> User:
+        """Return user by ID."""
+        if user := db_session.query(User).filter(User.id == user_id).one_or_none():
+            return user
+        raise UserNotFound
+
+    @staticmethod
+    def create(username: str, password: str) -> User:
+        """Create user and set password."""
+        user = User(username=username)
+        user.password = password
+        db_session.add(user)
+        db_session.commit()
+        return user
+        
