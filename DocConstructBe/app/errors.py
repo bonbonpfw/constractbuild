@@ -234,8 +234,18 @@ class UserNotFound(ApiError):
     def __init__(self):
         super().__init__(
             msg='משתמש לא נמצא',
-            code='user_not_found'
+            code='user_not_found',
         )
 
     def http_code(self):
         return HttpCodes.NOT_FOUND
+
+
+class AuthenticationFailed(ApiError):
+    """Password provided does not match."""
+
+    def __init__(self):
+        super().__init__(msg="לא מורשה", code="unauthorized")
+
+    def http_code(self):
+        return HttpCodes.NOT_AUTHORIZED

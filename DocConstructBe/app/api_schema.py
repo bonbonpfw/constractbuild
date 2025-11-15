@@ -211,6 +211,20 @@ class ProjectTeamGetSchema(Schema):
     project_id = fields.UUID(required=True)
 
 
+class UserCreateSchema(Schema):
+    """User creation API endpoint payload."""
+
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
+
+
+class UserUpdatePasswordSchema(Schema):
+    """User update password API endpoint payload."""
+
+    old_password = fields.Str(required=True)
+    new_password = fields.Str(required=True)
+
+
 class Endpoints:
     GET_PROJECTS = "get_projects"
     GET_PROJECT = "get_project"
@@ -248,6 +262,9 @@ class Endpoints:
     CREATE_PROJECT_TEAM = "create_project_team"
     UPDATE_PROJECT_TEAM = "update_project_team"
     DELETE_PROJECT_TEAM = "delete_project_team"
+
+    USER_CREATE = "create_user"
+    USER_SET_PASSWORD = "update_user_password"
 
 
 API_ENDPOINTS = {
@@ -400,5 +417,15 @@ API_ENDPOINTS = {
         'method': 'DELETE',
         'schema': ProjectTeamDeleteSchema,
         'description': 'Delete a project team member'
+    },
+    Endpoints.USER_CREATE: {
+        "method": "POST",
+        "schema": UserCreateSchema,
+        "description": "Create user."
+    },
+    Endpoints.USER_SET_PASSWORD: {
+        "method": "PATCH",
+        "schema": UserUpdatePasswordSchema,
+        "description": "Set user password."
     },
 }
