@@ -1,8 +1,9 @@
 from datetime import date, datetime, UTC
 import re
-from sqlalchemy import Column, String, Date, ForeignKey, UniqueConstraint, DateTime, Enum as SqlEnum
+
+from sqlalchemy import Column, Boolean, String, Date, ForeignKey, UniqueConstraint, DateTime, Enum as SqlEnum
 from sqlalchemy.orm import relationship
-import enum
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.errors import ValidationError
 from database.base_model import Base
@@ -10,6 +11,34 @@ from database.database import engine
 from database.database import UUID_F
 
 
+
+class User(Base):
+    """User model for authentication and authorization purposes."""
+
+    __tablename__ = 'users'
+
+    id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
+
+
+    @property
+    def password(self) -> None:
+        raise AttributeError("Password is not a readable attribute.")
+
+    @password.setter
+    def password(self, password: str) -> None:
+        """Set the user's password by hashing it."""
+        self.hashed_password = generate_password_hash(password)
+
+    def verify_password(self, password: str) -> bool:
+        """Verify the provided password against the stored hashed password."""
+        if not self.hashed_password:
+            return False
+        return check_password_hash(self.hashed_password, password)
 
 
 class Project(Base):
