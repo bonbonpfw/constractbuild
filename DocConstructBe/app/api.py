@@ -622,6 +622,21 @@ class UserManager:
     """Users collection controller."""
 
     @staticmethod
+    def create(username: str, password: str) -> User:
+        """Create user and set password."""
+        user = User(username=username)
+        user.password = password
+        db_session.add(user)
+        db_session.commit()
+        return user
+
+    def delete(self, user_id: str) -> None:
+        """Disable user account."""
+        user = self.get_by_id(user_id)
+        user.is_active = False
+        db_session.commit()
+
+    @staticmethod
     def get_all() -> Iterable[User]:
         """Return all users."""
         return db_session.query(User)
@@ -633,12 +648,8 @@ class UserManager:
             return user
         raise UserNotFound
 
-    @staticmethod
-    def create(username: str, password: str) -> User:
-        """Create user and set password."""
-        user = User(username=username)
-        user.password = password
-        db_session.add(user)
+    def set_password(self, user_id: str, new_password: str) -> None:
+        """Update user's password."""
+        user = self.get_by_id(user_id)
+        user.password = new_password
         db_session.commit()
-        return user
-        
