@@ -3,16 +3,17 @@ import tempfile
 from data_model.enum import DocumentStatus
 from flask import send_file, request
 
-from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError
+from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError, AuthenticationFailed
 from app.api import (
     ProjectManager,
     ProfessionalManager,
     ProjectDocumentManager,
     is_document_professional_missing,
     save_file_to_temp,
-    ProjectTeamManager
+    ProjectTeamManager,
+    UserManager,
 )
-from app.response import SuccessResponse
+from app.response import SuccessResponse, ApiResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
 from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole, City
 import logging
@@ -576,6 +577,46 @@ def init_routes(app):
             'name': role.name
         } for role in ProjectTeamRole]
         return SuccessResponse({'roles': roles}).generate_response()
+
+    @app.route("/api/users", methods=["GET"])
+    def get_users() -> ApiResponse:
+        """Return list of users."""
+        user_manager = UserManager()
+        users = [
+            user_manager.serialize(user) for user in user_manager.get_all()
+        ]
+        return SuccessResponse({"users": users}).generate_response()
+
+    @app.route("/api/users", methods=["POST"])
+    def create_user() -> ApiResponse:
+        """Create user."""
+        data = validate_request(Endpoints.USER_CREATE)
+        user_manager = UserManager()
+        user = user_manager.create(
+            username=data.get("username"),
+            password=data.get("password"),
+        )
+        return SuccessResponse({"id": user.id}).generate_response()
+
+    @app.route("/api/users/<str:user_id>", methods=["DELETE"])
+    def delete_user(user_id: str) -> ApiResponse:
+        """Deactivate user."""
+        user_manager = UserManager()
+        user_manager.delete(user_id)
+        return SuccessResponse({"id": user_id}).generate_response()
+
+    @app.route("/api/users/<str:user_id>", methods=["PATCH"])
+    def update_user_password(user_id: str) -> ApiResponse:
+        """Set user password."""
+        data = validate_request(Endpoints.USER_SET_PASSWORD)
+        user_manager = UserManager()
+        user = user_manager.get_by_id(user_id)
+        if user.verify_password(data.get("old_password")):
+            user_manager.set_password(user=user, new_password=data.get("new_password"))
+            return SuccessResponse({"id": user.id}).generate_response()
+        raise AuthenticationFailed
+
+
 
 def get_permit_owner_for_project(project_id):
     from data_model.models import ProjectTeamMember
