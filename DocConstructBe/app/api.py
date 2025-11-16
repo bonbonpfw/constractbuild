@@ -6,7 +6,11 @@ import os
 import shutil
 import tempfile
 import mimetypes
-from config.sys_config import DOCUMENTS_FOLDER
+import jwt
+
+from sqlalchemy.sql import func
+
+from config.sys_config import DOCUMENTS_FOLDER, SECRET_KEY
 from utils.data_extract import ExtractProfessional
 from utils.doc_to_bin import process_pdf_image_to_binary,process_image_to_binary,process_pdf_to_binary
 from doc_map.doc_map import DocumentMap
@@ -635,6 +639,16 @@ class UserManager:
         user = self.get_by_id(user_id)
         user.is_active = False
         db_session.commit()
+        
+    @staticmethod
+    def generate_jwt_token(user: User) -> str:
+        """Generate JWT token for user."""
+        payload = {
+            "user_id": str(user.id),
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+        return token
 
     @staticmethod
     def get_all() -> Iterable[User]:
@@ -645,6 +659,13 @@ class UserManager:
     def get_by_id(user_id: str) -> User:
         """Return user by ID."""
         if user := db_session.query(User).filter(User.id == user_id).one_or_none():
+            return user
+        raise UserNotFound
+    
+    @staticmethod
+    def get_by_username(username: str) -> User:
+        """Return user by username."""
+        if user := db_session.query(User).filter(func.lower(User.username) == username.lower()).one_or_none():
             return user
         raise UserNotFound
 

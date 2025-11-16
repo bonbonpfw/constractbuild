@@ -225,6 +225,12 @@ class UserUpdatePasswordSchema(Schema):
     new_password = fields.Str(required=True)
 
 
+class AuthenticateUserSchema(Schema):
+    """User authentication API endpoint payload."""
+
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
+
 class Endpoints:
     GET_PROJECTS = "get_projects"
     GET_PROJECT = "get_project"
@@ -265,6 +271,7 @@ class Endpoints:
 
     USER_CREATE = "create_user"
     USER_SET_PASSWORD = "update_user_password"
+    AUTHENTICATE_USER = "authenticate_user"
 
 
 API_ENDPOINTS = {
@@ -427,5 +434,10 @@ API_ENDPOINTS = {
         "method": "PATCH",
         "schema": UserUpdatePasswordSchema,
         "description": "Set user password."
+    },
+    Endpoints.AUTHENTICATE_USER: {
+        "method": "POST",
+        "schema": AuthenticateUserSchema,
+        "description": "Authenticate user and return JWT token."
     },
 }
