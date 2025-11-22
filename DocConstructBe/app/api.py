@@ -704,4 +704,16 @@ class ProjectCommentsManager:
         """Get all comments for a specific project."""
         return db_session.query(ProjectComment).filter(
             ProjectComment.project_id == project_id
-        )
+        ).order_by(ProjectComment.created_at.desc())  # older comments first
+
+    @staticmethod
+    def serialize(comment: ProjectComment) -> dict:
+        """Serialize project comment for response."""
+        return {
+            "id": comment.id,
+            "author_user_id": comment.author_user_id,
+            "author_username": comment.author_user and comment.author_user.username,
+            "content": comment.content,
+            "created_at": comment.created_at.isoformat(),
+            "updated_at": comment.updated_at.isoformat(),
+        }

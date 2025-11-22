@@ -8,6 +8,7 @@ from app.errors import ValidationError, InvalidProjectProfessionalDocument, Inva
 from app.api import (
     ProjectManager,
     ProfessionalManager,
+    ProjectCommentsManager,
     ProjectDocumentManager,
     is_document_professional_missing,
     save_file_to_temp,
@@ -664,6 +665,31 @@ def init_routes(app):
             return SuccessResponse({"token": token}).generate_response()
         raise AuthenticationFailed
 
+    @app.route("/api/projects/<string:project_id>/comments", methods=["GET"])
+    @jwt_required
+    def get_project_comments(project_id: str) -> ApiResponse:
+        """Get all comments for a specific project."""
+        comments = ProjectCommentsManager.get_by_project(project_id)
+        return SuccessResponse({
+            'comments': [
+                ProjectCommentsManager.serialize(comment)
+                for comment in comments
+            ],
+        }).generate_response()
+
+    @app.route("/api/projects/<string:project_id>/comments", methods=["POST"])
+    @jwt_required
+    def add_project_comment(project_id: str) -> ApiResponse:
+        """Add a comment to a specific project."""
+        data = validate_request(Endpoints.ADD_PROJECT_COMMENT)
+        comment = ProjectCommentsManager.create(
+            project_id=project_id,
+            author_user_id=request.user_id,
+            content=data.get('content'),
+        )
+        return SuccessResponse({
+            'comment': ProjectCommentsManager.serialize(comment),
+        }).generate_response()
 
 
 def get_permit_owner_for_project(project_id):
