@@ -226,3 +226,26 @@ class InvalidDocumentStatus(ApiError):
             msg=f'סטטוס מסמך לא תקין: {document_status}',
             code='invalid_document_status'
         )
+
+
+class UserNotFound(ApiError):
+    """User does not exists."""
+
+    def __init__(self):
+        super().__init__(
+            msg='משתמש לא נמצא',
+            code='user_not_found',
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
+
+class AuthenticationFailed(ApiError):
+    """Password provided does not match."""
+
+    def __init__(self):
+        super().__init__(msg="לא מורשה", code="unauthorized")
+
+    def http_code(self):
+        return HttpCodes.NOT_AUTHORIZED
