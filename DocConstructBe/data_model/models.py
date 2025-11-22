@@ -86,6 +86,17 @@ class Project(Base):
         return f"<Project(name='{self.name}', request_number='{self.request_number}', status='{self.status}')>"
 
 
+class ProjectComment(Base):
+    """In-project comment."""
+    __tablename__ = "project_comments"
+
+    id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
+    project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
+    author_user_id = Column(UUID_F(), ForeignKey('users.id'), nullable=False)
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+
 class Professional(Base):
     __tablename__ = 'professionals'
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
