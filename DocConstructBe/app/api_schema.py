@@ -231,6 +231,13 @@ class AuthenticateUserSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
+
+class AddProjectCommentSchema(Schema):
+    """Add project comment API endpoint payload."""
+
+    content = fields.Str(required=True, validate=validate.Length(min=1))
+
+
 class Endpoints:
     GET_PROJECTS = "get_projects"
     GET_PROJECT = "get_project"
@@ -272,6 +279,8 @@ class Endpoints:
     USER_CREATE = "create_user"
     USER_SET_PASSWORD = "update_user_password"
     AUTHENTICATE_USER = "authenticate_user"
+    
+    ADD_PROJECT_COMMENT = "add_project_comment"
 
 
 API_ENDPOINTS = {
@@ -439,5 +448,10 @@ API_ENDPOINTS = {
         "method": "POST",
         "schema": AuthenticateUserSchema,
         "description": "Authenticate user and return JWT token."
+    },
+    Endpoints.ADD_PROJECT_COMMENT: {
+        "method": "POST",
+        "schema": AddProjectCommentSchema,
+        "description": "Add a comment to a project."
     },
 }

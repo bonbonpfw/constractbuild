@@ -92,7 +92,9 @@ class ProjectComment(Base):
 
     id = Column(UUID_F(), primary_key=True, default=UUID_F.uuid_allocator, unique=True, nullable=False)
     project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
+    project = relationship("Project", backref="comments")
     author_user_id = Column(UUID_F(), ForeignKey('users.id'), nullable=False)
+    author_user = relationship("User", backref="comments")
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
