@@ -28,6 +28,7 @@ from app.errors import (
 from data_model.models import (
     Project,
     Professional,
+    ProjectComment,
     ProjectProfessional,
     ProjectDocument,
     ProfessionalDocument,
@@ -681,3 +682,26 @@ class UserManager:
             "is_active": user.is_active,
             "id": user.id,
         }
+
+
+class ProjectCommentsManager:
+    """Project Comments collection controller."""
+    
+    @staticmethod
+    def create(project_id: str, author_user_id: str, content: str):
+        """Create a new project comment."""
+        comment = ProjectComment(
+            project_id=project_id,
+            author_user_id=author_user_id,
+            content=content,
+        )
+        db_session.add(comment)
+        db_session.commit()
+        return comment
+
+    @staticmethod
+    def get_by_project(project_id: str) -> Iterable[ProjectComment]:
+        """Get all comments for a specific project."""
+        return db_session.query(ProjectComment).filter(
+            ProjectComment.project_id == project_id
+        )
