@@ -1,5 +1,5 @@
-import React, {useEffect, useRef, useState} from "react";
-import {useRouter} from "next/router";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import {
   Button,
@@ -17,9 +17,14 @@ import {
   TopPanelGroup,
   TopPanelLogo,
   TopPanelTitle,
-  TopPanelTitleHolder
+  TopPanelTitleHolder,
 } from "../../styles/SharedStyles";
-import {Professional, Project, ProjectDocument, DocumentState} from "../../types";
+import {
+  Professional,
+  Project,
+  ProjectDocument,
+  DocumentState,
+} from "../../types";
 import {
   getProjectById,
   getProjectStatuses,
@@ -34,18 +39,20 @@ import {
   createProjectTeamMember,
   updateProjectTeamMember,
   deleteProjectTeamMember,
-  autoFillDocument
+  autoFillDocument,
 } from "../../api";
-import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
+import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
 import EmptyStatePlaceholder from "../shared/EmptyState";
 import useDeleteProject from "./useDeleteProject";
 import DeletionDialog from "../shared/DeletionDialog";
-import {toast} from "react-toastify";
-import FileArea, {FileAreaDocument, FilePreview} from "../shared/FileArea";
+import { toast } from "react-toastify";
+import FileArea, { FileAreaDocument, FilePreview } from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { Tab, Tabs } from "../shared/Tabs";
+import { Chat } from "./Chat";
 
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
@@ -54,15 +61,21 @@ const StatusBadge = styled.span<{ status: string }>`
   font-size: 12px;
   font-weight: 500;
   background: ${({ status }) =>
-    status === 'Active' ? '#e3f6ec' :
-    status === 'Expired' ? '#ffecef' :
-    status === 'Warning' ? '#fff7e0' :
-    '#ffecef'};
+    status === "Active"
+      ? "#e3f6ec"
+      : status === "Expired"
+      ? "#ffecef"
+      : status === "Warning"
+      ? "#fff7e0"
+      : "#ffecef"};
   color: ${({ status }) =>
-    status === 'Active' ? '#1d8450' :
-    status === 'Expired' ? '#e1273d' :
-    status === 'Warning' ? '#b0851f' :
-    '#e1273d'};
+    status === "Active"
+      ? "#1d8450"
+      : status === "Expired"
+      ? "#e1273d"
+      : status === "Warning"
+      ? "#b0851f"
+      : "#e1273d"};
 `;
 
 const MainLayout = styled.div`
@@ -97,13 +110,13 @@ const SidebarButton = styled.button<{ active: boolean }>`
   align-items: center;
   padding: 12px 15px;
   font-size: 16px;
-  font-weight: ${p => p.active ? '600' : '400'};
+  font-weight: ${(p) => (p.active ? "600" : "400")};
   color: #51789f;
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   text-align: right;
-  
+
   &:hover {
     background-color: rgb(227, 237, 246);
   }
@@ -122,8 +135,6 @@ const DocumentsPanel = styled.div`
   border-right: 1px solid #eaeaea;
   overflow: hidden;
 `;
-
-
 
 const Card = styled.div`
   background: #ffffff;
@@ -180,7 +191,7 @@ const ProfessionalCard = styled.div`
   transition: all 0.2s ease;
   flex: 1;
   min-width: 230px;
-  
+
   &:hover {
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   }
@@ -205,17 +216,31 @@ const ProfessionalType = styled.span`
   color: #666;
 `;
 
+const docTabs: Tab[] = [
+  { label: "מסמכי תחילת עבודה", value: "categorized" },
+  { label: "מסמכים כלליים", value: "general" },
+];
+
+const projectTabs: Tab[] = [
+  { label: "סקירה כללית", value: "overview" },
+  { label: "לְשׂוֹחֵחַ", value: "chat" },
+];
+
 const ProjectView: React.FC = () => {
   const router = useRouter();
   const { id } = router.query as { id?: string };
 
   if (!id) {
-    return (
-      <PageContainer />
-    );
+    return <PageContainer />;
   }
 
-  const {isDeleteDialogOpen, handleDelete, handleConfirmDelete, handleCancelDelete, isDeleting} = useDeleteProject(id);
+  const {
+    isDeleteDialogOpen,
+    handleDelete,
+    handleConfirmDelete,
+    handleCancelDelete,
+    isDeleting,
+  } = useDeleteProject(id);
 
   const [formData, setFormData] = useState<Project | null>(null);
   const originalData = useRef<Project | null>(null);
@@ -226,8 +251,10 @@ const ProjectView: React.FC = () => {
   // Professionals state
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
-  const [showAddProfessionalDialog, setShowAddProfessionalDialog] = useState(false);
-  const [professionalToRemove, setProfessionalToRemove] = useState<Professional | null>(null);
+  const [showAddProfessionalDialog, setShowAddProfessionalDialog] =
+    useState(false);
+  const [professionalToRemove, setProfessionalToRemove] =
+    useState<Professional | null>(null);
 
   // Documents state
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
@@ -239,14 +266,28 @@ const ProjectView: React.FC = () => {
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
   // Add tab state
-  const [activeTab, setActiveTab] = useState<'details' | 'professionals' | 'team'>('details');
-  const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "details" | "professionals" | "team"
+  >("details");
+  const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>(
+    []
+  );
   const [rolesLoading, setRolesLoading] = useState(true);
   const [teamExpanded, setTeamExpanded] = useState<Record<string, boolean>>({});
-  const [teamData, setTeamData] = useState<Record<string, { name: string; phone: string; email: string; address: string }>>({});
+  const [teamData, setTeamData] = useState<
+    Record<
+      string,
+      { name: string; phone: string; email: string; address: string }
+    >
+  >({});
 
   // In the DocumentsPanel, add tab state and tab buttons for document sections
-  const [activeDocTab, setActiveDocTab] = useState<'categorized' | 'general'>('categorized');
+  const [activeDocTab, setActiveDocTab] = useState<string>(docTabs[0].value);
+
+  // In the ProjectPanel, add tab state and tab buttons for chat sections
+  const [activeProjectTab, setActiveProjectTab] = useState<string>(
+    projectTabs[0].value
+  );
 
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
@@ -256,40 +297,43 @@ const ProjectView: React.FC = () => {
     try {
       const [proj, statuses] = await Promise.all([
         getProjectById(id),
-        getProjectStatuses()
+        getProjectStatuses(),
       ]);
       setFormData(proj);
       originalData.current = proj;
       setStatuses(statuses);
-      
+
       // Fetch document types based on project's city
-      const docTypes = await getProjectDocumentTypes(proj.city || '');
-      setDocumentTypes([...docTypes]); 
+      const docTypes = await getProjectDocumentTypes(proj.city || "");
+      setDocumentTypes([...docTypes]);
 
       // Extract professionals data directly from the project
       setIsLoadingProfessionals(true);
       try {
         if (proj.professionals && Array.isArray(proj.professionals)) {
           // Map the professionals data to the Professional type
-          const projectProfessionals = proj.professionals.map(prof => ({
+          const projectProfessionals = proj.professionals.map((prof) => ({
             id: prof.id,
             name: prof.name,
             email: prof.email,
             professional_type: prof.professional_type,
             status: prof.status,
             // Add default values for required fields that might not be in the API response
-            national_id: '',
-            phone: '',
-            license_number: '',
-            license_expiration_date: '',
-            address: ''
+            national_id: "",
+            phone: "",
+            license_number: "",
+            license_expiration_date: "",
+            address: "",
           }));
           setProfessionals(projectProfessionals);
         } else {
           setProfessionals([]);
         }
       } catch (error) {
-        errorHandler(error as ErrorResponseData, 'Failed to load professionals');
+        errorHandler(
+          error as ErrorResponseData,
+          "Failed to load professionals"
+        );
         setProfessionals([]);
       } finally {
         setIsLoadingProfessionals(false);
@@ -304,7 +348,7 @@ const ProjectView: React.FC = () => {
           setDocuments([]);
         }
       } catch (error) {
-        errorHandler(error as ErrorResponseData, 'Failed to load documents');
+        errorHandler(error as ErrorResponseData, "Failed to load documents");
         setDocuments([]);
       } finally {
         setIsLoadingDocuments(false);
@@ -312,13 +356,15 @@ const ProjectView: React.FC = () => {
     } catch (error) {
       const errorData = error as ErrorResponseData;
       // Add proper checks to avoid "Cannot read properties of undefined"
-      if (errorData && 
-          errorData.response && 
-          errorData.response.data && 
-          errorData.response.data.error_code === 'project_does_not_exist') {
-        router.push('/projects');
+      if (
+        errorData &&
+        errorData.response &&
+        errorData.response.data &&
+        errorData.response.data.error_code === "project_does_not_exist"
+      ) {
+        router.push("/projects");
       } else {
-         errorHandler(error as ErrorResponseData, 'Failed to load project');
+        errorHandler(error as ErrorResponseData, "Failed to load project");
       }
     }
   };
@@ -326,8 +372,10 @@ const ProjectView: React.FC = () => {
   useEffect(() => {
     // Fetch team member roles from backend
     getProjectTeamRoles()
-      .then(roles => {
-        setTeamRoles(roles.map((role: any) => ({ key: role.name, label: role.value })));
+      .then((roles) => {
+        setTeamRoles(
+          roles.map((role: any) => ({ key: role.name, label: role.value }))
+        );
       })
       .finally(() => setRolesLoading(false));
   }, []);
@@ -335,16 +383,19 @@ const ProjectView: React.FC = () => {
   useEffect(() => {
     if (teamRoles.length > 0) {
       const expanded: Record<string, boolean> = {};
-      const data: Record<string, { name: string; phone: string; email: string; address: string }> = {};
-      teamRoles.forEach(role => {
-        expanded[role.key] = role.key === 'PERMIT_OWNER';
+      const data: Record<
+        string,
+        { name: string; phone: string; email: string; address: string }
+      > = {};
+      teamRoles.forEach((role) => {
+        expanded[role.key] = role.key === "PERMIT_OWNER";
         // Find the team member for this role
         const member = teamMembers.find((m: any) => m.role === role.label);
         data[role.key] = {
-          name: member?.name || '',
-          phone: member?.phone || '',
-          email: member?.email || '',
-          address: member?.address || ''
+          name: member?.name || "",
+          phone: member?.phone || "",
+          email: member?.email || "",
+          address: member?.address || "",
         };
       });
       setTeamExpanded(expanded);
@@ -367,24 +418,32 @@ const ProjectView: React.FC = () => {
         originalData.current = updatedProject;
 
         // Update professionals list from the updated project data
-        if (updatedProject.professionals && Array.isArray(updatedProject.professionals)) {
-          const projectProfessionals = updatedProject.professionals.map(prof => ({
-            id: prof.id,
-            name: prof.name,
-            email: prof.email,
-            professional_type: prof.professional_type,
-            status: prof.status,
-            // Add default values for required fields that might not be in the API response
-            national_id: '',
-            phone: '',
-            license_number: '',
-            license_expiration_date: '',
-            address: ''
-          }));
+        if (
+          updatedProject.professionals &&
+          Array.isArray(updatedProject.professionals)
+        ) {
+          const projectProfessionals = updatedProject.professionals.map(
+            (prof) => ({
+              id: prof.id,
+              name: prof.name,
+              email: prof.email,
+              professional_type: prof.professional_type,
+              status: prof.status,
+              // Add default values for required fields that might not be in the API response
+              national_id: "",
+              phone: "",
+              license_number: "",
+              license_expiration_date: "",
+              address: "",
+            })
+          );
           setProfessionals(projectProfessionals);
         }
       } catch (error) {
-        errorHandler(error as ErrorResponseData, 'Failed to reload project data');
+        errorHandler(
+          error as ErrorResponseData,
+          "Failed to reload project data"
+        );
       }
     }
   };
@@ -397,15 +456,18 @@ const ProjectView: React.FC = () => {
     if (!professionalToRemove || !id) return;
     setProfessionalToRemove(null);
     try {
-      const professional_id = professionalToRemove.id.toString()
+      const professional_id = professionalToRemove.id.toString();
       await removeProfessionalFromProject({
         project_id: id,
-        professional_id: professional_id
+        professional_id: professional_id,
       });
-      await loadData()
-      toast.success('Professional removed from project');
+      await loadData();
+      toast.success("Professional removed from project");
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to remove professional from project');
+      errorHandler(
+        error as ErrorResponseData,
+        "Failed to remove professional from project"
+      );
     }
   };
 
@@ -414,10 +476,12 @@ const ProjectView: React.FC = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData(prev =>
+    setFormData((prev) =>
       prev ? ({ ...prev, [name]: value } as Project) : prev
     );
   };
@@ -444,33 +508,41 @@ const ProjectView: React.FC = () => {
         originalData.current = updatedProject;
 
         // Update professionals list from the updated project data
-        if (updatedProject.professionals && Array.isArray(updatedProject.professionals)) {
-          const projectProfessionals = updatedProject.professionals.map(prof => ({
-            id: prof.id,
-            name: prof.name,
-            email: prof.email,
-            professional_type: prof.professional_type,
-            status: prof.status,
-            // Add default values for required fields that might not be in the API response
-            national_id: '',
-            phone: '',
-            license_number: '',
-            license_expiration_date: '',
-            address: ''
-          }));
+        if (
+          updatedProject.professionals &&
+          Array.isArray(updatedProject.professionals)
+        ) {
+          const projectProfessionals = updatedProject.professionals.map(
+            (prof) => ({
+              id: prof.id,
+              name: prof.name,
+              email: prof.email,
+              professional_type: prof.professional_type,
+              status: prof.status,
+              // Add default values for required fields that might not be in the API response
+              national_id: "",
+              phone: "",
+              license_number: "",
+              license_expiration_date: "",
+              address: "",
+            })
+          );
           setProfessionals(projectProfessionals);
         }
       } catch (error) {
-        errorHandler(error as ErrorResponseData, 'Failed to reload project data');
+        errorHandler(
+          error as ErrorResponseData,
+          "Failed to reload project data"
+        );
         // If we can't reload, at least update the local state with what we have
         setFormData(formData);
         originalData.current = formData;
       }
 
       setIsEditingDetails(false);
-      toast.success('Changes saved')
+      toast.success("Changes saved");
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to save changes');
+      errorHandler(error as ErrorResponseData, "Failed to save changes");
     } finally {
       setSaving(false);
     }
@@ -480,14 +552,19 @@ const ProjectView: React.FC = () => {
     loadData();
   }, [id]);
 
-  console.log('ProjectView render - isEditing:', isEditingDetails, 'activeTab:', activeTab);
+  console.log(
+    "ProjectView render - isEditing:",
+    isEditingDetails,
+    "activeTab:",
+    activeTab
+  );
 
   // Convert ProjectDocument[] to FileAreaDocument[]
   const filesData: FileAreaDocument[] = [];
 
   // Group documents by type
   const documentsByType: Record<string, ProjectDocument[]> = {};
-  documents.forEach(doc => {
+  documents.forEach((doc) => {
     if (!documentsByType[doc.document_type]) {
       documentsByType[doc.document_type] = [];
     }
@@ -496,9 +573,9 @@ const ProjectView: React.FC = () => {
 
   // Add documents to filesData
   Object.entries(documentsByType).forEach(([type, docs]) => {
-    if (type === 'כללי') {
+    if (type === "כללי") {
       // Add all general files
-      docs.forEach(generalDoc => {
+      docs.forEach((generalDoc) => {
         filesData.push({
           fileId: generalDoc.id,
           fileName: generalDoc.name,
@@ -506,24 +583,30 @@ const ProjectView: React.FC = () => {
           fileType: type,
           status: generalDoc.status,
           created_at: generalDoc.created_at,
-          versions: [] // General files don't have versions
+          versions: [], // General files don't have versions
         });
       });
     } else {
       // For other document types, sort by created_at and take the most recent
-      const sortedDocs = docs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const sortedDocs = docs.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       const doc = sortedDocs[0]; // Take the most recent document
-      
+
       // Create versions array from all documents of this type
-      const versions = docs.map(versionDoc => ({
+      const versions = docs.map((versionDoc) => ({
         id: versionDoc.id,
         name: versionDoc.name,
         status: versionDoc.status,
-        created_at: versionDoc.created_at
+        created_at: versionDoc.created_at,
       }));
-      
-      console.log(`Document ${type} has ${versions.length} versions:`, versions);
-      
+
+      console.log(
+        `Document ${type} has ${versions.length} versions:`,
+        versions
+      );
+
       filesData.push({
         fileId: doc.id,
         fileName: doc.name,
@@ -531,34 +614,47 @@ const ProjectView: React.FC = () => {
         fileType: type,
         status: doc.status,
         created_at: doc.created_at,
-        versions: versions
+        versions: versions,
       });
     }
   });
 
   // Add missing document types
   const existingTypes = Object.keys(documentsByType);
-  documentTypes?.forEach(type => {
+  documentTypes?.forEach((type) => {
     // Do not create a missing placeholder for general documents
-    if (type === 'כללי') {
+    if (type === "כללי") {
       return;
     }
     if (!existingTypes.includes(type)) {
       filesData.push({
-        fileId: '',
+        fileId: "",
         fileName: null,
         state: DocumentState.MISSING,
         fileType: type,
-        versions: []
+        versions: [],
       });
     }
   });
 
-  const handleFileUpload = async (fileType: string, file: File, mode: 'auto' | 'manual', status: string = DocumentState.UPLOADED) => {
+  const handleFileUpload = async (
+    fileType: string,
+    file: File,
+    mode: "auto" | "manual",
+    status: string = DocumentState.UPLOADED
+  ) => {
     if (!id || !file) return;
     try {
       console.log(`Uploading document with status: ${status}`);
-      await uploadProjectDocument(id, fileType, file.name, file, status, mode, formData?.city || '');
+      await uploadProjectDocument(
+        id,
+        fileType,
+        file.name,
+        file,
+        status,
+        mode,
+        formData?.city || ""
+      );
       await loadData();
       toast.success(`${fileType} uploaded successfully with status: ${status}`);
     } catch (error) {
@@ -567,24 +663,34 @@ const ProjectView: React.FC = () => {
     }
   };
 
-  const handleAutoFill = async (fileId: string, documentType: string, fileName: string) => {
+  const handleAutoFill = async (
+    fileId: string,
+    documentType: string,
+    fileName: string
+  ) => {
     if (!id || !fileId) return;
-    
+
     // Set loading state for this document
     setAutoFillingDocId(fileId);
-    
+
     try {
       // Download the current file
       const blob = await downloadProjectDocument(id, fileId);
       const file = new File([blob], fileName, { type: blob.type });
-      
+
       // Update the document with auto-fill and forward city
-      await autoFillDocument(id, fileId, documentType, file,formData?.city || '');
+      await autoFillDocument(
+        id,
+        fileId,
+        documentType,
+        file,
+        formData?.city || ""
+      );
       await loadData();
-      toast.success('Document auto-filled successfully');
+      toast.success("Document auto-filled successfully");
     } catch (error) {
       console.error("Auto fill error details:", error);
-      errorHandler(error as ErrorResponseData, 'Failed to auto-fill document');
+      errorHandler(error as ErrorResponseData, "Failed to auto-fill document");
     } finally {
       // Clear loading state
       setAutoFillingDocId(null);
@@ -595,7 +701,7 @@ const ProjectView: React.FC = () => {
     try {
       const blob = await downloadProjectDocument(id, fileId);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
@@ -603,34 +709,34 @@ const ProjectView: React.FC = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to download file');
+      errorHandler(error as ErrorResponseData, "Failed to download file");
     }
   };
-  
+
   // Handler for downloading a specific version of a document
   const handleVersionDownload = async (versionId: string) => {
     console.log(`handleVersionDownload called with versionId: ${versionId}`);
-    
+
     if (!id) {
       console.error("Project ID is missing");
       toast.error("שגיאה: מזהה פרויקט חסר");
       return;
     }
-    
+
     if (!versionId) {
       console.error("Version ID is missing");
       toast.error("שגיאה: מזהה גרסה חסר");
       return;
     }
-    
+
     try {
       // Find the document version details
-      let fileName = '';
+      let fileName = "";
       let foundVersion = false;
-      
+
       for (const file of filesData) {
         if (file.versions) {
-          const version = file.versions.find(v => v.id === versionId);
+          const version = file.versions.find((v) => v.id === versionId);
           if (version) {
             fileName = version.name;
             foundVersion = true;
@@ -639,26 +745,32 @@ const ProjectView: React.FC = () => {
           }
         }
       }
-      
+
       if (!foundVersion) {
-        console.warn(`Could not find version with ID: ${versionId} in local data`);
+        console.warn(
+          `Could not find version with ID: ${versionId} in local data`
+        );
       }
-      
-      console.log(`Downloading document with projectId: ${id}, versionId: ${versionId}`);
-      
+
+      console.log(
+        `Downloading document with projectId: ${id}, versionId: ${versionId}`
+      );
+
       // Download the specific version
       try {
         const blob = await downloadProjectDocument(id, versionId);
-        console.log(`Document downloaded successfully, blob size: ${blob.size} bytes`);
-        
+        console.log(
+          `Document downloaded successfully, blob size: ${blob.size} bytes`
+        );
+
         if (blob.size === 0) {
           console.error("Downloaded blob is empty");
           toast.error("הקובץ שהורד ריק");
           return;
         }
-        
+
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = fileName || `document-${versionId}.pdf`;
         document.body.appendChild(a);
@@ -666,14 +778,17 @@ const ProjectView: React.FC = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        toast.success('הגרסה הורדה בהצלחה');
+        toast.success("הגרסה הורדה בהצלחה");
       } catch (downloadError) {
         console.error(`Error in downloadProjectDocument: ${downloadError}`);
         throw downloadError;
       }
     } catch (error) {
       console.error(`Error downloading version ${versionId}:`, error);
-      errorHandler(error as ErrorResponseData, 'Failed to download document version');
+      errorHandler(
+        error as ErrorResponseData,
+        "Failed to download document version"
+      );
     }
   };
 
@@ -681,15 +796,15 @@ const ProjectView: React.FC = () => {
     if (!id || !fileId) return;
 
     // Find the file to get its status
-    const fileToDelete = filesData.find(file => file.fileId === fileId);
+    const fileToDelete = filesData.find((file) => file.fileId === fileId);
     const status = fileToDelete?.status || DocumentState.UPLOADED;
 
     try {
       await deleteProjectDocument(id, fileId, status);
       await loadData();
-      toast.success('File deleted successfully');
+      toast.success("File deleted successfully");
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to delete file');
+      errorHandler(error as ErrorResponseData, "Failed to delete file");
     }
   };
 
@@ -700,7 +815,7 @@ const ProjectView: React.FC = () => {
       setPreviewFileUrl(url);
       setPreviewFileName(fileName);
     } catch (error) {
-      errorHandler(error as ErrorResponseData, 'Failed to preview file');
+      errorHandler(error as ErrorResponseData, "Failed to preview file");
     }
   };
 
@@ -717,41 +832,52 @@ const ProjectView: React.FC = () => {
 
     try {
       const fileName = file.name;
-      console.log(`Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.GENERAL}`);
-      await uploadProjectDocument(id, 'כללי', fileName, file, DocumentState.GENERAL);
+      console.log(
+        `Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.GENERAL}`
+      );
+      await uploadProjectDocument(
+        id,
+        "כללי",
+        fileName,
+        file,
+        DocumentState.GENERAL
+      );
       await loadData();
-      toast.success('File uploaded successfully');
+      toast.success("File uploaded successfully");
     } catch (error) {
-      console.error("File upload error:", error); 
-      errorHandler(error as ErrorResponseData, 'Failed to upload file');
+      console.error("File upload error:", error);
+      errorHandler(error as ErrorResponseData, "Failed to upload file");
     }
   };
 
   const handleDownloadAllFiles = async () => {
     // Get all uploaded documents
-    const uploadedDocs = documents.filter(doc => doc.id);
-    
+    const uploadedDocs = documents.filter((doc) => doc.id);
+
     if (uploadedDocs.length === 0) {
-      toast.info('No files to download');
+      toast.info("No files to download");
       return;
     }
-    
+
     // Download each file
     for (const doc of uploadedDocs) {
       try {
         await handleFileDownload(doc.id, doc.name);
       } catch (error) {
-        errorHandler(error as ErrorResponseData, `Failed to download ${doc.name}`);
+        errorHandler(
+          error as ErrorResponseData,
+          `Failed to download ${doc.name}`
+        );
       }
     }
-    
+
     toast.success(`Downloading ${uploadedDocs.length} files`);
   };
 
   const handleEmailAllFiles = () => {
     // Would implement email functionality here
     // This would typically open a dialog to enter email address
-    toast.info('Email all files feature would be implemented here');
+    toast.info("Email all files feature would be implemented here");
   };
 
   // Render icons directly
@@ -772,16 +898,19 @@ const ProjectView: React.FC = () => {
   }, [id]);
 
   // Prepare filesData for FileArea
-  let generalFiles = filesData.filter(f => f.fileType === 'כללי');
+  let generalFiles = filesData.filter((f) => f.fileType === "כללי");
   // Sort general files by file name (ascending). Missing placeholders always last.
   generalFiles = generalFiles.sort((a, b) => {
     const aMissing = a.state === DocumentState.MISSING;
     const bMissing = b.state === DocumentState.MISSING;
     if (aMissing && !bMissing) return 1;
     if (bMissing && !aMissing) return -1;
-    const an = (a.fileName || '').toString();
-    const bn = (b.fileName || '').toString();
-    return an.localeCompare(bn, undefined, { numeric: true, sensitivity: 'base' });
+    const an = (a.fileName || "").toString();
+    const bn = (b.fileName || "").toString();
+    return an.localeCompare(bn, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
   });
 
   const saveTeam = async (data: typeof teamData) => {
@@ -790,13 +919,18 @@ const ProjectView: React.FC = () => {
     let hasValidationError = false;
 
     for (const roleKey of Object.keys(teamData)) {
-      const role = teamRoles.find(r => r.key === roleKey);
+      const role = teamRoles.find((r) => r.key === roleKey);
       if (!role) continue;
       const memberData = teamData[roleKey];
       const existing = currentMembers.find((m: any) => m.role === role.label);
 
       // If all fields are empty, skip
-      if (!memberData.name && !memberData.phone && !memberData.email && !memberData.address) {
+      if (
+        !memberData.name &&
+        !memberData.phone &&
+        !memberData.email &&
+        !memberData.address
+      ) {
         if (existing) {
           await deleteProjectTeamMember(existing.id);
         }
@@ -818,7 +952,7 @@ const ProjectView: React.FC = () => {
           address: memberData.address,
           phone: memberData.phone,
           email: memberData.email,
-          role: role.label
+          role: role.label,
         });
       } else {
         await createProjectTeamMember({
@@ -827,24 +961,22 @@ const ProjectView: React.FC = () => {
           address: memberData.address,
           phone: memberData.phone,
           email: memberData.email,
-          role: role.label
+          role: role.label,
         });
       }
     }
     await loadTeamMembers();
     if (!hasValidationError) {
-      toast.success('Team members saved successfully');
+      toast.success("Team members saved successfully");
     }
   };
 
   return (
     <PageContainer>
       <TopPanel>
-        <TopPanelLogo/>
+        <TopPanelLogo />
         <TopPanelTitleHolder>
-          <TopPanelTitle>
-            {formData?.name || 'Project Details'}
-          </TopPanelTitle>
+          <TopPanelTitle>{formData?.name || "Project Details"}</TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
           <IconOnlyButton onClick={() => router.back()} title="Back">
@@ -861,7 +993,7 @@ const ProjectView: React.FC = () => {
           </IconOnlyButton>
         </TopPanelGroup>
       </TopPanel>
-      <PageContent style={{ padding: '16px 0 0 0', overflow: 'hidden' }}>
+      <PageContent style={{ padding: "16px 0 0 0", overflow: "hidden" }}>
         {!formData ? (
           <EmptyStatePlaceholder msg="Project not found" />
         ) : (
@@ -869,21 +1001,21 @@ const ProjectView: React.FC = () => {
             {/* Second Sidebar with Navigation */}
             <SecondSidebar>
               <SecondSidebarContent>
-                <SidebarButton 
-                  active={activeTab === 'details'} 
-                  onClick={() => setActiveTab('details')}
+                <SidebarButton
+                  active={activeTab === "details"}
+                  onClick={() => setActiveTab("details")}
                 >
                   פרטי הפרויקט
                 </SidebarButton>
-                <SidebarButton 
-                  active={activeTab === 'professionals'} 
-                  onClick={() => setActiveTab('professionals')}
+                <SidebarButton
+                  active={activeTab === "professionals"}
+                  onClick={() => setActiveTab("professionals")}
                 >
                   בעלי מקצוע
                 </SidebarButton>
                 <SidebarButton
-                  active={activeTab === 'team'}
-                  onClick={() => setActiveTab('team')}
+                  active={activeTab === "team"}
+                  onClick={() => setActiveTab("team")}
                 >
                   צוות הפרויקט
                 </SidebarButton>
@@ -892,105 +1024,234 @@ const ProjectView: React.FC = () => {
 
             {/* Project Panel */}
             <ProjectPanel>
-              <Card style={{ marginTop: '60px' }}>
-                
-                {activeTab === 'details' && (
+              <Card style={{ marginTop: "60px" }}>
+                {activeTab === "details" && (
                   <div>
                     {/* Document Status Indicator - Moved to project details section */}
-                    <div style={{ 
-                      marginBottom: 20, 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '10px',
-                      border: '1px solid #e0e0e0'
-                    }}>
-                      <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>סטטוס מסמכי תחילת עבודה</div>
-                      
+                    <div
+                      style={{
+                        marginBottom: 20,
+                        padding: "15px",
+                        backgroundColor: "#f8f9fa",
+                        borderRadius: "10px",
+                        border: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <div
+                        style={{
+                          marginBottom: "10px",
+                          fontWeight: "bold",
+                          fontSize: "14px",
+                        }}
+                      >
+                        סטטוס מסמכי תחילת עבודה
+                      </div>
+
                       {/* Progress Bar Container */}
-                      <div style={{ 
-                        display: 'flex', 
-                        height: '12px', 
-                        borderRadius: '6px', 
-                        overflow: 'hidden',
-                        marginBottom: '10px'
-                      }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          height: "12px",
+                          borderRadius: "6px",
+                          overflow: "hidden",
+                          marginBottom: "10px",
+                        }}
+                      >
                         {/* Calculate document counts by status */}
                         {(() => {
-                          const categorizedDocs = filesData.filter(f => f.fileType !== 'כללי');
+                          const categorizedDocs = filesData.filter(
+                            (f) => f.fileType !== "כללי"
+                          );
                           const totalDocs = categorizedDocs.length;
-                          
-                          const missingCount = categorizedDocs.filter(f => f.state === DocumentState.MISSING).length;
-                          const uploadedCount = categorizedDocs.filter(f => f.status === DocumentState.UPLOADED && f.state !== DocumentState.MISSING).length;
-                          const filledCount = categorizedDocs.filter(f => f.status === DocumentState.FILLED).length;
-                          const signedCount = categorizedDocs.filter(f => f.status === DocumentState.SIGNED).length;
-                          
+
+                          const missingCount = categorizedDocs.filter(
+                            (f) => f.state === DocumentState.MISSING
+                          ).length;
+                          const uploadedCount = categorizedDocs.filter(
+                            (f) =>
+                              f.status === DocumentState.UPLOADED &&
+                              f.state !== DocumentState.MISSING
+                          ).length;
+                          const filledCount = categorizedDocs.filter(
+                            (f) => f.status === DocumentState.FILLED
+                          ).length;
+                          const signedCount = categorizedDocs.filter(
+                            (f) => f.status === DocumentState.SIGNED
+                          ).length;
+
                           // Calculate percentages
-                          const missingPercent = totalDocs > 0 ? (missingCount / totalDocs) * 100 : 0;
-                          const uploadedPercent = totalDocs > 0 ? (uploadedCount / totalDocs) * 100 : 0;
-                          const filledPercent = totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
-                          const signedPercent = totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
-                          
+                          const missingPercent =
+                            totalDocs > 0
+                              ? (missingCount / totalDocs) * 100
+                              : 0;
+                          const uploadedPercent =
+                            totalDocs > 0
+                              ? (uploadedCount / totalDocs) * 100
+                              : 0;
+                          const filledPercent =
+                            totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
+                          const signedPercent =
+                            totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
+
                           return (
                             <>
                               {/* Missing segment */}
                               {missingCount > 0 && (
-                                <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>
+                                <div
+                                  style={{
+                                    width: `${missingPercent}%`,
+                                    backgroundColor: "#ff6b6b",
+                                  }}
+                                ></div>
                               )}
-                              
+
                               {/* Uploaded segment */}
                               {uploadedCount > 0 && (
-                                <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>
+                                <div
+                                  style={{
+                                    width: `${uploadedPercent}%`,
+                                    backgroundColor: "#0071e3",
+                                  }}
+                                ></div>
                               )}
-                              
+
                               {/* Filled segment */}
                               {filledCount > 0 && (
-                                <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>
+                                <div
+                                  style={{
+                                    width: `${filledPercent}%`,
+                                    backgroundColor: "#b0851f",
+                                  }}
+                                ></div>
                               )}
-                              
+
                               {/* Signed segment */}
                               {signedCount > 0 && (
-                                <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>
+                                <div
+                                  style={{
+                                    width: `${signedPercent}%`,
+                                    backgroundColor: "#1d8450",
+                                  }}
+                                ></div>
                               )}
                             </>
                           );
                         })()}
                       </div>
-                      
+
                       {/* Legend */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "12px",
+                          fontSize: "12px",
+                        }}
+                      >
                         {/* Calculate document counts by status */}
                         {(() => {
-                          const categorizedDocs = filesData.filter(f => f.fileType !== 'כללי');
+                          const categorizedDocs = filesData.filter(
+                            (f) => f.fileType !== "כללי"
+                          );
                           const totalDocs = categorizedDocs.length;
-                          
-                          const missingCount = categorizedDocs.filter(f => f.state === DocumentState.MISSING).length;
-                          const uploadedCount = categorizedDocs.filter(f => f.status === DocumentState.UPLOADED && f.state !== DocumentState.MISSING).length;
-                          const filledCount = categorizedDocs.filter(f => f.status === DocumentState.FILLED).length;
-                          const signedCount = categorizedDocs.filter(f => f.status === DocumentState.SIGNED).length;
-                          
+
+                          const missingCount = categorizedDocs.filter(
+                            (f) => f.state === DocumentState.MISSING
+                          ).length;
+                          const uploadedCount = categorizedDocs.filter(
+                            (f) =>
+                              f.status === DocumentState.UPLOADED &&
+                              f.state !== DocumentState.MISSING
+                          ).length;
+                          const filledCount = categorizedDocs.filter(
+                            (f) => f.status === DocumentState.FILLED
+                          ).length;
+                          const signedCount = categorizedDocs.filter(
+                            (f) => f.status === DocumentState.SIGNED
+                          ).length;
+
                           return (
                             <>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <div style={{ width: '10px', height: '10px', backgroundColor: '#ff6b6b', borderRadius: '2px' }}></div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "10px",
+                                    height: "10px",
+                                    backgroundColor: "#ff6b6b",
+                                    borderRadius: "2px",
+                                  }}
+                                ></div>
                                 <span>חסרים: {missingCount}</span>
                               </div>
-                              
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <div style={{ width: '10px', height: '10px', backgroundColor: '#0071e3', borderRadius: '2px' }}></div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "10px",
+                                    height: "10px",
+                                    backgroundColor: "#0071e3",
+                                    borderRadius: "2px",
+                                  }}
+                                ></div>
                                 <span>ריקים: {uploadedCount}</span>
                               </div>
-                              
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <div style={{ width: '10px', height: '10px', backgroundColor: '#b0851f', borderRadius: '2px' }}></div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "10px",
+                                    height: "10px",
+                                    backgroundColor: "#b0851f",
+                                    borderRadius: "2px",
+                                  }}
+                                ></div>
                                 <span>מלאים: {filledCount}</span>
                               </div>
-                              
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <div style={{ width: '10px', height: '10px', backgroundColor: '#1d8450', borderRadius: '2px' }}></div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "10px",
+                                    height: "10px",
+                                    backgroundColor: "#1d8450",
+                                    borderRadius: "2px",
+                                  }}
+                                ></div>
                                 <span>חתומים: {signedCount}</span>
                               </div>
-                              
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginRight: 'auto' }}>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  marginRight: "auto",
+                                }}
+                              >
                                 <span>סה"כ: {totalDocs}</span>
                               </div>
                             </>
@@ -998,162 +1259,262 @@ const ProjectView: React.FC = () => {
                         })()}
                       </div>
                     </div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                      {!isEditingDetails ? (
-                        <CompactButton onClick={() => setIsEditingDetails(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveChanges(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaCheck)} Save
-                          </CompactButton>
-                          <CompactButton onClick={() => { cancelEditing(); setIsEditingDetails(false); }} disabled={saving}>
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
-                    <CompactFormGrid>
-                      <FullWidthField>
-                        <CompactLabel>שם הפרויקט</CompactLabel>
-                        <Input
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </FullWidthField>
-                      <CompactField>
-                        <CompactLabel>מספר בקשה</CompactLabel>
-                        <Input
-                          name="request_number"
-                          value={formData.request_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר היתר</CompactLabel>
-                        <Input
-                          name="permit_number"
-                          value={formData.permit_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק טיפול</CompactLabel>
-                        <Input
-                          name="construction_supervision_number"
-                          value={formData.construction_supervision_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיאום הנדסי</CompactLabel>
-                        <Input
-                          name="engineering_coordinator_number"
-                          value={formData.engineering_coordinator_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק כיבוי</CompactLabel>
-                        <Input
-                          name="firefighting_number"
-                          value={formData.firefighting_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>סטטוס הפרויקט</CompactLabel>
-                        <Select
-                          name="status"
-                          value={formData.status}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        >
-                          {statuses.map(s => (<option key={s} value={s}>{s}</option>))}
-                        </Select>
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>תאריך תחילת עבודות</CompactLabel>
-                        <Input
-                          name="status_due_date"
-                          type="date"
-                          value={formData.status_due_date || ''}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', height: '36px' }}
-                        />
-                      </CompactField>
-                      <FullWidthField>
-                        <CompactLabel>תיאור הפרויקט</CompactLabel>
-                        <TextArea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{ borderRadius: '8px', padding: '8px 10px', minHeight: '60px' }}
-                        />
-                      </FullWidthField>
-                    </CompactFormGrid>
 
+                    <Tabs
+                      tabs={projectTabs}
+                      activeTab={activeProjectTab}
+                      onTabChange={(tab) => setActiveProjectTab(tab)}
+                    />
+                    {activeProjectTab === "chat" && <Chat projectId={id} />}
+                    {activeProjectTab === "overview" && (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            marginTop: 16,
+                          }}
+                        >
+                          {!isEditingDetails ? (
+                            <CompactButton
+                              onClick={() => setIsEditingDetails(true)}
+                            >
+                              {renderIcon(FaIcons.FaEdit)} Edit
+                            </CompactButton>
+                          ) : (
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <CompactButton
+                                onClick={async () => {
+                                  await saveChanges();
+                                  setIsEditingDetails(false);
+                                }}
+                                disabled={saving}
+                              >
+                                {renderIcon(FaIcons.FaCheck)} Save
+                              </CompactButton>
+                              <CompactButton
+                                onClick={() => {
+                                  cancelEditing();
+                                  setIsEditingDetails(false);
+                                }}
+                                disabled={saving}
+                              >
+                                {renderIcon(FaIcons.FaTimes)} Cancel
+                              </CompactButton>
+                            </div>
+                          )}
+                        </div>
+                        <CompactFormGrid>
+                          <FullWidthField>
+                            <CompactLabel>שם הפרויקט</CompactLabel>
+                            <Input
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </FullWidthField>
+                          <CompactField>
+                            <CompactLabel>מספר בקשה</CompactLabel>
+                            <Input
+                              name="request_number"
+                              value={formData.request_number}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>מספר היתר</CompactLabel>
+                            <Input
+                              name="permit_number"
+                              value={formData.permit_number}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>מספר תיק טיפול</CompactLabel>
+                            <Input
+                              name="construction_supervision_number"
+                              value={formData.construction_supervision_number}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>מספר תיאום הנדסי</CompactLabel>
+                            <Input
+                              name="engineering_coordinator_number"
+                              value={formData.engineering_coordinator_number}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>מספר תיק כיבוי</CompactLabel>
+                            <Input
+                              name="firefighting_number"
+                              value={formData.firefighting_number}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>סטטוס הפרויקט</CompactLabel>
+                            <Select
+                              name="status"
+                              value={formData.status}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            >
+                              {statuses.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </Select>
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>תאריך תחילת עבודות</CompactLabel>
+                            <Input
+                              name="status_due_date"
+                              type="date"
+                              value={formData.status_due_date || ""}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                height: "36px",
+                              }}
+                            />
+                          </CompactField>
+                          <FullWidthField>
+                            <CompactLabel>תיאור הפרויקט</CompactLabel>
+                            <TextArea
+                              name="description"
+                              value={formData.description}
+                              onChange={handleChange}
+                              disabled={!isEditingDetails}
+                              style={{
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                minHeight: "60px",
+                              }}
+                            />
+                          </FullWidthField>
+                        </CompactFormGrid>
+                      </>
+                    )}
                   </div>
                 )}
-                
-                {activeTab === 'professionals' && (
+
+                {activeTab === "professionals" && (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-                      <CompactButton 
-                        onClick={handleAddProfessional} 
-                      >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <CompactButton onClick={handleAddProfessional}>
                         {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
                       </CompactButton>
                     </div>
-                    
+
                     {isLoadingProfessionals ? (
-                      <p style={{ fontSize: '13px', color: '#666' }}>טוען בעלי מקצוע...</p>
+                      <p style={{ fontSize: "13px", color: "#666" }}>
+                        טוען בעלי מקצוע...
+                      </p>
                     ) : professionals.length === 0 ? (
-                      <div style={{ 
-                        padding: '16px 12px', 
-                        textAlign: 'center', 
-                        backgroundColor: '#f9f9fb',
-                        borderRadius: '8px',
-                        color: '#666',
-                        fontSize: '13px'
-                      }}>
+                      <div
+                        style={{
+                          padding: "16px 12px",
+                          textAlign: "center",
+                          backgroundColor: "#f9f9fb",
+                          borderRadius: "8px",
+                          color: "#666",
+                          fontSize: "13px",
+                        }}
+                      >
                         אין בעלי מקצוע מצורפים לפרויקט
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {professionals.map(professional => (
-                          <ProfessionalCard className='professional-card' key={professional.id}>
-                            <ProfessionalInfo className='professional-info'>
-                              <Link href={`/professionals/${professional.id}`} passHref>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                        }}
+                      >
+                        {professionals.map((professional) => (
+                          <ProfessionalCard
+                            className="professional-card"
+                            key={professional.id}
+                          >
+                            <ProfessionalInfo className="professional-info">
+                              <Link
+                                href={`/professionals/${professional.id}`}
+                                passHref
+                              >
                                 <ProfessionalName>
                                   {professional.name}
                                 </ProfessionalName>
                               </Link>
-                              <ProfessionalType>{professional.professional_type}</ProfessionalType>
-                              <StatusBadge status={professional.status}>{professional.status}</StatusBadge>
+                              <ProfessionalType>
+                                {professional.professional_type}
+                              </ProfessionalType>
+                              <StatusBadge status={professional.status}>
+                                {professional.status}
+                              </StatusBadge>
                             </ProfessionalInfo>
-                            <IconOnlyButton 
-                              onClick={() => handleRemoveProfessional(professional)} 
+                            <IconOnlyButton
+                              onClick={() =>
+                                handleRemoveProfessional(professional)
+                              }
                               title="הסר בעל מקצוע"
-                              style={{ margin: '0', width: '24px', height: '24px', fontSize: '12px' }}
+                              style={{
+                                margin: "0",
+                                width: "24px",
+                                height: "24px",
+                                fontSize: "12px",
+                              }}
                             >
                               {renderIcon(FaIcons.FaTrash, 12)}
                             </IconOnlyButton>
@@ -1164,19 +1525,37 @@ const ProjectView: React.FC = () => {
                   </div>
                 )}
 
-                {activeTab === 'team' && (
+                {activeTab === "team" && (
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginTop: 16,
+                      }}
+                    >
                       {!isEditingTeam ? (
                         <CompactButton onClick={() => setIsEditingTeam(true)}>
                           {renderIcon(FaIcons.FaEdit)} Edit
                         </CompactButton>
                       ) : (
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <CompactButton onClick={async () => { await saveTeam(teamData); setIsEditingTeam(false); }} disabled={saving}>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <CompactButton
+                            onClick={async () => {
+                              await saveTeam(teamData);
+                              setIsEditingTeam(false);
+                            }}
+                            disabled={saving}
+                          >
                             {renderIcon(FaIcons.FaCheck)} Save
                           </CompactButton>
-                          <CompactButton onClick={() => { setIsEditingTeam(false); loadTeamMembers(); }} disabled={saving}>
+                          <CompactButton
+                            onClick={() => {
+                              setIsEditingTeam(false);
+                              loadTeamMembers();
+                            }}
+                            disabled={saving}
+                          >
                             {renderIcon(FaIcons.FaTimes)} Cancel
                           </CompactButton>
                         </div>
@@ -1185,12 +1564,30 @@ const ProjectView: React.FC = () => {
                     {rolesLoading ? (
                       <div>Loading roles...</div>
                     ) : (
-                      teamRoles.map(member => (
+                      teamRoles.map((member) => (
                         <Card key={member.key} style={{ marginBottom: 12 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-                            onClick={() => setTeamExpanded(prev => ({ ...prev, [member.key]: !prev[member.key] }))}>
-                            <span style={{ fontWeight: 600 }}>{member.label}</span>
-                            {teamExpanded[member.key] ? <FaChevronUp /> : <FaChevronDown />}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: "pointer",
+                            }}
+                            onClick={() =>
+                              setTeamExpanded((prev) => ({
+                                ...prev,
+                                [member.key]: !prev[member.key],
+                              }))
+                            }
+                          >
+                            <span style={{ fontWeight: 600 }}>
+                              {member.label}
+                            </span>
+                            {teamExpanded[member.key] ? (
+                              <FaChevronUp />
+                            ) : (
+                              <FaChevronDown />
+                            )}
                           </div>
                           {teamExpanded[member.key] && (
                             <div style={{ marginTop: 12 }}>
@@ -1198,8 +1595,16 @@ const ProjectView: React.FC = () => {
                                 <CompactField>
                                   <CompactLabel>שם מלא</CompactLabel>
                                   <Input
-                                    value={teamData[member.key]?.name || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], name: e.target.value } }))}
+                                    value={teamData[member.key]?.name || ""}
+                                    onChange={(e) =>
+                                      setTeamData((prev) => ({
+                                        ...prev,
+                                        [member.key]: {
+                                          ...prev[member.key],
+                                          name: e.target.value,
+                                        },
+                                      }))
+                                    }
                                     placeholder="שם מלא"
                                     disabled={!isEditingTeam}
                                   />
@@ -1207,8 +1612,16 @@ const ProjectView: React.FC = () => {
                                 <CompactField>
                                   <CompactLabel>טלפון</CompactLabel>
                                   <Input
-                                    value={teamData[member.key]?.phone || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], phone: e.target.value } }))}
+                                    value={teamData[member.key]?.phone || ""}
+                                    onChange={(e) =>
+                                      setTeamData((prev) => ({
+                                        ...prev,
+                                        [member.key]: {
+                                          ...prev[member.key],
+                                          phone: e.target.value,
+                                        },
+                                      }))
+                                    }
                                     placeholder="טלפון"
                                     disabled={!isEditingTeam}
                                   />
@@ -1216,8 +1629,16 @@ const ProjectView: React.FC = () => {
                                 <CompactField>
                                   <CompactLabel>דוא"ל</CompactLabel>
                                   <Input
-                                    value={teamData[member.key]?.email || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], email: e.target.value } }))}
+                                    value={teamData[member.key]?.email || ""}
+                                    onChange={(e) =>
+                                      setTeamData((prev) => ({
+                                        ...prev,
+                                        [member.key]: {
+                                          ...prev[member.key],
+                                          email: e.target.value,
+                                        },
+                                      }))
+                                    }
                                     placeholder={'דוא"ל'}
                                     disabled={!isEditingTeam}
                                   />
@@ -1225,8 +1646,16 @@ const ProjectView: React.FC = () => {
                                 <CompactField>
                                   <CompactLabel>כתובת</CompactLabel>
                                   <Input
-                                    value={teamData[member.key]?.address || ''}
-                                    onChange={e => setTeamData(prev => ({ ...prev, [member.key]: { ...prev[member.key], address: e.target.value } }))}
+                                    value={teamData[member.key]?.address || ""}
+                                    onChange={(e) =>
+                                      setTeamData((prev) => ({
+                                        ...prev,
+                                        [member.key]: {
+                                          ...prev[member.key],
+                                          address: e.target.value,
+                                        },
+                                      }))
+                                    }
                                     placeholder="כתובת"
                                     disabled={!isEditingTeam}
                                   />
@@ -1244,63 +1673,61 @@ const ProjectView: React.FC = () => {
 
             {/* Documents Panel */}
             <DocumentsPanel>
-              <Card style={{ height: 'auto', padding: '20px' }}>
-                <div style={{ display: 'flex', borderBottom: '1px solid #e0e0e0', marginBottom: 16 }}>
-                  <button
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: '8px 16px',
-                      fontSize: 14,
-                      fontWeight: activeDocTab === 'categorized' ? 700 : 600,
-                      color: activeDocTab === 'categorized' ? '#0071e3' : '#666',
-                      borderBottom: `2px solid ${activeDocTab === 'categorized' ? '#0071e3' : 'transparent'}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onClick={() => setActiveDocTab('categorized')}
-                  >
-                    מסמכי תחילת עבודה
-                  </button>
-                  <button
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: '8px 16px',
-                      fontSize: 14,
-                      fontWeight: activeDocTab === 'general' ? 700 : 600,
-                      color: activeDocTab === 'general' ? '#0071e3' : '#666',
-                      borderBottom: `2px solid ${activeDocTab === 'general' ? '#0071e3' : 'transparent'}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onClick={() => setActiveDocTab('general')}
-                  >
-                    מסמכים כלליים
-                  </button>
-                </div>
-                {activeDocTab === 'categorized' && (
+              <Card style={{ height: "auto", padding: "20px" }}>
+                <Tabs
+                  tabs={docTabs}
+                  activeTab={activeDocTab}
+                  onTabChange={(tab) => setActiveDocTab(tab)}
+                />
+                {activeDocTab === "categorized" && (
                   <>
                     {/* Action Buttons */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16, gap: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        marginBottom: 16,
+                        gap: 8,
+                      }}
+                    >
                       <button
                         onClick={handleDownloadAllFiles}
-                        disabled={filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0}
+                        disabled={
+                          filesData.filter(
+                            (f) =>
+                              f.fileType !== "כללי" &&
+                              f.state === DocumentState.UPLOADED
+                          ).length === 0
+                        }
                         style={{
-                          background: '#648fbf',
-                          color: '#fff',
-                          border: 'none',
+                          background: "#648fbf",
+                          color: "#fff",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '8px 16px',
+                          padding: "8px 16px",
                           fontWeight: 600,
                           fontSize: 14,
-                          cursor: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 'not-allowed' : 'pointer',
-                          opacity: filesData.filter(f => f.fileType !== 'כללי' && f.state === DocumentState.UPLOADED).length === 0 ? 0.5 : 1,
+                          cursor:
+                            filesData.filter(
+                              (f) =>
+                                f.fileType !== "כללי" &&
+                                f.state === DocumentState.UPLOADED
+                            ).length === 0
+                              ? "not-allowed"
+                              : "pointer",
+                          opacity:
+                            filesData.filter(
+                              (f) =>
+                                f.fileType !== "כללי" &&
+                                f.state === DocumentState.UPLOADED
+                            ).length === 0
+                              ? 0.5
+                              : 1,
                           marginBottom: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
                         }}
                       >
                         {renderIcon(FaIcons.FaDownload, 16)}
@@ -1309,20 +1736,20 @@ const ProjectView: React.FC = () => {
                       <button
                         disabled={true}
                         style={{
-                          background: '#648fbf',
-                          color: '#fff',
-                          border: 'none',
+                          background: "#648fbf",
+                          color: "#fff",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '8px 16px',
+                          padding: "8px 16px",
                           fontWeight: 600,
                           fontSize: 14,
-                          cursor: 'not-allowed',
+                          cursor: "not-allowed",
                           opacity: 0.5,
                           marginBottom: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
                         }}
                       >
                         {renderIcon(FaIcons.FaEnvelope, 16)}
@@ -1331,35 +1758,44 @@ const ProjectView: React.FC = () => {
                     </div>
                   </>
                 )}
-                {activeDocTab === 'general' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12, gap: 8 }}>
+                {activeDocTab === "general" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      marginBottom: 12,
+                      gap: 8,
+                    }}
+                  >
                     <button
                       onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
+                        const input = document.createElement("input");
+                        input.type = "file";
                         input.multiple = true;
-                        input.accept = '.pdf,.jpg,.jpeg,.png';
+                        input.accept = ".pdf,.jpg,.jpeg,.png";
                         input.onchange = (e: Event) => {
                           const files = (e.target as HTMLInputElement).files;
                           if (!files || files.length === 0) return;
-                          Array.from(files).forEach(f => handleUploadGeneralFile(f));
+                          Array.from(files).forEach((f) =>
+                            handleUploadGeneralFile(f)
+                          );
                         };
                         input.click();
                       }}
                       style={{
-                        background: '#648fbf',
-                        color: '#fff',
-                        border: 'none',
+                        background: "#648fbf",
+                        color: "#fff",
+                        border: "none",
                         borderRadius: 8,
-                        padding: '8px 16px',
+                        padding: "8px 16px",
                         fontWeight: 600,
                         fontSize: 14,
-                        cursor: 'pointer',
+                        cursor: "pointer",
                         marginBottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
                       }}
                     >
                       {renderIcon(FaIcons.FaUpload, 16)}
@@ -1368,17 +1804,21 @@ const ProjectView: React.FC = () => {
                   </div>
                 )}
                 <FileArea
-                  files={activeDocTab === 'categorized' ? filesData.filter(f => f.fileType !== 'כללי') : generalFiles}
+                  files={
+                    activeDocTab === "categorized"
+                      ? filesData.filter((f) => f.fileType !== "כללי")
+                      : generalFiles
+                  }
                   disabled={false}
                   onUpload={handleFileUpload}
                   onDelete={handleFileDelete}
                   onPreview={handleFilePreview}
                   onAutoFill={handleAutoFill}
                   onDownloadVersion={handleVersionDownload}
-                  isAutoFill={activeDocTab === 'categorized'}
+                  isAutoFill={activeDocTab === "categorized"}
                   autoFillingDocId={autoFillingDocId}
-                  {...(activeDocTab === 'general' && {
-                    onUploadGeneral: handleUploadGeneralFile
+                  {...(activeDocTab === "general" && {
+                    onUploadGeneral: handleUploadGeneralFile,
                   })}
                 />
               </Card>
@@ -1406,7 +1846,7 @@ const ProjectView: React.FC = () => {
           <ProjectProfessionalDialog
             projectId={id}
             onClose={handleProfessionalAdded}
-            existingProfessionalIds={professionals.map(p => p.id)}
+            existingProfessionalIds={professionals.map((p) => p.id)}
           />
         )}
 
