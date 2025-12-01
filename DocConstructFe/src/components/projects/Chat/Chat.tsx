@@ -62,6 +62,18 @@ export default function Chat({ projectId }: { projectId: string }) {
     }
   }, [comments]);
 
+  useEffect(() => {
+    const fetchChat = async () => {
+      const chat = await getProjectComments(projectId);
+      setComments(chat);
+    };
+
+    const interval = setInterval(() => {
+      fetchChat();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [sortedComments]);
+
   return (
     <ChatContainer>
       <ChatWrapper>

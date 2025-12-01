@@ -38,7 +38,7 @@ export const MessagesWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
-  max-height: 400px;
+  max-height: 450px;
 `;
 
 export const Message = styled.div`

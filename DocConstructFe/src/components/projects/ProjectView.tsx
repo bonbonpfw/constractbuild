@@ -267,7 +267,7 @@ const ProjectView: React.FC = () => {
 
   // Add tab state
   const [activeTab, setActiveTab] = useState<
-    "details" | "professionals" | "team"
+    "details" | "professionals" | "team" | "chat"
   >("details");
   const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>(
     []
@@ -1008,6 +1008,12 @@ const ProjectView: React.FC = () => {
                   פרטי הפרויקט
                 </SidebarButton>
                 <SidebarButton
+                  active={activeTab === "chat"}
+                  onClick={() => setActiveTab("chat")}
+                >
+                  לְשׂוֹחֵחַ
+                </SidebarButton>
+                <SidebarButton
                   active={activeTab === "professionals"}
                   onClick={() => setActiveTab("professionals")}
                 >
@@ -1025,422 +1031,409 @@ const ProjectView: React.FC = () => {
             {/* Project Panel */}
             <ProjectPanel>
               <Card style={{ marginTop: "60px" }}>
+                <div
+                  style={{
+                    marginBottom: 20,
+                    padding: "15px",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "10px",
+                    border: "1px solid #e0e0e0",
+                  }}
+                >
+                  <div
+                    style={{
+                      marginBottom: "10px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    סטטוס מסמכי תחילת עבודה
+                  </div>
+
+                  {/* Progress Bar Container */}
+                  <div
+                    style={{
+                      display: "flex",
+                      height: "12px",
+                      borderRadius: "6px",
+                      overflow: "hidden",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    {/* Calculate document counts by status */}
+                    {(() => {
+                      const categorizedDocs = filesData.filter(
+                        (f) => f.fileType !== "כללי"
+                      );
+                      const totalDocs = categorizedDocs.length;
+
+                      const missingCount = categorizedDocs.filter(
+                        (f) => f.state === DocumentState.MISSING
+                      ).length;
+                      const uploadedCount = categorizedDocs.filter(
+                        (f) =>
+                          f.status === DocumentState.UPLOADED &&
+                          f.state !== DocumentState.MISSING
+                      ).length;
+                      const filledCount = categorizedDocs.filter(
+                        (f) => f.status === DocumentState.FILLED
+                      ).length;
+                      const signedCount = categorizedDocs.filter(
+                        (f) => f.status === DocumentState.SIGNED
+                      ).length;
+
+                      // Calculate percentages
+                      const missingPercent =
+                        totalDocs > 0 ? (missingCount / totalDocs) * 100 : 0;
+                      const uploadedPercent =
+                        totalDocs > 0 ? (uploadedCount / totalDocs) * 100 : 0;
+                      const filledPercent =
+                        totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
+                      const signedPercent =
+                        totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
+
+                      return (
+                        <>
+                          {/* Missing segment */}
+                          {missingCount > 0 && (
+                            <div
+                              style={{
+                                width: `${missingPercent}%`,
+                                backgroundColor: "#ff6b6b",
+                              }}
+                            ></div>
+                          )}
+
+                          {/* Uploaded segment */}
+                          {uploadedCount > 0 && (
+                            <div
+                              style={{
+                                width: `${uploadedPercent}%`,
+                                backgroundColor: "#0071e3",
+                              }}
+                            ></div>
+                          )}
+
+                          {/* Filled segment */}
+                          {filledCount > 0 && (
+                            <div
+                              style={{
+                                width: `${filledPercent}%`,
+                                backgroundColor: "#b0851f",
+                              }}
+                            ></div>
+                          )}
+
+                          {/* Signed segment */}
+                          {signedCount > 0 && (
+                            <div
+                              style={{
+                                width: `${signedPercent}%`,
+                                backgroundColor: "#1d8450",
+                              }}
+                            ></div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Legend */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {/* Calculate document counts by status */}
+                    {(() => {
+                      const categorizedDocs = filesData.filter(
+                        (f) => f.fileType !== "כללי"
+                      );
+                      const totalDocs = categorizedDocs.length;
+
+                      const missingCount = categorizedDocs.filter(
+                        (f) => f.state === DocumentState.MISSING
+                      ).length;
+                      const uploadedCount = categorizedDocs.filter(
+                        (f) =>
+                          f.status === DocumentState.UPLOADED &&
+                          f.state !== DocumentState.MISSING
+                      ).length;
+                      const filledCount = categorizedDocs.filter(
+                        (f) => f.status === DocumentState.FILLED
+                      ).length;
+                      const signedCount = categorizedDocs.filter(
+                        (f) => f.status === DocumentState.SIGNED
+                      ).length;
+
+                      return (
+                        <>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "10px",
+                                height: "10px",
+                                backgroundColor: "#ff6b6b",
+                                borderRadius: "2px",
+                              }}
+                            ></div>
+                            <span>חסרים: {missingCount}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "10px",
+                                height: "10px",
+                                backgroundColor: "#0071e3",
+                                borderRadius: "2px",
+                              }}
+                            ></div>
+                            <span>ריקים: {uploadedCount}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "10px",
+                                height: "10px",
+                                backgroundColor: "#b0851f",
+                                borderRadius: "2px",
+                              }}
+                            ></div>
+                            <span>מלאים: {filledCount}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "10px",
+                                height: "10px",
+                                backgroundColor: "#1d8450",
+                                borderRadius: "2px",
+                              }}
+                            ></div>
+                            <span>חתומים: {signedCount}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              marginRight: "auto",
+                            }}
+                          >
+                            <span>סה"כ: {totalDocs}</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+
                 {activeTab === "details" && (
                   <div>
                     {/* Document Status Indicator - Moved to project details section */}
+
                     <div
                       style={{
-                        marginBottom: 20,
-                        padding: "15px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "10px",
-                        border: "1px solid #e0e0e0",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginTop: 16,
                       }}
                     >
-                      <div
-                        style={{
-                          marginBottom: "10px",
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                        }}
-                      >
-                        סטטוס מסמכי תחילת עבודה
-                      </div>
-
-                      {/* Progress Bar Container */}
-                      <div
-                        style={{
-                          display: "flex",
-                          height: "12px",
-                          borderRadius: "6px",
-                          overflow: "hidden",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        {/* Calculate document counts by status */}
-                        {(() => {
-                          const categorizedDocs = filesData.filter(
-                            (f) => f.fileType !== "כללי"
-                          );
-                          const totalDocs = categorizedDocs.length;
-
-                          const missingCount = categorizedDocs.filter(
-                            (f) => f.state === DocumentState.MISSING
-                          ).length;
-                          const uploadedCount = categorizedDocs.filter(
-                            (f) =>
-                              f.status === DocumentState.UPLOADED &&
-                              f.state !== DocumentState.MISSING
-                          ).length;
-                          const filledCount = categorizedDocs.filter(
-                            (f) => f.status === DocumentState.FILLED
-                          ).length;
-                          const signedCount = categorizedDocs.filter(
-                            (f) => f.status === DocumentState.SIGNED
-                          ).length;
-
-                          // Calculate percentages
-                          const missingPercent =
-                            totalDocs > 0
-                              ? (missingCount / totalDocs) * 100
-                              : 0;
-                          const uploadedPercent =
-                            totalDocs > 0
-                              ? (uploadedCount / totalDocs) * 100
-                              : 0;
-                          const filledPercent =
-                            totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
-                          const signedPercent =
-                            totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
-
-                          return (
-                            <>
-                              {/* Missing segment */}
-                              {missingCount > 0 && (
-                                <div
-                                  style={{
-                                    width: `${missingPercent}%`,
-                                    backgroundColor: "#ff6b6b",
-                                  }}
-                                ></div>
-                              )}
-
-                              {/* Uploaded segment */}
-                              {uploadedCount > 0 && (
-                                <div
-                                  style={{
-                                    width: `${uploadedPercent}%`,
-                                    backgroundColor: "#0071e3",
-                                  }}
-                                ></div>
-                              )}
-
-                              {/* Filled segment */}
-                              {filledCount > 0 && (
-                                <div
-                                  style={{
-                                    width: `${filledPercent}%`,
-                                    backgroundColor: "#b0851f",
-                                  }}
-                                ></div>
-                              )}
-
-                              {/* Signed segment */}
-                              {signedCount > 0 && (
-                                <div
-                                  style={{
-                                    width: `${signedPercent}%`,
-                                    backgroundColor: "#1d8450",
-                                  }}
-                                ></div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Legend */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "12px",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {/* Calculate document counts by status */}
-                        {(() => {
-                          const categorizedDocs = filesData.filter(
-                            (f) => f.fileType !== "כללי"
-                          );
-                          const totalDocs = categorizedDocs.length;
-
-                          const missingCount = categorizedDocs.filter(
-                            (f) => f.state === DocumentState.MISSING
-                          ).length;
-                          const uploadedCount = categorizedDocs.filter(
-                            (f) =>
-                              f.status === DocumentState.UPLOADED &&
-                              f.state !== DocumentState.MISSING
-                          ).length;
-                          const filledCount = categorizedDocs.filter(
-                            (f) => f.status === DocumentState.FILLED
-                          ).length;
-                          const signedCount = categorizedDocs.filter(
-                            (f) => f.status === DocumentState.SIGNED
-                          ).length;
-
-                          return (
-                            <>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "10px",
-                                    height: "10px",
-                                    backgroundColor: "#ff6b6b",
-                                    borderRadius: "2px",
-                                  }}
-                                ></div>
-                                <span>חסרים: {missingCount}</span>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "10px",
-                                    height: "10px",
-                                    backgroundColor: "#0071e3",
-                                    borderRadius: "2px",
-                                  }}
-                                ></div>
-                                <span>ריקים: {uploadedCount}</span>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "10px",
-                                    height: "10px",
-                                    backgroundColor: "#b0851f",
-                                    borderRadius: "2px",
-                                  }}
-                                ></div>
-                                <span>מלאים: {filledCount}</span>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "10px",
-                                    height: "10px",
-                                    backgroundColor: "#1d8450",
-                                    borderRadius: "2px",
-                                  }}
-                                ></div>
-                                <span>חתומים: {signedCount}</span>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
-                                  marginRight: "auto",
-                                }}
-                              >
-                                <span>סה"כ: {totalDocs}</span>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
+                      {!isEditingDetails ? (
+                        <CompactButton
+                          onClick={() => setIsEditingDetails(true)}
+                        >
+                          {renderIcon(FaIcons.FaEdit)} Edit
+                        </CompactButton>
+                      ) : (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <CompactButton
+                            onClick={async () => {
+                              await saveChanges();
+                              setIsEditingDetails(false);
+                            }}
+                            disabled={saving}
+                          >
+                            {renderIcon(FaIcons.FaCheck)} Save
+                          </CompactButton>
+                          <CompactButton
+                            onClick={() => {
+                              cancelEditing();
+                              setIsEditingDetails(false);
+                            }}
+                            disabled={saving}
+                          >
+                            {renderIcon(FaIcons.FaTimes)} Cancel
+                          </CompactButton>
+                        </div>
+                      )}
                     </div>
-
-                    <Tabs
-                      tabs={projectTabs}
-                      activeTab={activeProjectTab}
-                      onTabChange={(tab) => setActiveProjectTab(tab)}
-                    />
-                    {activeProjectTab === "chat" && <Chat projectId={id} />}
-                    {activeProjectTab === "overview" && (
-                      <>
-                        <div
+                    <CompactFormGrid>
+                      <FullWidthField>
+                        <CompactLabel>שם הפרויקט</CompactLabel>
+                        <Input
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
                           style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            marginTop: 16,
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </FullWidthField>
+                      <CompactField>
+                        <CompactLabel>מספר בקשה</CompactLabel>
+                        <Input
+                          name="request_number"
+                          value={formData.request_number}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר היתר</CompactLabel>
+                        <Input
+                          name="permit_number"
+                          value={formData.permit_number}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיק טיפול</CompactLabel>
+                        <Input
+                          name="construction_supervision_number"
+                          value={formData.construction_supervision_number}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיאום הנדסי</CompactLabel>
+                        <Input
+                          name="engineering_coordinator_number"
+                          value={formData.engineering_coordinator_number}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>מספר תיק כיבוי</CompactLabel>
+                        <Input
+                          name="firefighting_number"
+                          value={formData.firefighting_number}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>סטטוס הפרויקט</CompactLabel>
+                        <Select
+                          name="status"
+                          value={formData.status}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
                           }}
                         >
-                          {!isEditingDetails ? (
-                            <CompactButton
-                              onClick={() => setIsEditingDetails(true)}
-                            >
-                              {renderIcon(FaIcons.FaEdit)} Edit
-                            </CompactButton>
-                          ) : (
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <CompactButton
-                                onClick={async () => {
-                                  await saveChanges();
-                                  setIsEditingDetails(false);
-                                }}
-                                disabled={saving}
-                              >
-                                {renderIcon(FaIcons.FaCheck)} Save
-                              </CompactButton>
-                              <CompactButton
-                                onClick={() => {
-                                  cancelEditing();
-                                  setIsEditingDetails(false);
-                                }}
-                                disabled={saving}
-                              >
-                                {renderIcon(FaIcons.FaTimes)} Cancel
-                              </CompactButton>
-                            </div>
-                          )}
-                        </div>
-                        <CompactFormGrid>
-                          <FullWidthField>
-                            <CompactLabel>שם הפרויקט</CompactLabel>
-                            <Input
-                              name="name"
-                              value={formData.name}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </FullWidthField>
-                          <CompactField>
-                            <CompactLabel>מספר בקשה</CompactLabel>
-                            <Input
-                              name="request_number"
-                              value={formData.request_number}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>מספר היתר</CompactLabel>
-                            <Input
-                              name="permit_number"
-                              value={formData.permit_number}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>מספר תיק טיפול</CompactLabel>
-                            <Input
-                              name="construction_supervision_number"
-                              value={formData.construction_supervision_number}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>מספר תיאום הנדסי</CompactLabel>
-                            <Input
-                              name="engineering_coordinator_number"
-                              value={formData.engineering_coordinator_number}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>מספר תיק כיבוי</CompactLabel>
-                            <Input
-                              name="firefighting_number"
-                              value={formData.firefighting_number}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>סטטוס הפרויקט</CompactLabel>
-                            <Select
-                              name="status"
-                              value={formData.status}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            >
-                              {statuses.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </Select>
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>תאריך תחילת עבודות</CompactLabel>
-                            <Input
-                              name="status_due_date"
-                              type="date"
-                              value={formData.status_due_date || ""}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                height: "36px",
-                              }}
-                            />
-                          </CompactField>
-                          <FullWidthField>
-                            <CompactLabel>תיאור הפרויקט</CompactLabel>
-                            <TextArea
-                              name="description"
-                              value={formData.description}
-                              onChange={handleChange}
-                              disabled={!isEditingDetails}
-                              style={{
-                                borderRadius: "8px",
-                                padding: "8px 10px",
-                                minHeight: "60px",
-                              }}
-                            />
-                          </FullWidthField>
-                        </CompactFormGrid>
-                      </>
-                    )}
+                          {statuses.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </Select>
+                      </CompactField>
+                      <CompactField>
+                        <CompactLabel>תאריך תחילת עבודות</CompactLabel>
+                        <Input
+                          name="status_due_date"
+                          type="date"
+                          value={formData.status_due_date || ""}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            height: "36px",
+                          }}
+                        />
+                      </CompactField>
+                      <FullWidthField>
+                        <CompactLabel>תיאור הפרויקט</CompactLabel>
+                        <TextArea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          disabled={!isEditingDetails}
+                          style={{
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            minHeight: "60px",
+                          }}
+                        />
+                      </FullWidthField>
+                    </CompactFormGrid>
                   </div>
                 )}
 
@@ -1668,6 +1661,8 @@ const ProjectView: React.FC = () => {
                     )}
                   </div>
                 )}
+
+                {activeTab === "chat" && <Chat projectId={id} />}
               </Card>
             </ProjectPanel>
 
