@@ -5,6 +5,7 @@ export const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
 `;
 
 export const ChatInput = styled(TextArea)`
@@ -19,6 +20,8 @@ export const ChatWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   position: relative;
+  flex-grow: 1;
+  min-height: 0;
 `;
 
 export const SendButton = styled(Button)`
@@ -38,7 +41,6 @@ export const MessagesWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
-  max-height: 450px;
 `;
 
 export const Message = styled.div`

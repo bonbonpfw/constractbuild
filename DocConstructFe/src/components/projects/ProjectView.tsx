@@ -80,7 +80,7 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const MainLayout = styled.div`
   display: grid;
-  grid-template-columns: 180px 0.8fr 400px;
+  grid-template-columns: 180px 1fr 0.7fr;
   grid-template-rows: auto;
   grid-template-areas: "sidebar project documents";
   gap: 16px;
@@ -130,7 +130,6 @@ const ProjectPanel = styled.div`
 
 const DocumentsPanel = styled.div`
   grid-area: documents;
-  width: 540px;
   padding: 0 12px;
   border-right: 1px solid #eaeaea;
   overflow: hidden;
@@ -142,6 +141,11 @@ const Card = styled.div`
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
   padding: 16px;
   margin-bottom: 16px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  min-height: 0;
 `;
 
 const CompactFormGrid = styled(FormGrid)`
@@ -1030,7 +1034,9 @@ const ProjectView: React.FC = () => {
 
             {/* Project Panel */}
             <ProjectPanel>
-              <Card style={{ marginTop: "60px" }}>
+              <Card
+                style={{ marginTop: "60px", maxHeight: "calc(100% - 60px)" }}
+              >
                 <div
                   style={{
                     marginBottom: 20,
@@ -1260,7 +1266,7 @@ const ProjectView: React.FC = () => {
                 </div>
 
                 {activeTab === "details" && (
-                  <div>
+                  <div style={{ minHeight: 0, overflow: "auto" }}>
                     {/* Document Status Indicator - Moved to project details section */}
 
                     <div
@@ -1438,7 +1444,7 @@ const ProjectView: React.FC = () => {
                 )}
 
                 {activeTab === "professionals" && (
-                  <div>
+                  <div style={{ minHeight: 0, overflow: "auto" }}>
                     <div
                       style={{
                         display: "flex",
@@ -1519,7 +1525,7 @@ const ProjectView: React.FC = () => {
                 )}
 
                 {activeTab === "team" && (
-                  <div>
+                  <div style={{ minHeight: 0, overflow: "auto" }}>
                     <div
                       style={{
                         display: "flex",

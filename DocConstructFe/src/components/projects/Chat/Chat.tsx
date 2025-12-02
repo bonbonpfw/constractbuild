@@ -38,12 +38,19 @@ export default function Chat({ projectId }: { projectId: string }) {
     setComments([...comments, newComment]);
     setInput("");
     setIsSending(false);
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
     const fetchChat = async () => {
       const chat = await getProjectComments(projectId);
       setComments(chat);
+      console.log(chatRef.current);
+      if (chatRef.current) {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
     };
     fetchChat();
   }, [projectId]);
@@ -60,7 +67,7 @@ export default function Chat({ projectId }: { projectId: string }) {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [comments]);
+  }, []);
 
   useEffect(() => {
     const fetchChat = async () => {
