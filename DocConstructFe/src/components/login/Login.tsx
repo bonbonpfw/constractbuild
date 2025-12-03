@@ -226,7 +226,6 @@ const LoginSplitMockupQuote = () => {
                   <Form.Item
                     label="שם משתמש"
                     name="username"
-                    dir="rtl"
                     rules={[
                       { required: true, message: "אנא הכנס שם משתמש" },
                       // { type: "email", message: "Please enter a valid email" },
@@ -243,7 +242,6 @@ const LoginSplitMockupQuote = () => {
                   <Form.Item
                     label="סיסמה"
                     name="password"
-                    dir="rtl"
                     rules={[
                       { required: true, message: "אנא הכנס סיסמה" },
                     ]}
