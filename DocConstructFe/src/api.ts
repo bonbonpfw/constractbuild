@@ -11,10 +11,24 @@ import Cookies from "js-cookie";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001/api";
 
-const TOKEN = Cookies.get("auth_token");
-
 axios.defaults.baseURL = API_URL;
-axios.defaults.headers.common["Authorization"] = `Bearer ${TOKEN}`;
+
+// Add a request interceptor to attach the token to every request
+axios.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("auth_token");
+    if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Projects API
 
