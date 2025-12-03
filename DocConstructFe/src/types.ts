@@ -2,9 +2,9 @@
 
 // Professional Types
 export enum ProfessionalStatus {
-  ACTIVE = 'Active',
-  WARNING = 'Warning',
-  EXPIRED = 'Expired'
+  ACTIVE = "Active",
+  WARNING = "Warning",
+  EXPIRED = "Expired",
 }
 
 export interface ProfessionalType {
@@ -52,11 +52,11 @@ export interface ProjectDocument {
 
 // Project Team Member Types
 export enum ProjectTeamRole {
-  PERMIT_OWNER = 'PERMIT_OWNER',
-  REQUEST_EDITOR = 'REQUEST_EDITOR', 
-  CONTRACTOR_REPRESENTATIVE = 'CONTRACTOR_REPRESENTATIVE',
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  PERMIT_OWNER_REPRESENTATIVE = 'PERMIT_OWNER_REPRESENTATIVE'
+  PERMIT_OWNER = "PERMIT_OWNER",
+  REQUEST_EDITOR = "REQUEST_EDITOR",
+  CONTRACTOR_REPRESENTATIVE = "CONTRACTOR_REPRESENTATIVE",
+  PROJECT_MANAGER = "PROJECT_MANAGER",
+  PERMIT_OWNER_REPRESENTATIVE = "PERMIT_OWNER_REPRESENTATIVE",
 }
 
 export interface ProjectTeamMember {
@@ -82,19 +82,19 @@ export interface PermitOwnerData {
 
 // Project Types
 export enum ProjectStatus {
-  PRE_PERMIT = 'Pre permit',
-  POST_PERMIT = 'Post permit',
-  FINAL = 'Final'
+  PRE_PERMIT = "Pre permit",
+  POST_PERMIT = "Post permit",
+  FINAL = "Final",
 }
 
 export enum DocumentState {
-  PENDING = 'Pending',
-  SIGNED = 'Signed',
-  FILLED = 'Filled',
-  DELIVERED = 'Delivered',
-  MISSING = 'Missing',
-  UPLOADED = 'Uploaded',
-  GENERAL = 'General'
+  PENDING = "Pending",
+  SIGNED = "Signed",
+  FILLED = "Filled",
+  DELIVERED = "Delivered",
+  MISSING = "Missing",
+  UPLOADED = "Uploaded",
+  GENERAL = "General",
 }
 
 export interface Project {
@@ -116,4 +116,26 @@ export interface Project {
   team_members?: ProjectTeamMember[];
 }
 
-export interface ProjectCreationFormData extends Omit<Project, 'id'> {}
+export interface User {
+  id: string;
+  username: string;
+}
+
+export interface CreateUserValues {
+  username: string;
+  password: string;
+  "confirm-password": string;
+}
+
+export type EditUserValues = {
+  oldPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
+export type UpdateUserPasswordPayload = {
+  old_password: string;
+  new_password: string;
+};
+
+export interface ProjectCreationFormData extends Omit<Project, "id"> {}

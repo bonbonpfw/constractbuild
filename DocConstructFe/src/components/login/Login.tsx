@@ -5,8 +5,9 @@ import Image from "next/image";
 import { Form, Input, Button as AntButton } from "antd";
 import { useRouter } from "next/router";
 import styled from "styled-components";
-import { getProjects, login } from "../../api";
+import { login } from "../../api";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
+import Cookies from "js-cookie";
 
 type LoginValues = {
   username: string;
@@ -179,7 +180,9 @@ const LoginSplitMockupQuote = () => {
       const res = await login(username, password);
 
       if (res?.status_code === "success" && res.token) {
-        document.cookie = `auth_token=${res.token}; path=/;`;
+        Cookies.set("auth_token", res.token, {
+          path: "/",
+        });
 
         await router.push("/projects");
       }

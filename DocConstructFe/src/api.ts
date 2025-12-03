@@ -4,13 +4,14 @@ import {
   Project,
   ProjectCreationFormData,
   DocumentState,
+  UpdateUserPasswordPayload,
 } from "./types";
 import { ProfessionalCreationFormData } from "./components/professionals/ProfessionalCreationDialog";
+import Cookies from "js-cookie";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001/api";
 
-const TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTk0NDk2MDgtNGQ2OC00Nzc1LWJmOWMtOWU5NWUyZWU3MGU3IiwiZXhwIjoxNzY0MjcyNDgwfQ.aEny_rCFjGapf1z1v7v0oWV9ZMMehII-h-YPUZC2EBU";
+const TOKEN = Cookies.get("auth_token");
 
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.common["Authorization"] = `Bearer ${TOKEN}`;
@@ -353,4 +354,27 @@ export const login = async (username: string, password: string) => {
     password,
   });
   return response.data;
+};
+
+export const getUsers = async () => {
+  const response = await axios.get(`${API_URL}/users`);
+  return response.data;
+};
+
+export const createUser = async (username: string, password: string) => {
+  const response = await axios.post(`${API_URL}/users`, { username, password });
+  return response.data;
+};
+
+export const deleteUser = async (id: string) => {
+  await axios.delete(`${API_URL}/users/${id}`);
+  return true;
+};
+
+export const editUser = async (
+  id: string,
+  payload: UpdateUserPasswordPayload,
+) => {
+  await axios.patch(`${API_URL}/users/${id}`, payload);
+  return true;
 };

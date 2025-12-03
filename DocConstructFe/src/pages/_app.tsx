@@ -8,13 +8,7 @@ import "../styles/globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/router";
-
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-
-  const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return match ? decodeURIComponent(match[2]) : null;
-}
+import Cookies from "js-cookie";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const noLayoutRoutes = ["/login"];
@@ -30,7 +24,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   );
 
   useEffect(() => {
-    const token = getCookie("auth_token");
+    const token = Cookies.get("auth_token");
     const isLoginPage = router.pathname === "/login";
 
     if (!token && !isLoginPage) {

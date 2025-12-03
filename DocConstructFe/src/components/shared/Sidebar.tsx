@@ -1,12 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import { useRouter } from 'next/router';
-import styled from 'styled-components';
-import {FaBars} from 'react-icons/fa';
-import Link from 'next/link';
-import {FaBuilding, FaUserTie} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import styled from "styled-components";
+import Link from "next/link";
+import {
+  FaBuilding,
+  FaUserTie,
+  FaBars,
+  FaSignOutAlt,
+  FaUsers,
+} from "react-icons/fa";
+import Cookies from "js-cookie";
 
 const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
-  width: ${props => props.isCollapsed ? '60px' : '250px'};
+  width: ${(props) => (props.isCollapsed ? "60px" : "250px")};
   height: 100vh;
   background: #f5f5f5;
   color: #51789f;
@@ -25,31 +31,38 @@ const SidebarGroup = styled.div`
 `;
 
 const SidebarItemHolder = styled.div<{ isActive: boolean }>`
-  cursor: ${props => props.isActive ? 'default' : 'pointer'};
+  cursor: ${(props) => (props.isActive ? "default" : "pointer")};
   height: 65px;
   display: flex;
   text-decoration: none;
   padding: 14px 0 14px 0;
-  font-weight: ${props => props.isActive ? '600' : '400'};
+  font-weight: ${(props) => (props.isActive ? "600" : "400")};
   transition: all 0.2s ease;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     background-color: rgb(227, 237, 246);
   }
 `;
 
-const SidebarItemLabel = styled.span<{ isCollapsed: boolean; isActive: boolean }>`
+const SidebarItemLabel = styled.span<{
+  isCollapsed: boolean;
+  isActive: boolean;
+}>`
   display: flex;
   align-items: center;
   text-decoration: none;
-  font-weight: ${props => props.isActive ? '600' : '400'};
+  font-weight: ${(props) => (props.isActive ? "600" : "400")};
   font-size: 22px;
-  border-radius: ${props => props.theme.borderRadius.small};
-  background-color: 'transparent';
-  visibility: ${props => (props.isCollapsed ? 'hidden' : 'visible')};
-  transition: opacity 0.2s ease, visibility 0s linear ${props => (props.isCollapsed ? '0s' : '0.3s')};
+  border-radius: ${(props) => props.theme.borderRadius.small};
+  background-color: "transparent";
+  visibility: ${(props) => (props.isCollapsed ? "hidden" : "visible")};
+  transition:
+    opacity 0.2s ease,
+    visibility 0s linear ${(props) => (props.isCollapsed ? "0s" : "0.3s")};
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     background-color: transparent;
   }
 `;
@@ -70,7 +83,7 @@ const ToggleButtonHolder = styled.div`
   display: flex;
   margin-top: 20px;
   margin-bottom: 10px;
-  margin-right: 10px
+  margin-right: 10px;
 `;
 
 const ToggleButton = styled.button`
@@ -83,11 +96,28 @@ const ToggleButton = styled.button`
   transition: color 0.2s ease;
 `;
 
+const LogoutHolder = styled.div`
+  border-top: 1px solid #e0e0e0;
+  padding: 10px 0 20px 0;
+`;
+
+const BottomWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 20px;
+`;
+
+const UserManagementHolder = styled.div`
+  border-top: 1px solid #e0e0e0;
+  padding-top: 10px;
+`;
+
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('sidebarCollapsed');
+    const stored = localStorage.getItem("sidebarCollapsed");
     if (stored !== null) {
       setIsCollapsed(JSON.parse(stored));
     }
@@ -98,12 +128,18 @@ const Sidebar: React.FC = () => {
   const isActive = (path: string) => router.pathname === path;
 
   const routes = [
-    {'label': 'פרויקטים', 'icon': <FaBuilding/>, 'path': '/projects'},
-    {'label': 'אנשי מקצוע', 'icon': <FaUserTie/>, 'path': '/professionals'},
-  ]
+    { label: "פרויקטים", icon: <FaBuilding />, path: "/projects" },
+    { label: "אנשי מקצוע", icon: <FaUserTie />, path: "/professionals" },
+  ];
+
+  const handleLogout = () => {
+    Cookies.remove("auth_token");
+
+    router.push("/login");
+  };
 
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
+    localStorage.setItem("sidebarCollapsed", JSON.stringify(isCollapsed));
   }, [isCollapsed]);
 
   return (
@@ -112,19 +148,20 @@ const Sidebar: React.FC = () => {
         <SidebarGroup>
           <ToggleButtonHolder>
             <ToggleButton onClick={() => setIsCollapsed(!isCollapsed)}>
-              <FaBars/>
+              <FaBars />
             </ToggleButton>
           </ToggleButtonHolder>
         </SidebarGroup>
         <SidebarGroup>
-          <div style={{marginTop: '70px'}}>
+          <div style={{ marginTop: "70px" }}>
             {routes.map((route, index) => (
               <Link key={index} href={route.path} passHref>
                 <SidebarItemHolder isActive={isActive(route.path)}>
-                  <SidebarItemIcon>
-                    {route.icon}
-                  </SidebarItemIcon>
-                  <SidebarItemLabel isCollapsed={isCollapsed} isActive={isActive(route.path)}>
+                  <SidebarItemIcon>{route.icon}</SidebarItemIcon>
+                  <SidebarItemLabel
+                    isCollapsed={isCollapsed}
+                    isActive={isActive(route.path)}
+                  >
                     {route.label}
                   </SidebarItemLabel>
                 </SidebarItemHolder>
@@ -133,6 +170,34 @@ const Sidebar: React.FC = () => {
           </div>
         </SidebarGroup>
       </SidebarGroup>
+      <BottomWrapper>
+        <UserManagementHolder>
+          <Link href="/users" passHref>
+            <SidebarItemHolder isActive={isActive("/users")}>
+              <SidebarItemIcon>
+                <FaUsers />
+              </SidebarItemIcon>
+              <SidebarItemLabel
+                isCollapsed={isCollapsed}
+                isActive={isActive("/users")}
+              >
+                ניהול משתמשים
+              </SidebarItemLabel>
+            </SidebarItemHolder>
+          </Link>
+        </UserManagementHolder>
+
+        <LogoutHolder>
+          <SidebarItemHolder isActive={false} onClick={handleLogout}>
+            <SidebarItemIcon>
+              <FaSignOutAlt />
+            </SidebarItemIcon>
+            <SidebarItemLabel isCollapsed={isCollapsed} isActive={false}>
+              יציאה
+            </SidebarItemLabel>
+          </SidebarItemHolder>
+        </LogoutHolder>
+      </BottomWrapper>
     </SidebarContainer>
   );
 };
