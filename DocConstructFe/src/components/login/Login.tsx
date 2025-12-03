@@ -222,7 +222,7 @@ const LoginSplitMockupQuote = () => {
                 requiredMark={false}
                 style={{ display: "flex", flexDirection: "column", gap: 24 }}
               >
-                <div style={fieldsWrapperStyle}>
+                <div style={fieldsWrapperStyle} dir="rtl">
                   <Form.Item
                     label="שם משתמש"
                     name="username"
