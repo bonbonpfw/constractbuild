@@ -225,7 +225,7 @@ const ProfessionalsView: React.FC = () => {
               onSort={handleSort}
               sortable={false}
             >
-              {/* Actions column - not sortable */}
+              פעולות
             </SortableTableHeader>
           </tr>
         </thead>
