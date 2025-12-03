@@ -184,6 +184,10 @@ const LoginSplitMockupQuote = () => {
           path: "/",
         });
 
+        // Update axios default headers with the new token
+        const axios = require('axios');
+        axios.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
+
         await router.push("/projects");
       }
     } catch (error) {

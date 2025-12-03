@@ -27,6 +27,12 @@ function MyApp({ Component, pageProps }: AppProps) {
     const token = Cookies.get("auth_token");
     const isLoginPage = router.pathname === "/login";
 
+    // Set axios authorization header if token exists
+    if (token) {
+      const axios = require('axios');
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+
     if (!token && !isLoginPage) {
       (async () => {
         await router.replace("/login");

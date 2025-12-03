@@ -100,14 +100,14 @@ const UserManagement = () => {
         <Table>
           <thead>
             <tr>
-              <th style={{ textAlign: "right" }}>ID</th>
+              <th style={{ textAlign: "right" }}>Username</th>
               <th style={{ textAlign: "right" }} />
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <TableBody style={{ textAlign: "right" }}>{user.id}</TableBody>
+                <TableBody style={{ textAlign: "right" }}>{user.username}</TableBody>
                 <TableBody style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   <button
                     onClick={() => handleDeleteUser(user.id)}

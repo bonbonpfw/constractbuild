@@ -639,6 +639,7 @@ class UserManager:
         """Disable user account."""
         user = self.get_by_id(user_id)
         user.is_active = False
+        db_session.delete(user)
         db_session.commit()
         
     @staticmethod
@@ -681,6 +682,7 @@ class UserManager:
         return {
             "is_active": user.is_active,
             "id": user.id,
+            "username": user.username,
         }
 
 
