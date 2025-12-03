@@ -2,7 +2,7 @@ TYPES:
   - permit_owner
   - permit_owner_representative
   - request_editor
-  - structural_engineer
+  - supervisor_engineer
   - general_contractor
   - contractor_representative
   - project_manager
@@ -27,11 +27,11 @@ TYPES:
     - general_contractor_phone
     - general_contractor_name
     - None
-    - structural_engineer_address
+    - supervisor_engineer_address
     - None
-    - structural_engineer_mail
-    - structural_engineer_phone
-    - structural_engineer_name
+    - supervisor_engineer_mail
+    - supervisor_engineer_phone
+    - supervisor_engineer_name
     - None
     - request_editor_address
     - None
