@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
+import styled, { css } from "styled-components";
 
 export const ErrorMessage = styled.div`
-  color: ${props => props.theme.colors.accent};
+  color: ${(props) => props.theme.colors.accent};
   margin-top: 1rem;
   font-weight: 600;
 `;
@@ -12,12 +12,12 @@ export const PageContainer = styled.div`
   flex-direction: column;
   height: 100vh;
   flex: 1;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   direction: rtl;
 `;
 
 export const TopPanel = styled.div`
-  position: relative;                /* <-- make it the positioning context */
+  position: relative; /* <-- make it the positioning context */
   border-bottom: 1px solid #dee2e6;
   display: flex;
   padding-bottom: 10px;
@@ -34,7 +34,7 @@ export const TopPanel = styled.div`
 
 export const TopPanelLogo = styled.img.attrs({
   src: "/opa.png",
-  alt: "OPA Logo"
+  alt: "OPA Logo",
 })`
   width: 120px;
   height: 40px;
@@ -43,14 +43,14 @@ export const TopPanelLogo = styled.img.attrs({
 `;
 
 export const TopPanelTitleHolder = styled.div`
-  position: absolute;                /* <-- remove from normal flow */
+  position: absolute; /* <-- remove from normal flow */
   left: 50%;
-  transform: translateX(-50%);       /* <-- truly center it */
+  transform: translateX(-50%); /* <-- truly center it */
 `;
 
 export const TopPanelTitle = styled.h1`
   font-size: 2rem;
-  color: ${props => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.primary};
   text-align: center;
 `;
 
@@ -64,8 +64,10 @@ export const TopPanelGroup = styled.div`
 export const PageContent = styled.div`
   overflow-y: auto;
   padding-top: 30px;
+  padding-bottom: 24px;
   display: flex;
   justify-content: flex-start;
+  flex-grow: 1;
 
   &::-webkit-scrollbar {
     display: none;
@@ -73,7 +75,9 @@ export const PageContent = styled.div`
 `;
 
 // Buttons
-export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text' }>`
+export const Button = styled.button<{
+  variant?: "contained" | "outlined" | "text";
+}>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +85,7 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
   font-size: 1rem;
   height: 35px;
   font-weight: 500;
-  border-radius: ${p => p.theme.borderRadius.medium};
+  border-radius: ${(p) => p.theme.borderRadius.medium};
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 
@@ -91,8 +95,8 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
   }
 
   /* OUTLINED */
-  ${p =>
-    p.variant === 'outlined' &&
+  ${(p) =>
+    p.variant === "outlined" &&
     css`
       background: transparent;
       border: 2px solid #99b1bd;
@@ -106,8 +110,8 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
     `}
 
   /* TEXT */
-  ${p =>
-    p.variant === 'text' &&
+  ${(p) =>
+    p.variant === "text" &&
     css`
       background: transparent;
       border: none;
@@ -119,8 +123,8 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
     `}
 
   /* CONTAINED (default) */
-  ${p =>
-    (!p.variant || p.variant === 'contained') &&
+  ${(p) =>
+    (!p.variant || p.variant === "contained") &&
     css`
       background: ${p.theme.colors.accent};
       border: none;
@@ -135,7 +139,9 @@ export const Button = styled.button<{ variant?: 'contained' | 'outlined' | 'text
     `}
 `;
 
-export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | 'text' }>`
+export const IconButton = styled.button<{
+  variant?: "contained" | "outlined" | "text";
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -155,7 +161,7 @@ export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | '
   line-height: 1;
 
   /* default text color */
-  color: ${p => p.theme.colors.accent};
+  color: ${(p) => p.theme.colors.accent};
 
   /* disabled */
   &:disabled {
@@ -164,8 +170,8 @@ export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | '
   }
 
   /* TEXT */
-  ${p =>
-    p.variant === 'text' &&
+  ${(p) =>
+    p.variant === "text" &&
     css`
       background: transparent;
       border: none;
@@ -177,8 +183,8 @@ export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | '
     `}
 
   /* OUTLINED */
-  ${p =>
-    p.variant === 'outlined' &&
+  ${(p) =>
+    p.variant === "outlined" &&
     css`
       background: transparent;
       border: 2px solid ${p.theme.colors.accent};
@@ -190,8 +196,8 @@ export const IconButton = styled.button<{ variant?: 'contained' | 'outlined' | '
     `}
 
   /* CONTAINED (default) */
-  ${p =>
-    (!p.variant || p.variant === 'contained') &&
+  ${(p) =>
+    (!p.variant || p.variant === "contained") &&
     css`
       background: ${p.theme.colors.accent};
       border: none;
@@ -223,7 +229,7 @@ export const DialogContainer = styled.div`
   border-radius: 8px;
   width: 500px;
   max-width: 90%;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 `;
 
 export const DialogHeader = styled.div`
@@ -246,7 +252,9 @@ export const DialogCloseButton = styled.button`
   font-size: 1.1rem;
   cursor: pointer;
   color: #555;
-  &:hover { color: #000; }
+  &:hover {
+    color: #000;
+  }
 `;
 
 export const DialogActions = styled.div`
@@ -292,16 +300,14 @@ export const Input = styled.input`
   border-radius: 4px;
   border: 1px solid #dce3f1;
   color: #213953;
-  transition: border-color 0.15s ease-in-out,
-  color 0.15s ease-in-out,
-  box-shadow 0.15s ease-in-out,
-  background-color 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
   height: 36px;
   position: relative; /* anchor for absolute icon */
 
   /* ---------- date‑only tweaks ---------- */
 
-  &[type='date'] {
+  &[type="date"] {
     text-align: right; /* put the numbers on the right */
     padding-left: 38px; /* room for icon on the left */
     padding-right: 10px;
@@ -337,10 +343,8 @@ export const Select = styled.select`
   color: #213953;
   height: 36px;
   appearance: none;
-  transition: border-color 0.15s ease-in-out,
-              color 0.15s ease-in-out,
-              box-shadow 0.15s ease-in-out,
-              background-color 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
 
   &:hover:not(:disabled) {
     border-color: #b0bcd9;
@@ -358,11 +362,11 @@ export const Select = styled.select`
 
   /* ---------- keep look unchanged when disabled ---------- */
   &:disabled {
-    border-color: #dce3f1;          /* same border */
-    background: #ffffff;            /* same background */
-    color: #213953;                 /* same font colour */
+    border-color: #dce3f1; /* same border */
+    background: #ffffff; /* same background */
+    color: #213953; /* same font colour */
     -webkit-text-fill-color: #213953; /* Safari override */
-    opacity: 1;                     /* cancel browser greying */
+    opacity: 1; /* cancel browser greying */
   }
 `;
 
@@ -374,10 +378,8 @@ export const TextArea = styled.textarea`
   font-family: sans-serif;
   min-height: 100px;
   resize: vertical;
-  transition: border-color 0.15s ease-in-out,
-              color 0.15s ease-in-out,
-              box-shadow 0.15s ease-in-out,
-              background-color 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
 
   &:focus {
     outline: none;
@@ -406,7 +408,7 @@ export const EmptyStateIcon = styled.div`
   margin-bottom: 16px;
 
   &::before {
-    content: '';
+    content: "";
     width: 32px;
     height: 32px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4'%3E%3C/path%3E%3C/svg%3E");
@@ -464,7 +466,7 @@ export const Card = styled.div`
 
 export const CardName = styled.h2`
   font-size: 22px;
-  color: ${props => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.primary};
   margin-bottom: 12px;
   font-weight: 500;
 `;

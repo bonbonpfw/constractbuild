@@ -392,3 +392,18 @@ export const editUser = async (
   await axios.patch(`${API_URL}/users/${id}`, payload);
   return true;
 };
+
+export const getProjectComments = async (projectId: string) => {
+  const response = await axios.get(`${API_URL}/projects/${projectId}/comments`);
+  return response.data.comments;
+};
+
+export const addProjectComment = async (projectId: string, comment: string) => {
+  const response = await axios.post(
+    `${API_URL}/projects/${projectId}/comments`,
+    {
+      content: comment,
+    }
+  );
+  return response.data.comment;
+};
