@@ -64,18 +64,18 @@ const StatusBadge = styled.span<{ status: string }>`
     status === "Active"
       ? "#e3f6ec"
       : status === "Expired"
-      ? "#ffecef"
-      : status === "Warning"
-      ? "#fff7e0"
-      : "#ffecef"};
+        ? "#ffecef"
+        : status === "Warning"
+          ? "#fff7e0"
+          : "#ffecef"};
   color: ${({ status }) =>
     status === "Active"
       ? "#1d8450"
       : status === "Expired"
-      ? "#e1273d"
-      : status === "Warning"
-      ? "#b0851f"
-      : "#e1273d"};
+        ? "#e1273d"
+        : status === "Warning"
+          ? "#b0851f"
+          : "#e1273d"};
 `;
 
 const MainLayout = styled.div`
@@ -272,7 +272,7 @@ const ProjectView: React.FC = () => {
   // Add tab state
   const [activeTab, setActiveTab] = useState<
     "details" | "professionals" | "team" | "chat"
-  >("details");
+  >("chat");
   const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>(
     []
   );
@@ -1006,17 +1006,18 @@ const ProjectView: React.FC = () => {
             <SecondSidebar>
               <SecondSidebarContent>
                 <SidebarButton
+                  active={activeTab === "chat"}
+                  onClick={() => setActiveTab("chat")}
+                >
+                  תגובות
+                </SidebarButton>
+                <SidebarButton
                   active={activeTab === "details"}
                   onClick={() => setActiveTab("details")}
                 >
                   פרטי הפרויקט
                 </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "chat"}
-                  onClick={() => setActiveTab("chat")}
-                >
-                  לְשׂוֹחֵחַ
-                </SidebarButton>
+
                 <SidebarButton
                   active={activeTab === "professionals"}
                   onClick={() => setActiveTab("professionals")}

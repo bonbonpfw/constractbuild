@@ -4,31 +4,36 @@ import {
   Project,
   ProjectCreationFormData,
   DocumentState,
+  UpdateUserPasswordPayload,
 } from "./types";
 import { ProfessionalCreationFormData } from "./components/professionals/ProfessionalCreationDialog";
+import Cookies from "js-cookie";
 
-// Use the direct API URL from environment variables if available
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001/api";
 
-axios.interceptors.request.use((config) => {
-  if (!config?.headers) {
-    config.headers = {};
-  }
+axios.defaults.baseURL = API_URL;
 
-  config.headers["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
-  return config;
-});
+// Add a request interceptor to attach the token to every request
+axios.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("auth_token");
+    if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Projects API
+
 export const getProjects = async (): Promise<Project[]> => {
-  console.log("getProjects");
-  console.log(localStorage.getItem("token"));
-  const response = await axios.get(`${API_URL}/projects`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-      "x-my-text": "test",
-    },
-  });
+  const response = await axios.get(`${API_URL}/projects`);
   return response.data.projects;
 };
 
@@ -42,7 +47,7 @@ export const getProjectById = async (projectId: string): Promise<Project> => {
 };
 
 export const createProject = async (
-  data: ProjectCreationFormData
+  data: ProjectCreationFormData,
 ): Promise<Project> => {
   const response = await axios.post(`${API_URL}/project`, data);
   return response.data;
@@ -91,7 +96,7 @@ export const getProfessionals = async (): Promise<Professional[]> => {
 };
 
 export const getProfessionalById = async (
-  professional_id: string
+  professional_id: string,
 ): Promise<Professional> => {
   const response = await axios.get(`${API_URL}/professional`, {
     params: {
@@ -102,14 +107,14 @@ export const getProfessionalById = async (
 };
 
 export const createProfessional = async (
-  data: ProfessionalCreationFormData
+  data: ProfessionalCreationFormData,
 ): Promise<Professional> => {
   const response = await axios.post(`${API_URL}/professional`, data);
   return response.data;
 };
 
 export const updateProfessional = async (
-  data: Professional
+  data: Professional,
 ): Promise<Professional> => {
   const { documents, ...rest } = data; // exclude 'documents'
   const response = await axios.put(`${API_URL}/professional`, rest);
@@ -117,7 +122,7 @@ export const updateProfessional = async (
 };
 
 export const deleteProfessional = async (
-  professionalId: string
+  professionalId: string,
 ): Promise<null> => {
   const response = await axios.delete(`${API_URL}/professional`, {
     params: {
@@ -160,7 +165,7 @@ export const uploadProfessionalDocument = async (
   professionalId: string,
   documentType: string,
   documentName: string,
-  file: File
+  file: File,
 ) => {
   const formData = new FormData();
   formData.append("professional_id", professionalId);
@@ -175,14 +180,14 @@ export const uploadProfessionalDocument = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
   return response.data;
 };
 
 export const downloadProfessionalDocument = async (
   professionalId: string,
-  documentId: string
+  documentId: string,
 ) => {
   const response = await axios.get(`${API_URL}/professional/document`, {
     params: {
@@ -196,7 +201,7 @@ export const downloadProfessionalDocument = async (
 
 export const deleteProfessionalDocument = async (
   professionalId: string,
-  documentId: string
+  documentId: string,
 ) => {
   const response = await axios.delete(`${API_URL}/professional/document`, {
     params: {
@@ -214,7 +219,7 @@ export const getProfessionalDocumentTypes = async (): Promise<string[]> => {
 };
 
 export const importProfessionalData = async (
-  file: File
+  file: File,
 ): Promise<ProfessionalCreationFormData> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -226,7 +231,7 @@ export const importProfessionalData = async (
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
   return response.data;
 };
@@ -239,7 +244,7 @@ export const uploadProjectDocument = async (
   file: File,
   status: string = DocumentState.UPLOADED,
   mode?: "auto" | "manual",
-  city?: string
+  city?: string,
 ) => {
   const formData = new FormData();
   formData.append("project_id", projectId);
@@ -265,7 +270,7 @@ export const uploadProjectDocument = async (
 
 export const downloadProjectDocument = async (
   projectId: string,
-  documentId: string
+  documentId: string,
 ) => {
   const response = await axios.get(`${API_URL}/project/document`, {
     params: {
@@ -280,7 +285,7 @@ export const downloadProjectDocument = async (
 export const deleteProjectDocument = async (
   projectId: string,
   documentId: string,
-  status: string
+  status: string,
 ) => {
   const response = await axios.delete(`${API_URL}/project/document`, {
     params: {
@@ -293,7 +298,7 @@ export const deleteProjectDocument = async (
 };
 
 export const getProjectDocumentTypes = async (
-  city: string
+  city: string,
 ): Promise<string[]> => {
   const response = await axios.get(`${API_URL}/project/document/types`, {
     params: {
@@ -340,7 +345,7 @@ export const autoFillDocument = async (
   documentId: string,
   documentType: string,
   file: File,
-  city: string
+  city: string,
 ) => {
   const formData = new FormData();
   formData.append("project_id", projectId);
@@ -355,6 +360,37 @@ export const autoFillDocument = async (
     },
   });
   return response.data;
+};
+
+export const login = async (username: string, password: string) => {
+  const response = await axios.post(`${API_URL}/auth/token`, {
+    username,
+    password,
+  });
+  return response.data;
+};
+
+export const getUsers = async () => {
+  const response = await axios.get(`${API_URL}/users`);
+  return response.data;
+};
+
+export const createUser = async (username: string, password: string) => {
+  const response = await axios.post(`${API_URL}/users`, { username, password });
+  return response.data;
+};
+
+export const deleteUser = async (id: string) => {
+  await axios.delete(`${API_URL}/users/${id}`);
+  return true;
+};
+
+export const editUser = async (
+  id: string,
+  payload: UpdateUserPasswordPayload,
+) => {
+  await axios.patch(`${API_URL}/users/${id}`, payload);
+  return true;
 };
 
 export const getProjectComments = async (projectId: string) => {

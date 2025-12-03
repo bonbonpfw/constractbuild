@@ -20,7 +20,7 @@ TTF_PATH = os.path.join(CONFIG, "Alef-Regular.ttf")
 CONFIG_FALLBACK = os.path.join(CONFIG,"config.yaml")
 
 PROF_DOC_CONFIG = os.path.join(CONFIG, "docs")
-SECRET_KEY = os.environ.get("SECRET_KEY", str(uuid.uuid4()))
+SECRET_KEY = os.getenv("SECRET_KEY","_dev_key_")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
