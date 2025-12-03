@@ -5,10 +5,13 @@ FROM node:18
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (force public registry, clear any auth)
+RUN rm -f /root/.npmrc \
+  && npm config set registry "https://registry.npmjs.org/" \
+  && npm config set //registry.npmjs.org/:_authToken "" \
+  && npm i
 
 # Copy the rest of the application code
 COPY . .
