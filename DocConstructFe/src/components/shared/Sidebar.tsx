@@ -8,6 +8,7 @@ import {
   FaBars,
   FaSignOutAlt,
   FaUsers,
+  FaUser,
 } from "react-icons/fa";
 import Cookies from "js-cookie";
 
@@ -113,13 +114,74 @@ const UserManagementHolder = styled.div`
   padding-top: 10px;
 `;
 
+const UserProfileSection = styled.div<{ isCollapsed: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  gap: 12px;
+  transition: all 0.3s ease;
+`;
+
+const UserAvatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #51789f 0%, #3d5a7a 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const UserInfo = styled.div<{ isCollapsed: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: ${(props) => (props.isCollapsed ? "0" : "1")};
+  visibility: ${(props) => (props.isCollapsed ? "hidden" : "visible")};
+  transition:
+    opacity 0.2s ease,
+    visibility 0s linear ${(props) => (props.isCollapsed ? "0s" : "0.3s")};
+  overflow: hidden;
+`;
+
+const Username = styled.span`
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const UserRole = styled.span`
+  font-size: 12px;
+  color: #7f8c8d;
+  white-space: nowrap;
+`;
+
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [userInfo, setUserInfo] = useState<{ username: string } | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebarCollapsed");
     if (stored !== null) {
       setIsCollapsed(JSON.parse(stored));
+    }
+
+    // Load user info
+    const storedUserInfo = localStorage.getItem("user_info");
+    if (storedUserInfo) {
+      try {
+        setUserInfo(JSON.parse(storedUserInfo));
+      } catch (e) {
+        console.error("Failed to parse user info:", e);
+      }
     }
   }, []);
 
@@ -134,6 +196,7 @@ const Sidebar: React.FC = () => {
 
   const handleLogout = () => {
     Cookies.remove("auth_token");
+    localStorage.removeItem("user_info");
 
     router.push("/login");
   };
@@ -141,6 +204,10 @@ const Sidebar: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", JSON.stringify(isCollapsed));
   }, [isCollapsed]);
+
+  const getInitial = (username: string) => {
+    return username ? username.charAt(0).toUpperCase() : "U";
+  };
 
   return (
     <SidebarContainer isCollapsed={isCollapsed}>
@@ -152,8 +219,10 @@ const Sidebar: React.FC = () => {
             </ToggleButton>
           </ToggleButtonHolder>
         </SidebarGroup>
+
+
         <SidebarGroup>
-          <div style={{ marginTop: "70px" }}>
+          <div style={{ marginTop: "20px" }}>
             {routes.map((route, index) => (
               <Link key={index} href={route.path} passHref>
                 <SidebarItemHolder isActive={isActive(route.path)}>
@@ -186,6 +255,19 @@ const Sidebar: React.FC = () => {
             </SidebarItemHolder>
           </Link>
         </UserManagementHolder>
+        {/* User Profile Section */}
+        {userInfo && (
+          <UserProfileSection isCollapsed={isCollapsed}>
+            <UserAvatar>
+              {userInfo.username ? getInitial(userInfo.username) : <FaUser />}
+            </UserAvatar>
+            <UserInfo isCollapsed={isCollapsed}>
+              <Username>{userInfo.username}</Username>
+              <UserRole>משתמש</UserRole>
+            </UserInfo>
+          </UserProfileSection>
+        )}
+
 
         <LogoutHolder>
           <SidebarItemHolder isActive={false} onClick={handleLogout}>

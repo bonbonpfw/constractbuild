@@ -49,12 +49,12 @@ export const Message = styled.div`
   gap: 16px;
 `;
 
-export const MessageContent = styled.div`
+export const MessageContent = styled.div<{ $backgroundColor?: string }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
 
-  background-color: #f5f5f5;
+  background-color: ${(props) => props.$backgroundColor || "#f5f5f5"};
   padding: 8px;
   border-radius: 8px;
 `;

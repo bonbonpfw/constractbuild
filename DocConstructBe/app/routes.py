@@ -662,7 +662,13 @@ def init_routes(app):
         user = user_manager.get_by_username(data.get("username"))
         if user and user.verify_password(data.get("password")):
             token = user_manager.generate_jwt_token(user)
-            return SuccessResponse({"token": token}).generate_response()
+            return SuccessResponse({
+                "token": token,
+                "user": {
+                    "id": str(user.id),
+                    "username": user.username
+                }
+            }).generate_response()
         raise AuthenticationFailed
 
     @app.route("/api/projects/<string:project_id>/comments", methods=["GET"])

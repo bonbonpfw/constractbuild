@@ -33,13 +33,13 @@ export const TopPanel = styled.div`
 `;
 
 export const TopPanelLogo = styled.img.attrs({
-  src: "/opa.png",
+  src: "/logo.jpeg",
   alt: "OPA Logo",
 })`
   width: 120px;
   height: 40px;
   object-fit: contain;
-  margin-right: 24px;
+  margin-right: -24px;
 `;
 
 export const TopPanelTitleHolder = styled.div`

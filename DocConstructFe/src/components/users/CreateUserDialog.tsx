@@ -1,4 +1,4 @@
-import React, { Dispatch, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import {
   Button,
@@ -11,27 +11,28 @@ import {
 } from "../../styles/SharedStyles";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import { Form, Input } from "antd";
-import { CreateUserValues, User } from "../../types";
+import { CreateUserValues } from "../../types";
 import { createUser } from "../../api";
 
 interface CreateUsersDialogProps {
   onClose: () => void;
-  setUsers: Dispatch<React.SetStateAction<User[]>>;
+  onUserCreated: () => void;
 }
 
 const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
-  setUsers,
+  onUserCreated,
   onClose,
 }) => {
   const [loading, setLoading] = useState(false);
+
+  const [form] = Form.useForm();
 
   const handleSubmit = async (values: CreateUserValues) => {
     setLoading(true);
     const { username, password } = values;
     try {
-      const data = await createUser(username, password);
-      setUsers((prevState) => [...prevState, data]);
-
+      await createUser(username, password);
+      onUserCreated();
       onClose();
     } catch (error) {
       errorHandler(error as ErrorResponseData, "Failed to create user");
@@ -57,6 +58,7 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
             </DialogCloseButton>
           </DialogHeader>
           <Form
+            form={form}
             layout="vertical"
             colon={false}
             onFinish={handleSubmit}
@@ -67,7 +69,7 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
               name="username"
               rules={[{ required: true, message: "Please enter username" }]}
             >
-              <Input />
+              <Input autoComplete="off" onPressEnter={() => form.submit()} />
             </Form.Item>
             <Form.Item
               label="סיסמה"
@@ -77,7 +79,12 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
                 { min: 6, message: "Password must be at least 6 characters" },
               ]}
             >
-              <Input.Password placeholder="••••••••" size="large" />
+              <Input.Password
+                autoComplete="new-password"
+                placeholder="••••••••"
+                size="large"
+                onPressEnter={() => form.submit()}
+              />
             </Form.Item>
             <Form.Item
               label="אימות סיסמה"
@@ -95,10 +102,15 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
                 }),
               ]}
             >
-              <Input.Password placeholder="••••••••" size="large" />
+              <Input.Password
+                autoComplete="new-password"
+                placeholder="••••••••"
+                size="large"
+                onPressEnter={() => form.submit()}
+              />
             </Form.Item>
             <DialogActions>
-              <Button variant="text" onClick={onClose}>
+              <Button variant="text" onClick={onClose} type="button">
                 ביטול
               </Button>
               <Button variant="contained" type="submit" disabled={loading}>

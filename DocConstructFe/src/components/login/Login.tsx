@@ -166,12 +166,11 @@ const rightInnerStyle: React.CSSProperties = {
   height: "100%",
   width: "100%",
   maxWidth: 660,
+
 };
 
 const LoginSplitMockupQuote = () => {
   const router = useRouter();
-  // const { loading } = useSelector((state: RootState) => state.auth);
-  // const isLoading = loading.login;
 
   const onFinish = async (values: LoginValues) => {
     const { username, password } = values;
@@ -184,10 +183,15 @@ const LoginSplitMockupQuote = () => {
           path: "/",
         });
 
+        // Store user information
+        if (res.user) {
+          localStorage.setItem("user_info", JSON.stringify(res.user));
+        }
+
         await router.push("/projects");
       }
     } catch (error) {
-      errorHandler(error as ErrorResponseData, "Failed to login");
+      errorHandler(error as ErrorResponseData, "נכשל בכניסה");
     }
   };
 
@@ -199,14 +203,14 @@ const LoginSplitMockupQuote = () => {
       <div style={leftWrapperStyle}>
         <div style={leftInnerContainerStyle}>
           <div style={leftContentStyle}>
-            <div style={logoBlockStyle}>
+            <div style={logoBlockStyle} dir="rtl">
               <div style={{ width: 48, height: 48, cursor: "pointer" }}>
                 <Image src="/logo.jpeg" alt="logo" width={48} height={48} />
               </div>
               <div style={titleBlockStyle}>
-                <h1 style={titleStyle}>Log in</h1>
-                <p style={subtitleStyle}>
-                  Welcome back, Please enter your details.
+                <h1 style={titleStyle} dir="rtl">ברוכים הבאים</h1>
+                <p style={subtitleStyle} dir="rtl">
+                  אנא הכנס את הפרטים שלך
                 </p>
               </div>
             </div>
@@ -220,10 +224,11 @@ const LoginSplitMockupQuote = () => {
               >
                 <div style={fieldsWrapperStyle}>
                   <Form.Item
-                    label="Username"
+                    label="שם משתמש"
                     name="username"
+                    dir="rtl"
                     rules={[
-                      { required: true, message: "Please enter your username" },
+                      { required: true, message: "אנא הכנס שם משתמש" },
                       // { type: "email", message: "Please enter a valid email" },
                     ]}
                   >
@@ -231,17 +236,19 @@ const LoginSplitMockupQuote = () => {
                       type="username"
                       placeholder="Enter your Username"
                       size="large"
+                      dir="rtl"
                     />
                   </Form.Item>
 
                   <Form.Item
-                    label="Password"
+                    label="סיסמה"
                     name="password"
+                    dir="rtl"
                     rules={[
-                      { required: true, message: "Please enter your password" },
+                      { required: true, message: "אנא הכנס סיסמה" },
                     ]}
                   >
-                    <Input.Password placeholder="••••••••" size="large" />
+                    <Input.Password placeholder="••••••••" size="large" dir="rtl" />
                   </Form.Item>
                 </div>
 
@@ -252,7 +259,7 @@ const LoginSplitMockupQuote = () => {
                     block
                     loading={false}
                   >
-                    Sign in
+                    כניסה
                   </GradientButton>
                 </div>
               </Form>
@@ -320,12 +327,12 @@ const LoginSplitMockupQuote = () => {
               maxWidth: 142,
             }}
           >
-            <Image
+            {/* <Image
               src="/login/state.png"
               alt="state"
               width={164}
               height={166}
-            />
+            />   */}
           </div>
 
           <div
@@ -338,10 +345,10 @@ const LoginSplitMockupQuote = () => {
             }}
           >
             <Image
-              src="/login/comments-distribution-chart.png"
+              src="/logo.jpeg"
               alt="comments-distribution-chart"
               width={266}
-              height={352}
+              height={266}
             />
           </div>
 
@@ -354,12 +361,12 @@ const LoginSplitMockupQuote = () => {
               maxWidth: 120,
             }}
           >
-            <Image
+            {/* <Image
               src="/login/elected-officials.png"
               alt="elected-officials"
               width={152}
               height={100}
-            />
+            /> */}
           </div>
         </div>
       </RightWrapper>

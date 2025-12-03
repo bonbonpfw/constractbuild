@@ -11,7 +11,7 @@ import {
   TopPanelTitleHolder,
   Table,
 } from "../../styles/SharedStyles";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { deleteUser, getUsers } from "../../api";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import EmptyStatePlaceholder from "../shared/EmptyState";
@@ -39,7 +39,7 @@ const UserManagement = () => {
         );
         setShowDeleteDialog(false);
       } catch (error) {
-        errorHandler(error as ErrorResponseData, "Failed to delete user");
+        errorHandler(error as ErrorResponseData, "נכשל במחיקה");
       } finally {
         setLoading(false);
         setSelectedUserId(null);
@@ -62,24 +62,25 @@ const UserManagement = () => {
     setShowCreateModal(false);
   };
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await getUsers();
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await getUsers();
+      setUsers(res?.users ?? []);
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "נכשל בטעינת המשתמשים");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setUsers(res?.users ?? []);
-      } catch (error) {
-        errorHandler(error as ErrorResponseData, "Failed to load users");
-      } finally {
-        setLoading(false);
-      }
-    })();
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   const renderTableView = () => {
     if (users.length === 0) {
-      return <EmptyStatePlaceholder msg="No users available" />;
+      return <EmptyStatePlaceholder msg="אין משתמשים זמינים" />;
     }
 
     return (
@@ -100,7 +101,7 @@ const UserManagement = () => {
         <Table>
           <thead>
             <tr>
-              <th style={{ textAlign: "right" }}>Username</th>
+              <th style={{ textAlign: "right" }}>שם משתמש</th>
               <th style={{ textAlign: "right" }} />
             </tr>
           </thead>
@@ -110,29 +111,31 @@ const UserManagement = () => {
                 <TableBody style={{ textAlign: "right" }}>{user.username}</TableBody>
                 <TableBody style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   <button
-                    onClick={() => handleDeleteUser(user.id)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#c0392b",
-                      fontWeight: 500,
-                      marginLeft: 12,
-                    }}
-                  >
-                    Delete
-                  </button>
-                  <button
                     onClick={() => handleEditUser(user.id)}
                     style={{
                       background: "transparent",
                       border: "none",
                       cursor: "pointer",
                       color: "#1f5fbf",
-                      fontWeight: 500,
+                      fontSize: "16px",
+                      padding: "4px 8px",
                     }}
                   >
-                    Edit
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#c0392b",
+                      fontSize: "16px",
+                      padding: "4px 8px",
+                      marginLeft: 8,
+                    }}
+                  >
+                    <FaTrash />
                   </button>
                 </TableBody>
               </tr>
@@ -160,7 +163,7 @@ const UserManagement = () => {
         {renderTableView()}
       </PageContent>
       {showCreateModal && (
-        <CreateUserDialog onClose={onModalClose} setUsers={setUsers} />
+        <CreateUserDialog onClose={onModalClose} onUserCreated={fetchUsers} />
       )}
       {showEditModal && (
         <EditUserDialog onClose={onModalClose} id={selectedUserId} />
