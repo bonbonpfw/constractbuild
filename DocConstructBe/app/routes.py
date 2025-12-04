@@ -2,7 +2,7 @@ import os
 import tempfile
 from data_model.enum import DocumentStatus
 from flask import send_file, request
-
+from datetime import datetime
 from app.decorators import jwt_required
 from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError, AuthenticationFailed
 from app.api import (
@@ -146,8 +146,8 @@ def init_routes(app):
                     'email': team.email,
                     'signature_file_path': team.signature_file_path,
                     'role': team.role.value,
-                    'created_at': team.created_at.isoformat() if team.created_at else None,
-                    'updated_at': team.updated_at.isoformat() if team.updated_at else None,
+                    'created_at': team.created_at.isoformat() if isinstance(team.created_at, datetime) else str(team.created_at) if team.created_at else None,
+                    'updated_at': team.updated_at.isoformat() if isinstance(team.updated_at, datetime) else str(team.updated_at) if team.updated_at else None,
                 } for team in team_members],
             }
         }).generate_response()
@@ -558,8 +558,8 @@ def init_routes(app):
                     'phone': team.phone,
                     'email': team.email,
                     'signature_file_path': team.signature_file_path,
-                    'created_at': team.created_at.isoformat() if team.created_at else None,
-                    'updated_at': team.updated_at.isoformat() if team.updated_at else None,
+                    'created_at': team.created_at.isoformat() if isinstance(team.created_at, datetime) else str(team.created_at) if team.created_at else None,
+                    'updated_at': team.updated_at.isoformat() if isinstance(team.updated_at, datetime) else str(team.updated_at) if team.updated_at else None,
                     'role': team.role.value,
                 } for team in teams
             ]
