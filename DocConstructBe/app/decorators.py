@@ -2,7 +2,7 @@ from functools import wraps
 import jwt
 
 from flask import request, jsonify
-
+from database.database import db_session 
 from config.sys_config import SECRET_KEY
 
 
@@ -51,3 +51,15 @@ def jwt_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def auto_rollback(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            db_session.rollback()
+            print(f"Rolled back session due to: {e}")
+            raise
+    return decorated
