@@ -3,7 +3,7 @@ import tempfile
 from data_model.enum import DocumentStatus
 from flask import send_file, request
 from datetime import datetime
-from app.decorators import jwt_required
+from app.decorators import jwt_required, auto_rollback
 from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError, AuthenticationFailed
 from app.api import (
     ProjectManager,
@@ -73,6 +73,7 @@ def init_routes(app):
 
     @app.route('/api/projects', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_projects():
         validate_request(endpoint=Endpoints.GET_PROJECTS)
         projects = ProjectManager().get_all()
@@ -106,6 +107,7 @@ def init_routes(app):
 
     @app.route('/api/project', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project():
         data = validate_request(endpoint=Endpoints.GET_PROJECT)
         project = ProjectManager().get_by_id(project_id=str(data.get('project_id')))
@@ -154,6 +156,7 @@ def init_routes(app):
 
     @app.route('/api/project', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def create_project():
         data = validate_request(endpoint=Endpoints.CREATE_PROJECT)
         project = ProjectManager().create(
@@ -168,6 +171,7 @@ def init_routes(app):
 
     @app.route('/api/project', methods=['PUT'])
     @jwt_required
+    @auto_rollback
     def update_project():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT)
         
@@ -187,6 +191,7 @@ def init_routes(app):
 
     @app.route('/api/project', methods=['DELETE'])
     @jwt_required
+    @auto_rollback
     def delete_project():
         data = validate_request(endpoint=Endpoints.DELETE_PROJECT)
         ProjectManager().delete(project_id=str(data.get('project_id')))
@@ -194,6 +199,7 @@ def init_routes(app):
 
     @app.route('/api/project/statuses', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project_statuses():
         validate_request(endpoint=Endpoints.GET_PROJECT_STATUSES)
         return SuccessResponse({
@@ -202,6 +208,7 @@ def init_routes(app):
 
     @app.route('/api/project/cities', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project_cities():
         validate_request(endpoint=Endpoints.GET_PROJECT_CITIES)
         cities = [{'value': city.value, 'name': city.name} for city in City]
@@ -209,6 +216,7 @@ def init_routes(app):
 
     @app.route('/api/project/professionals', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def add_professional_to_project():
         data = validate_request(Endpoints.ADD_PROJECT_PROFESSIONAL)
         project_professional = ProjectManager().attach_professional(
@@ -223,6 +231,7 @@ def init_routes(app):
 
     @app.route('/api/project/professionals', methods=['DELETE'])
     @jwt_required
+    @auto_rollback
     def remove_professional_from_project():
         data = validate_request(Endpoints.REMOVE_PROJECT_PROFESSIONAL)
         ProjectManager().detach_professional(
@@ -233,6 +242,7 @@ def init_routes(app):
 
     @app.route('/api/project/document', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def download_project_document():
         data = validate_request(endpoint=Endpoints.DOWNLOAD_PROJECT_DOCUMENT)
         project_document = ProjectManager().get_document(
@@ -247,6 +257,7 @@ def init_routes(app):
 
     @app.route('/api/project/document', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def upload_project_document():
         data = validate_request(endpoint=Endpoints.UPLOAD_PROJECT_DOCUMENT)
         project_id = str(data.get('project_id'))
@@ -291,6 +302,7 @@ def init_routes(app):
 
     @app.route('/api/project/document', methods=['DELETE'])
     @jwt_required
+    @auto_rollback
     def delete_project_document():
         data = validate_request(endpoint=Endpoints.REMOVE_PROJECT_DOCUMENT)
         ProjectManager().remove_document(
@@ -302,6 +314,7 @@ def init_routes(app):
 
     @app.route('/api/project/document', methods=['PUT'])
     @jwt_required
+    @auto_rollback
     def update_project_document():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT_DOCUMENT)
         project_id = str(data.get('project_id'))
@@ -358,6 +371,7 @@ def init_routes(app):
 
     @app.route('/api/project/document/types', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project_document_types():
         data = validate_request(endpoint=Endpoints.GET_PROJECT_DOCUMENT_TYPES)
         city = data.get('city')
@@ -369,6 +383,7 @@ def init_routes(app):
 
     @app.route('/api/project/document/statuses', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project_document_statuses():
         return SuccessResponse({
             'document_statuses': ProjectManager().get_document_statuses()
@@ -377,6 +392,7 @@ def init_routes(app):
     ### Professionals ###
     @app.route('/api/professionals', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_professionals():
         validate_request(endpoint=Endpoints.GET_PROFESSIONALS)
         professionals = ProfessionalManager.get_all()
@@ -393,6 +409,7 @@ def init_routes(app):
 
     @app.route('/api/professional', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_professional():
         data = validate_request(endpoint=Endpoints.GET_PROFESSIONAL)
         professional = ProfessionalManager.get_by_id(professional_id=str(data.get('professional_id')))
@@ -421,6 +438,7 @@ def init_routes(app):
 
     @app.route('/api/professional', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def create_professional():
         data = validate_request(endpoint=Endpoints.CREATE_PROFESSIONAL)
         # Create the professional
@@ -440,6 +458,7 @@ def init_routes(app):
 
     @app.route('/api/professional/import', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def import_professional_data():
         logger.info(f"Importing professional data")
         data = validate_request(endpoint=Endpoints.IMPORT_PROFESSIONAL_FILE)
@@ -459,6 +478,7 @@ def init_routes(app):
 
     @app.route('/api/professional', methods=['PUT'])
     @jwt_required
+    @auto_rollback
     def update_professional():
         data = validate_request(endpoint=Endpoints.UPDATE_PROFESSIONAL)
         ProfessionalManager().update(
@@ -476,6 +496,7 @@ def init_routes(app):
 
     @app.route('/api/professional', methods=['DELETE'])
     @jwt_required
+    @auto_rollback
     def delete_professional():
         data = validate_request(endpoint=Endpoints.DELETE_PROFESSIONAL)
         ProfessionalManager().delete(professional_id=str(data.get('professional_id')))
@@ -483,18 +504,21 @@ def init_routes(app):
 
     @app.route('/api/professional/types', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_professional_types():
         validate_request(endpoint=Endpoints.GET_PROFESSIONAL_TYPES)
         return SuccessResponse({'types': ProfessionalManager().get_types()}).generate_response()
 
     @app.route('/api/professional/statuses', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_professional_statuses():
         validate_request(endpoint=Endpoints.GET_PROFESSIONAL_STATUSES)
         return SuccessResponse({'statuses': ProfessionalManager().get_statuses()}).generate_response()
 
     @app.route('/api/professional/document', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def download_professional_document():
         data = validate_request(endpoint=Endpoints.DOWNLOAD_PROFESSIONAL_DOCUMENT)
         professional_document = ProfessionalManager().get_document(
@@ -509,6 +533,7 @@ def init_routes(app):
 
     @app.route('/api/professional/document', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def add_professional_document():
         data = validate_request(endpoint=Endpoints.ADD_PROFESSIONAL_DOCUMENT)
         file_path = save_file_to_temp(data.get('file'))
@@ -544,6 +569,7 @@ def init_routes(app):
     # Project Team routes
     @app.route('/api/project/teams', methods=['GET'])
     @jwt_required
+    @auto_rollback
     def get_project_teams():
         data = validate_request(endpoint=Endpoints.GET_PROJECT_TEAM)
         project_id = str(data.get('project_id'))
@@ -567,6 +593,7 @@ def init_routes(app):
 
     @app.route('/api/project/teams', methods=['POST'])
     @jwt_required
+    @auto_rollback
     def create_project_team():
         data = validate_request(endpoint=Endpoints.CREATE_PROJECT_TEAM)
         team = ProjectTeamManager.create(
@@ -582,6 +609,7 @@ def init_routes(app):
 
     @app.route('/api/project/teams', methods=['PUT'])
     @jwt_required
+    @auto_rollback
     def update_project_team():
         data = validate_request(endpoint=Endpoints.UPDATE_PROJECT_TEAM)
         team = ProjectTeamManager.update(
@@ -597,6 +625,7 @@ def init_routes(app):
 
     @app.route('/api/project/teams', methods=['DELETE'])
     @jwt_required
+    @auto_rollback
     def delete_project_team():
         data = validate_request(endpoint=Endpoints.DELETE_PROJECT_TEAM)
         ProjectTeamManager.delete(team_id=str(data.get('id')))
@@ -614,6 +643,7 @@ def init_routes(app):
 
     @app.route("/api/users", methods=["GET"])
     @jwt_required
+    @auto_rollback
     def get_users() -> ApiResponse:
         """Return list of users."""
         user_manager = UserManager()
@@ -624,6 +654,7 @@ def init_routes(app):
 
     @app.route("/api/users", methods=["POST"])
     @jwt_required
+    @auto_rollback
     def create_user() -> ApiResponse:
         """Create user."""
         data = validate_request(Endpoints.USER_CREATE)
@@ -636,6 +667,7 @@ def init_routes(app):
 
     @app.route("/api/users/<string:user_id>", methods=["DELETE"])
     @jwt_required
+    @auto_rollback
     def delete_user(user_id: str) -> ApiResponse:
         """Deactivate user."""
         user_manager = UserManager()
@@ -644,6 +676,7 @@ def init_routes(app):
 
     @app.route("/api/users/<string:user_id>", methods=["PATCH"])
     @jwt_required
+    @auto_rollback
     def update_user_password(user_id: str) -> ApiResponse:
         """Set user password."""
         data = validate_request(Endpoints.USER_SET_PASSWORD)
@@ -673,6 +706,7 @@ def init_routes(app):
 
     @app.route("/api/projects/<string:project_id>/comments", methods=["GET"])
     @jwt_required
+    @auto_rollback
     def get_project_comments(project_id: str) -> ApiResponse:
         """Get all comments for a specific project."""
         comments = ProjectCommentsManager.get_by_project(project_id)
@@ -685,6 +719,7 @@ def init_routes(app):
 
     @app.route("/api/projects/<string:project_id>/comments", methods=["POST"])
     @jwt_required
+    @auto_rollback
     def add_project_comment(project_id: str) -> ApiResponse:
         """Add a comment to a specific project."""
         data = validate_request(Endpoints.ADD_PROJECT_COMMENT)
