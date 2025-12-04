@@ -24,6 +24,7 @@ import {
   Project,
   ProjectDocument,
   DocumentState,
+  ProjectStatus,
 } from "../../types";
 import {
   getProjectById,
@@ -229,6 +230,19 @@ const projectTabs: Tab[] = [
   { label: "סקירה כללית", value: "overview" },
   { label: "לְשׂוֹחֵחַ", value: "chat" },
 ];
+
+const getStatusLabel = (status?: string) => {
+  switch (status) {
+    case ProjectStatus.PRE_PERMIT:
+      return 'קדם היתר';
+    case ProjectStatus.POST_PERMIT:
+      return 'אחרי היתר';
+    case ProjectStatus.FINAL:
+      return 'הסתיים';
+    default:
+      return status || 'לא ידוע';
+  }
+};
 
 const ProjectView: React.FC = () => {
   const router = useRouter();
@@ -1406,7 +1420,7 @@ const ProjectView: React.FC = () => {
                         >
                           {statuses.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              {getStatusLabel(s)}
                             </option>
                           ))}
                         </Select>

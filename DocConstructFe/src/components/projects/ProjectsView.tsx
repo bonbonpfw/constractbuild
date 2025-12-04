@@ -90,8 +90,16 @@ const Projects: React.FC = () => {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    if (selectedCity === 'all') return projects;
-    return projects.filter((p) => {
+    // If "finals" is selected, show only FINAL status projects
+    if (selectedCity === 'finals') {
+      return projects.filter((p) => p.status === ProjectStatus.FINAL);
+    }
+    
+    // Otherwise, filter out FINAL status projects
+    const nonFinalProjects = projects.filter((p) => p.status !== ProjectStatus.FINAL);
+    
+    if (selectedCity === 'all') return nonFinalProjects;
+    return nonFinalProjects.filter((p) => {
       return (p.city || '') === selectedCity;
     });
   }, [projects, selectedCity]);
@@ -131,7 +139,7 @@ const Projects: React.FC = () => {
       case ProjectStatus.POST_PERMIT:
         return 'אחרי היתר';
       case ProjectStatus.FINAL:
-        return 'הושלם';
+        return 'הסתיים';
       default:
         return 'לא ידוע';
     }
@@ -376,6 +384,7 @@ const Projects: React.FC = () => {
                   title="סנן לפי עיר"
                 >
                   <option value="all">כל הערים</option>
+                  <option value="finals">הסתיימו</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>{CITY_LABELS[c] ?? c}</option>
                   ))}
