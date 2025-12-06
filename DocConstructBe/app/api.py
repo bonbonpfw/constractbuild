@@ -23,7 +23,8 @@ from app.errors import (
     ProfessionalNotInProject,
     ProfessionalDocumentNotFound,
     ProjectDocumentNotFound,
-    InvalidDocumentStatus
+    InvalidDocumentStatus,
+    ProjectTeamMemberNotFound,
 )
 from data_model.models import (
     Project,
@@ -627,12 +628,17 @@ class ProjectTeamManager:
             if team_member_name == type.name:
                 return type.value
         return None
-def get_permit_owner_for_project(project_id):
-  
-    return db_session.query(ProjectTeamMember).filter_by(
-        project_id=project_id,
-        role=ProjectTeamRole.PERMIT_OWNER.value
-    ).first()
+
+    @staticmethod
+    def get_project_permit_owner(project_id: str) -> ProjectTeamMember:
+        """Get the permit owner team member for a project."""
+        if permit_owner := db_session.query(ProjectTeamMember).filter(
+            ProjectTeamMember.project_id == project_id,
+            ProjectTeamMember.role == ProjectTeamRole.PERMIT_OWNER.value,
+        ).first():
+            return permit_owner
+
+        raise ProjectTeamMemberNotFound
 
 
 class UserManager:
