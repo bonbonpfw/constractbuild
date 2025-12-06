@@ -1,21 +1,27 @@
 import os
 from flask import Flask
 
+from config.app_config import FlaskAppConfiguration
 from config.sys_config import DOCUMENTS_FOLDER
 from data_model.models import init_tables
 from app.errors import handle_error
 from flask_executor import Executor
-
+from flask_mail import Mail
 
 
 # Create executor instance at module level
 executor = Executor()
+mail = Mail()
 
 
 def create_app():
     # global celery
     app = Flask(__name__)
-    
+    # Pull global config into app.config
+    app.config.from_object(FlaskAppConfiguration)
+
+    mail.init_app(app)
+
     # Initialize executor with app
     executor.init_app(app)
     
