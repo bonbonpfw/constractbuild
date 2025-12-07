@@ -139,3 +139,5 @@ export type UpdateUserPasswordPayload = {
 };
 
 export interface ProjectCreationFormData extends Omit<Project, "id"> {}
+
+export type ProfessionalCreationFormData = Omit<Professional, 'id' | 'status' | 'created_at' | 'updated_at'>;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaUpload, FaSpinner, FaBrain, FaCog } from 'react-icons/fa';
-import { Professional } from '../../types';
+import { Professional, ProfessionalCreationFormData } from '../../types';
 import { createProfessional, importProfessionalData } from '../../api';
 import {
   Button, DialogActions,
@@ -18,8 +18,6 @@ import {
   Select
 } from "../../styles/SharedStyles";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
-
-export type ProfessionalCreationFormData = Omit<Professional, 'id' | 'status' | 'created_at' | 'updated_at'>;
 
 export const defaultProfessionalCreationFormData: ProfessionalCreationFormData = {
   name: '',
