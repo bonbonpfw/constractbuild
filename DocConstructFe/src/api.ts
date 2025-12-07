@@ -9,9 +9,10 @@ import {
 import { ProfessionalCreationFormData } from "./components/professionals/ProfessionalCreationDialog";
 import Cookies from "js-cookie";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001/api";
+//const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5001/api";
 
-axios.defaults.baseURL = API_URL;
+const API_URL = "/api";
+
 
 // Add a request interceptor to attach the token to every request
 axios.interceptors.request.use(
@@ -306,6 +307,35 @@ export const getProjectDocumentTypes = async (
     },
   });
   return response.data.document_types;
+};
+
+export const sendFilledProjectDocuments = async (
+  projectId: string,
+  recipientEmail?: string,
+  subject?: string,
+  body?: string,
+) => {
+  const payload: {
+    recipient_email?: string;
+    subject?: string;
+    body?: string;
+  } = {};
+  
+  if (recipientEmail) {
+    payload.recipient_email = recipientEmail;
+  }
+  if (subject) {
+    payload.subject = subject;
+  }
+  if (body) {
+    payload.body = body;
+  }
+
+  const response = await axios.post(
+    `${API_URL}/projects/${projectId}/documents/send-filled`,
+    payload,
+  );
+  return response.data;
 };
 
 export const getProjectTeamRoles = async (): Promise<

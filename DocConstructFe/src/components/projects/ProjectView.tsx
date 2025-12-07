@@ -41,6 +41,7 @@ import {
   updateProjectTeamMember,
   deleteProjectTeamMember,
   autoFillDocument,
+  sendFilledProjectDocuments,
 } from "../../api";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
@@ -54,6 +55,7 @@ import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { Tab, Tabs } from "../shared/Tabs";
 import { Chat } from "./Chat";
+import EmailDialog from "./EmailDialog";
 
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
@@ -231,19 +233,6 @@ const projectTabs: Tab[] = [
   { label: "לְשׂוֹחֵחַ", value: "chat" },
 ];
 
-const getStatusLabel = (status?: string) => {
-  switch (status) {
-    case ProjectStatus.PRE_PERMIT:
-      return 'קדם היתר';
-    case ProjectStatus.POST_PERMIT:
-      return 'אחרי היתר';
-    case ProjectStatus.FINAL:
-      return 'הסתיים';
-    default:
-      return status || 'לא ידוע';
-  }
-};
-
 const ProjectView: React.FC = () => {
   const router = useRouter();
   const { id } = router.query as { id?: string };
@@ -310,6 +299,10 @@ const ProjectView: React.FC = () => {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   const [isEditingTeam, setIsEditingTeam] = useState(false);
+
+  // Email dialog state
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const loadData = async () => {
     try {
@@ -569,6 +562,19 @@ const ProjectView: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  const getStatusLabel = (status?: string) => {
+    switch (status) {
+      case ProjectStatus.PRE_PERMIT:
+        return 'קדם היתר';
+      case ProjectStatus.POST_PERMIT:
+        return 'אחרי היתר';
+      case ProjectStatus.FINAL:
+        return 'אושר לתחילת עבודות';
+      default:
+        return 'לא ידוע';
+    }
+  };
 
   console.log(
     "ProjectView render - isEditing:",
@@ -892,10 +898,34 @@ const ProjectView: React.FC = () => {
     toast.success(`Downloading ${uploadedDocs.length} files`);
   };
 
+  const getPermitOwnerEmail = (): string => {
+    const permitOwner = teamMembers.find(
+      (member: any) => member.role === "בעל ההיתר"
+    );
+    return permitOwner?.email || "";
+  };
+
   const handleEmailAllFiles = () => {
-    // Would implement email functionality here
-    // This would typically open a dialog to enter email address
-    toast.info("Email all files feature would be implemented here");
+    setIsEmailDialogOpen(true);
+  };
+
+  const handleSendEmail = async (
+    recipientEmail: string,
+    subject: string,
+    body: string
+  ) => {
+    if (!id) return;
+
+    setIsSendingEmail(true);
+    try {
+      await sendFilledProjectDocuments(id, recipientEmail, subject, body);
+      toast.success("המייל נשלח בהצלחה");
+      setIsEmailDialogOpen(false);
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "נכשל בשליחת המייל");
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   // Render icons directly
@@ -1750,7 +1780,14 @@ const ProjectView: React.FC = () => {
                         הורד הכל
                       </button>
                       <button
-                        disabled={true}
+                        onClick={handleEmailAllFiles}
+                        disabled={
+                          filesData.filter(
+                            (f) =>
+                              f.fileType !== "כללי" &&
+                              f.status === DocumentState.FILLED
+                          ).length === 0
+                        }
                         style={{
                           background: "#648fbf",
                           color: "#fff",
@@ -1759,8 +1796,22 @@ const ProjectView: React.FC = () => {
                           padding: "8px 16px",
                           fontWeight: 600,
                           fontSize: 14,
-                          cursor: "not-allowed",
-                          opacity: 0.5,
+                          cursor:
+                            filesData.filter(
+                              (f) =>
+                                f.fileType !== "כללי" &&
+                                f.status === DocumentState.FILLED
+                            ).length === 0
+                              ? "not-allowed"
+                              : "pointer",
+                          opacity:
+                            filesData.filter(
+                              (f) =>
+                                f.fileType !== "כללי" &&
+                                f.status === DocumentState.FILLED
+                            ).length === 0
+                              ? 0.5
+                              : 1,
                           marginBottom: 0,
                           display: "flex",
                           alignItems: "center",
@@ -1874,6 +1925,21 @@ const ProjectView: React.FC = () => {
             onClose={closePreview}
           />
         )}
+
+        {/* Email Dialog */}
+        <EmailDialog
+          isOpen={isEmailDialogOpen}
+          onClose={() => setIsEmailDialogOpen(false)}
+          onSend={handleSendEmail}
+          defaultRecipientEmail={getPermitOwnerEmail()}
+          defaultSubject={
+            process.env.NEXT_PUBLIC_FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT
+          }
+          defaultBody={
+            process.env.NEXT_PUBLIC_FILLED_PROJECT_DOCUMENTS_EMAIL_BODY
+          }
+          isSending={isSendingEmail}
+        />
       </PageContent>
     </PageContainer>
   );

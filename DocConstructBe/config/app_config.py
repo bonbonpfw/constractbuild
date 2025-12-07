@@ -1,7 +1,9 @@
 """Application configuration settings."""
 
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def get_boolean_env_var(var_name: str, *, default: bool = False) -> bool:
     """Helper function to get boolean environment variables."""
@@ -17,8 +19,8 @@ class FlaskAppConfiguration:
     This configuration is also used by Flask extensions such as Flask-Mail.
     """
 
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'localhost')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 25))
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT'))
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_USE_TLS = get_boolean_env_var('MAIL_USE_TLS', default=False)
@@ -31,9 +33,9 @@ class FlaskAppConfiguration:
 
     FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT = os.environ.get(
         "FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT",
-        "Your Filled Project Documents",
+        "מסמכים לחתימה",
     )
     FILLED_PROJECT_DOCUMENTS_EMAIL_BODY = os.environ.get(
         "FILLED_PROJECT_DOCUMENTS_EMAIL_BODY",
-        "Please find attached filled project documents.",
+        "ניתן למצוא את מסמכי הפרויקט המלאים המצורפים.",
     )

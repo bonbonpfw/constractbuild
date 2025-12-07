@@ -74,6 +74,7 @@ const Projects: React.FC = () => {
   const [showProjectCreationDialog, setShowProjectCreationDialog] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const router = useRouter();
   
   // Sorting functionality
@@ -90,19 +91,32 @@ const Projects: React.FC = () => {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    // If "finals" is selected, show only FINAL status projects
-    if (selectedCity === 'finals') {
-      return projects.filter((p) => p.status === ProjectStatus.FINAL);
+    let filtered = projects;
+    
+    // Filter by status
+    if (selectedStatus !== 'all') {
+      if (selectedStatus === 'final') {
+        filtered = filtered.filter((p) => p.status === ProjectStatus.FINAL);
+      } else if (selectedStatus === 'pre_permit') {
+        filtered = filtered.filter((p) => p.status === ProjectStatus.PRE_PERMIT);
+      }
+      else if (selectedStatus === 'post_permit') {
+        filtered = filtered.filter((p) => p.status === ProjectStatus.POST_PERMIT);
+      }
+    } else {
+      // If no status filter, exclude FINAL projects by default
+      filtered = filtered.filter((p) => p.status !== ProjectStatus.FINAL);
     }
     
-    // Otherwise, filter out FINAL status projects
-    const nonFinalProjects = projects.filter((p) => p.status !== ProjectStatus.FINAL);
+    // Filter by city
+    if (selectedCity !== 'all') {
+      filtered = filtered.filter((p) => {
+        return (p.city || '') === selectedCity;
+      });
+    }
     
-    if (selectedCity === 'all') return nonFinalProjects;
-    return nonFinalProjects.filter((p) => {
-      return (p.city || '') === selectedCity;
-    });
-  }, [projects, selectedCity]);
+    return filtered;
+  }, [projects, selectedCity, selectedStatus]);
 
   const fetchProjects = async () => {
     try {
@@ -139,7 +153,7 @@ const Projects: React.FC = () => {
       case ProjectStatus.POST_PERMIT:
         return 'אחרי היתר';
       case ProjectStatus.FINAL:
-        return 'הסתיים';
+        return 'אושר לתחילת עבודות';
       default:
         return 'לא ידוע';
     }
@@ -384,10 +398,19 @@ const Projects: React.FC = () => {
                   title="סנן לפי עיר"
                 >
                   <option value="all">כל הערים</option>
-                  <option value="finals">הסתיימו</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>{CITY_LABELS[c] ?? c}</option>
                   ))}
+                </CitySelect>
+                <CitySelect
+                  value={selectedStatus}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}
+                  title="סנן לפי סטטוס"
+                >
+                  <option value="all">כל הסטטוסים</option>
+                  <option value="pre_permit">לפני היתר</option>
+                  <option value="post_permit">אחרי היתר</option>
+                  <option value="final">אושר לתחילת עבודות</option>
                 </CitySelect>
                 <ViewToggleButton
                   onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}

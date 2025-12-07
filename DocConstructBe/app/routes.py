@@ -762,11 +762,21 @@ def init_routes(app):
         if not recipient_email:
             raise ProjectTeamMemberNotFound
 
+        # Use provided subject/body or fall back to config defaults
+        email_subject = (
+            data.get("subject")
+            or app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT"]
+        )
+        email_body = (
+            data.get("body")
+            or app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_BODY"]
+        )
+
         message = Message(
-            subject=app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT"],
+            subject=email_subject,
             sender=app.config["MAIL_DEFAULT_SENDER_EMAIL"],
             recipients=[recipient_email],
-            body=app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_BODY"],
+            body=email_body,
         )
 
         for document in documents:

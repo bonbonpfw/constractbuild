@@ -242,6 +242,8 @@ class SendFilledProjectDocumentsSchema(Schema):
     """Send filled project documents API endpoint payload."""
 
     recipient_email = fields.Email(required=False)
+    subject = fields.Str(required=False)
+    body = fields.Str(required=False)
 
 
 class Endpoints:
