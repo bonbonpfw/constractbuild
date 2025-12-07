@@ -228,6 +228,31 @@ class InvalidDocumentStatus(ApiError):
         )
 
 
+class ProjectTeamMemberNotFound(ApiError):
+    """Project team member does not exists."""
+
+    def __init__(self):
+        super().__init__(
+            msg='חבר צוות לא נמצא בפרויקט',
+            code='project_team_member_not_found'
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
+
+class EmailSendError(ApiError):
+    """Error sending email."""
+
+    def __init__(self):
+        super().__init__(
+            msg='שגיאה בשליחת המייל',
+            code='email_send_error'
+        )
+
+    def http_code(self):
+        return HttpCodes.SERVER_INTERNAL_ERROR
+
 class UserNotFound(ApiError):
     """User does not exists."""
 

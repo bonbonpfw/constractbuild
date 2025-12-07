@@ -238,6 +238,12 @@ class AddProjectCommentSchema(Schema):
     content = fields.Str(required=True, validate=validate.Length(min=1))
 
 
+class SendFilledProjectDocumentsSchema(Schema):
+    """Send filled project documents API endpoint payload."""
+
+    recipient_email = fields.Email(required=False)
+
+
 class Endpoints:
     GET_PROJECTS = "get_projects"
     GET_PROJECT = "get_project"
@@ -281,6 +287,8 @@ class Endpoints:
     AUTHENTICATE_USER = "authenticate_user"
     
     ADD_PROJECT_COMMENT = "add_project_comment"
+
+    SEND_FILLED_PROJECT_DOCUMENTS = "send_filled_project_documents"
 
 
 API_ENDPOINTS = {
@@ -453,5 +461,10 @@ API_ENDPOINTS = {
         "method": "POST",
         "schema": AddProjectCommentSchema,
         "description": "Add a comment to a project."
+    },
+    Endpoints.SEND_FILLED_PROJECT_DOCUMENTS: {
+        "method": "POST",
+        "schema": SendFilledProjectDocumentsSchema,
+        "description": "Send filled project documents to a specified email."
     },
 }

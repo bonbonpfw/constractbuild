@@ -1,10 +1,21 @@
 import os
+import mimetypes
 import tempfile
 from data_model.enum import DocumentStatus
 from flask import send_file, request
+from flask_mail import Message
 from datetime import datetime
+from app import mail
 from app.decorators import jwt_required, auto_rollback
-from app.errors import ValidationError, InvalidProjectProfessionalDocument, InvalidCityError, AuthenticationFailed
+from app.errors import (
+    ValidationError,
+    InvalidProjectProfessionalDocument,
+    InvalidCityError,
+    AuthenticationFailed,
+    ProjectDocumentNotFound,
+    ProjectTeamMemberNotFound,
+    EmailSendError,
+)
 from app.api import (
     ProjectManager,
     ProfessionalManager,
@@ -732,12 +743,47 @@ def init_routes(app):
             'comment': ProjectCommentsManager.serialize(comment),
         }).generate_response()
 
+    @app.route("/api/projects/<string:project_id>/documents/send-filled", methods=["POST"])
+    @jwt_required
+    def send_filled_project_documents(project_id: str) -> ApiResponse:
+        """Send filled project documents via email."""
+        data = validate_request(Endpoints.SEND_FILLED_PROJECT_DOCUMENTS)
 
-def get_permit_owner_for_project(project_id):
-    from data_model.models import ProjectTeamMember
-    from data_model.enum import ProjectTeamRole
-    from database.database import db_session
-    return db_session.query(ProjectTeamMember).filter_by(
-        project_id=project_id,
-        role=ProjectTeamRole.PERMIT_OWNER.value
-    ).first()
+        documents = ProjectManager.get_documents_by_status(
+            project_id, status=DocumentStatus.FILLED
+        )
+        if not documents:
+            raise ProjectDocumentNotFound
+
+        recipient_email = (
+            data.get("recipient_email")
+            or ProjectTeamManager().get_project_permit_owner(project_id).email
+        )
+        if not recipient_email:
+            raise ProjectTeamMemberNotFound
+
+        message = Message(
+            subject=app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT"],
+            sender=app.config["MAIL_DEFAULT_SENDER_EMAIL"],
+            recipients=[recipient_email],
+            body=app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_BODY"],
+        )
+
+        for document in documents:
+            content_type, _ = mimetypes.guess_type(document.file_path)
+            with open(document.file_path, 'rb') as fp:
+                message.attach(
+                    filename=os.path.basename(document.file_path),
+                    content_type=content_type,
+                    data=fp.read(),
+                )
+
+        try:
+            mail.send(message)
+        except Exception as e:
+            logger.exception(e)
+            raise EmailSendError from e
+
+        return SuccessResponse({
+            "message": f"Email sent successfully. {len(documents)} documents attached.",
+        }).generate_response()

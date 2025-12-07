@@ -23,3 +23,17 @@ class FlaskAppConfiguration:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_USE_TLS = get_boolean_env_var('MAIL_USE_TLS', default=False)
     MAIL_USE_SSL = get_boolean_env_var('MAIL_USE_SSL', default=False)
+
+    MAIL_DEFAULT_SENDER_EMAIL = os.environ.get(
+        "MAIL_DEFAULT_SENDER_EMAIL",
+        "no-reply@test.com",
+    )
+
+    FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT = os.environ.get(
+        "FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT",
+        "Your Filled Project Documents",
+    )
+    FILLED_PROJECT_DOCUMENTS_EMAIL_BODY = os.environ.get(
+        "FILLED_PROJECT_DOCUMENTS_EMAIL_BODY",
+        "Please find attached filled project documents.",
+    )
