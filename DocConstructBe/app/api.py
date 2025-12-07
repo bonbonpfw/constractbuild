@@ -158,6 +158,18 @@ class ProjectManager:
             raise ProjectDocumentNotFound()
         return document
 
+    @staticmethod
+    def get_documents_by_status(
+        project_id: str,
+        *,
+        status: DocumentStatus
+    ) -> list[ProjectDocument]:
+        """Get all documents for a specific project with the given status."""
+        return db_session.query(ProjectDocument).filter(
+            ProjectDocument.project_id == project_id,
+            ProjectDocument.status == status.value,
+        ).all()
+
     def add_document(self, file_path: str, project_id: str, document_type: str,
                      document_name: str, document_status: DocumentStatus) -> ProjectDocument:
         self.get_by_id(project_id=project_id)
