@@ -15,6 +15,7 @@ from app.errors import (
     ProjectDocumentNotFound,
     ProjectTeamMemberNotFound,
     EmailSendError,
+    ProjectCommentNotFound,
 )
 from app.api import (
     ProjectManager,
@@ -741,6 +742,25 @@ def init_routes(app):
         )
         return SuccessResponse({
             'comment': ProjectCommentsManager.serialize(comment),
+        }).generate_response()
+
+    @app.route("/api/projects/<string:project_id>/comments/<string:comment_id>", methods=["PUT"])
+    @jwt_required
+    @auto_rollback
+    def update_project_comment(project_id: str, comment_id: str) -> ApiResponse:
+        """Update an existing project comment."""
+        data = validate_request(Endpoints.UPDATE_PROJECT_COMMENT)
+        comment = ProjectCommentsManager.get_by_id(comment_id)
+        if str(comment.project_id) != project_id:
+            raise ProjectCommentNotFound
+        if str(comment.author_user_id) != request.user_id:
+            raise AuthenticationFailed
+        updated_comment = ProjectCommentsManager.update(
+            comment,
+            content=data.get("content"),
+        )
+        return SuccessResponse({
+            "comment": ProjectCommentsManager.serialize(updated_comment),
         }).generate_response()
 
     @app.route("/api/projects/<string:project_id>/documents/send-filled", methods=["POST"])

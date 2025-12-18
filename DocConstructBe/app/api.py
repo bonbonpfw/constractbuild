@@ -25,6 +25,7 @@ from app.errors import (
     ProjectDocumentNotFound,
     InvalidDocumentStatus,
     ProjectTeamMemberNotFound,
+    ProjectCommentNotFound,
 )
 from data_model.models import (
     Project,
@@ -731,6 +732,22 @@ class ProjectCommentsManager:
         return db_session.query(ProjectComment).filter(
             ProjectComment.project_id == project_id
         ).order_by(ProjectComment.created_at.desc())  # older comments first
+
+    @staticmethod
+    def get_by_id(comment_id: str) -> ProjectComment:
+        """Get comment by ID."""
+        if comment := db_session.query(ProjectComment).filter(
+            ProjectComment.id == comment_id
+        ).one_or_none():
+            return comment
+        raise ProjectCommentNotFound
+
+    @staticmethod
+    def update(comment: ProjectComment, content: str) -> ProjectComment:
+        """Update comment content."""
+        comment.content = content
+        db_session.commit()
+        return comment
 
     @staticmethod
     def serialize(comment: ProjectComment) -> dict:

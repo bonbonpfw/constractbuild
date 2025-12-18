@@ -238,6 +238,12 @@ class AddProjectCommentSchema(Schema):
     content = fields.Str(required=True, validate=validate.Length(min=1))
 
 
+class UpdateProjectCommentSchema(Schema):
+    """Update project comment API endpoint payload."""
+
+    content = fields.Str(required=True, validate=validate.Length(min=1))
+
+
 class SendFilledProjectDocumentsSchema(Schema):
     """Send filled project documents API endpoint payload."""
 
@@ -289,6 +295,7 @@ class Endpoints:
     AUTHENTICATE_USER = "authenticate_user"
     
     ADD_PROJECT_COMMENT = "add_project_comment"
+    UPDATE_PROJECT_COMMENT = "update_project_comment"
 
     SEND_FILLED_PROJECT_DOCUMENTS = "send_filled_project_documents"
 
@@ -463,6 +470,11 @@ API_ENDPOINTS = {
         "method": "POST",
         "schema": AddProjectCommentSchema,
         "description": "Add a comment to a project."
+    },
+    Endpoints.UPDATE_PROJECT_COMMENT: {
+        "method": "PUT",
+        "schema": UpdateProjectCommentSchema,
+        "description": "Update an existing project comment."
     },
     Endpoints.SEND_FILLED_PROJECT_DOCUMENTS: {
         "method": "POST",

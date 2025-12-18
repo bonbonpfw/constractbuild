@@ -444,3 +444,17 @@ export const addProjectComment = async (projectId: string, comment: string) => {
   );
   return response.data.comment;
 };
+
+export const updateProjectComment = async (
+  projectId: string,
+  commentId: string,
+  content: string
+) => {
+  const response = await axios.put(
+    `${API_URL}/projects/${projectId}/comments/${commentId}`,
+    {
+      content,
+    }
+  );
+  return response.data.comment;
+};

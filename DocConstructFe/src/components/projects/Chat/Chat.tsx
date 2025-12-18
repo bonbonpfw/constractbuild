@@ -8,7 +8,11 @@ import {
 } from "./Chat.styles";
 import { Label } from "../../../styles/SharedStyles";
 import { FaArrowUp } from "react-icons/fa";
-import { getProjectComments, addProjectComment } from "../../../api";
+import {
+  getProjectComments,
+  addProjectComment,
+  updateProjectComment,
+} from "../../../api";
 import Avatar from "../../shared/Avatar";
 import Message from "./Message";
 
@@ -27,6 +31,7 @@ export default function Chat({ projectId }: { projectId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState<boolean>(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +49,31 @@ export default function Chat({ projectId }: { projectId: string }) {
   };
 
   useEffect(() => {
+    const storedUserInfo = localStorage.getItem("user_info");
+    if (storedUserInfo) {
+      try {
+        const parsedUser = JSON.parse(storedUserInfo);
+        setCurrentUserId(parsedUser.id || null);
+      } catch {
+        setCurrentUserId(null);
+      }
+    }
+  }, []);
+
+  const handleUpdateComment = async (commentId: string, content: string) => {
+    const updatedComment = await updateProjectComment(
+      projectId,
+      commentId,
+      content
+    );
+    setComments((prevComments) =>
+      prevComments.map((comment) =>
+        comment.id === updatedComment.id ? updatedComment : comment
+      )
+    );
+  };
+
+  useEffect(() => {
     const fetchChat = async () => {
       const chat = await getProjectComments(projectId);
       setComments(chat);
@@ -56,7 +86,7 @@ export default function Chat({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   const sortedComments = useMemo(() => {
-    return comments.sort((a, b) => {
+    return [...comments].sort((a, b) => {
       return (
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
@@ -86,7 +116,12 @@ export default function Chat({ projectId }: { projectId: string }) {
       <ChatWrapper>
         <MessagesWrapper ref={chatRef}>
           {sortedComments.map((comment) => (
-            <Message key={comment.id} comment={comment} />
+            <Message
+              key={comment.id}
+              comment={comment}
+              canEdit={comment.author_user_id === currentUserId}
+              onUpdate={handleUpdateComment}
+            />
           ))}
         </MessagesWrapper>
         <ChatInput

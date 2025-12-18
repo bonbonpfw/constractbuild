@@ -202,6 +202,19 @@ class ProjectDocumentNotFound(ApiError):
     def http_code(self):
         return HttpCodes.NOT_FOUND
 
+
+class ProjectCommentNotFound(ApiError):
+    """Project comment does not exists."""
+
+    def __init__(self):
+        super().__init__(
+            msg='תגובה לא נמצאה',
+            code='project_comment_not_found'
+        )
+
+    def http_code(self):
+        return HttpCodes.NOT_FOUND
+
 class NoCoordinatesFound(ApiError):
     def __init__(self):
         super().__init__(

@@ -70,3 +70,29 @@ export const MessageAuthor = styled.div`
   color: #333333;
   font-weight: 600;
 `;
+
+export const MessageActions = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+`;
+
+export const MessageActionButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #0070f3;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+
+  &:disabled {
+    color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
+
+export const MessageEditInput = styled(TextArea)`
+  min-height: 60px;
+  resize: vertical;
+`;
