@@ -27,6 +27,13 @@ axios.interceptors.request.use(
     return config;
   },
   (error) => {
+    if (error.response && error.response.status === 401) {
+      if (typeof window !== "undefined") {
+        Cookies.remove("auth_token");
+        localStorage.removeItem("user_info");
+        window.location.href = "/login";
+      }
+    }
     return Promise.reject(error);
   }
 );

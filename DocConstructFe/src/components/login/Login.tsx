@@ -181,6 +181,7 @@ const LoginSplitMockupQuote = () => {
       if (res?.status_code === "success" && res.token) {
         Cookies.set("auth_token", res.token, {
           path: "/",
+          expires: 1,
         });
 
         // Store user information

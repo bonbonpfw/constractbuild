@@ -663,9 +663,10 @@ class UserManager:
     @staticmethod
     def generate_jwt_token(user: User) -> str:
         """Generate JWT token for user."""
+        expiration_hours = int(os.environ.get('JWT_EXPIRATION_HOURS', 4))
         payload = {
             "user_id": str(user.id),
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=expiration_hours)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
         return token
