@@ -564,12 +564,17 @@ def save_file_to_temp(file):
 class ProjectTeamManager:
     @staticmethod
     def get_all_by_project(project_id: str):
-        team_members = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
-        # Expunge objects from session to prevent SQLAlchemy from tracking changes
-        for team_member in team_members:
-            db_session.expunge(team_member)
-            team_member.role = ProjectTeamRole.map_to_value(team_member.role)
-        return team_members
+        try:
+            team_members = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
+            # Expunge objects from session to prevent SQLAlchemy from tracking changes
+            for team_member in team_members:
+                db_session.expunge(team_member)
+                team_member.role = ProjectTeamRole.map_to_value(team_member.role)
+            return team_members
+        except Exception:
+            db_session.rollback()
+            raise
+
 
     @staticmethod
     def get_by_id(team_id: str):
