@@ -1,3 +1,6 @@
+from typing import Any
+
+
 from datetime import date, datetime, UTC
 import re
 
@@ -5,6 +8,7 @@ from sqlalchemy import Column, Boolean, String, Date, ForeignKey, UniqueConstrai
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from DocConstructBe.data_model.enum import ProjectServiceType
 from app.errors import ValidationError
 from database.base_model import Base
 from database.database import engine
@@ -49,6 +53,7 @@ class Project(Base):
     request_number = Column(String, nullable=False)
     description = Column(String, nullable=True)
     status = Column(String, nullable=True)
+    service_types = Column("service_type", String, nullable=True)
     status_due_date = Column(Date, nullable=True)
     docs_path = Column(String, nullable=True)
     permit_number = Column(String, nullable=True)

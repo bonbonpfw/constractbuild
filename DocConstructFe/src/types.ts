@@ -109,6 +109,7 @@ export interface Project {
   description: string;
   status_due_date?: string;
   status?: string;
+  service_types?: string[];
   is_warning?: boolean;
   is_expired?: boolean;
   professionals: Professional[];

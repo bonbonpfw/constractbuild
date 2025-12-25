@@ -129,6 +129,7 @@ def init_routes(app):
                 'id': project.id,
                 'name': project.name,
                 'city': project.city,
+                'service_types': project.service_types.split(",") if project.service_types else [],
                 'request_number': project.request_number,
                 'status': enum_to_value(project.status),
                 'description': project.description,
@@ -178,6 +179,7 @@ def init_routes(app):
             status=data.get('status'),
             status_due_date=data.get('status_due_date'),
             city=data.get('city'),
+            service_types=data.get('service_types') if data.get('service_types') else [],
         )
         return SuccessResponse({'id': str(project.id)}).generate_response()
 

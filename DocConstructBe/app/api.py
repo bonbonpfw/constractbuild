@@ -38,6 +38,7 @@ from data_model.models import (
     User,
 )
 from database.database import db_session
+
 from data_model.enum import (
     ProjectStatus,
     ProfessionalStatus,
@@ -48,6 +49,7 @@ from data_model.enum import (
     DocumentStatus,
     ProjectTeamRole,
     City,
+    ProjectServiceType,
 )
 from doc_map.doc_map import DocumentFiller
 from app.errors import InvalidFileFormat, InvalidCityError, UserNotFound
@@ -72,12 +74,15 @@ class ProjectManager:
 
     @staticmethod
     def create(name: str,  request_number: str, status: ProjectStatus, description: str = None,
-               status_due_date: date = None, city: str | None = None) -> Project:
+               status_due_date: date = None, city: str | None = None, service_types: list[ProjectServiceType] = None) -> Project:
         existing_project = db_session.query(Project).filter(
             (Project.name == name) | (Project.request_number == request_number)
         ).first()
         if existing_project:
             raise ProjectAlreadyExists()
+        serialized_service_types = None
+        if service_types:
+            serialized_service_types = ",".join([enum_to_value(st) for st in service_types])
         project = Project(
             name=name,
             request_number=request_number,
@@ -85,6 +90,7 @@ class ProjectManager:
             status=enum_to_value(status),
             status_due_date=status_due_date,
             city=city,
+            service_types=serialized_service_types,
         )
         project.created_at = project.updated_at = datetime.datetime.now()
         db_session.add(project)
@@ -240,6 +246,10 @@ class ProjectManager:
             return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('TLV_')]
         elif city == City.RG.value:
             return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RG_')]
+        elif city == City.RH.value:
+            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RH_')]
+        elif city == City.RN.value:
+            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RN_')]
         else:
             raise InvalidCityError(city=city)
     

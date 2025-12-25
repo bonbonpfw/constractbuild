@@ -26,6 +26,16 @@ export const CITY_LABELS: Record<string, string> = {
   RamatHasharon: 'רמת השרון',
 };
 
+export enum ServiceType {
+  START_WORK = 'START_WORK',
+  ENG_COORDINATOR = 'ENG_COORDINATOR',
+  FOUR = 'FOUR',
+}
+const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
+  { value: ServiceType.START_WORK, label: 'תחילת עבודות' },
+  { value: ServiceType.ENG_COORDINATOR, label: 'תיאום הנדסי' },
+  { value: ServiceType.FOUR, label: 'טופס 4' },
+];
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   name: '',
   city: '',
@@ -36,7 +46,8 @@ export const DefaultProjectCreationFormData: ProjectCreationFormData = {
   firefighting_number: '',
   description: '',
   status: ProjectStatus.PRE_PERMIT,
-  professionals: []
+  professionals: [],
+  service_types: [],
 };
 
 const ProjectCreationDialog: React.FC<{
@@ -46,6 +57,16 @@ const ProjectCreationDialog: React.FC<{
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ProjectCreationFormData>(DefaultProjectCreationFormData);
   const [cities, setCities] = useState<{ value: string; name: string }[]>([]);
+
+  const handleToggleServiceType = (value: ServiceType) => {
+    setFormData((prev) => {
+      const existing = prev.service_types || [];
+      const next = existing.includes(value)
+        ? existing.filter((v) => v !== value)
+        : [...existing, value];
+      return { ...prev, service_types: next };
+    });
+  };
 
   
 
@@ -123,7 +144,21 @@ const ProjectCreationDialog: React.FC<{
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
             </FullWidthField>
-            
+            <FullWidthField>
+              <Label>סוג השירות (בחירה מרובה)</Label>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {SERVICE_TYPE_OPTIONS.map((option) => (
+                  <label key={option.value} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="checkbox"
+                      checked={(formData.service_types || []).includes(option.value)}
+                      onChange={() => handleToggleServiceType(option.value)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </FullWidthField>
             <FullWidthField>
               <Label>סטטוס הפרויקט</Label>
               <Select

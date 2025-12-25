@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole, ProjectServiceType
 
 # Project Schemas
 
@@ -17,6 +17,7 @@ class ProjectCreateSchema(Schema):
     request_number = fields.Str(required=True)
     permit_number = fields.Str(required=False)
     city = fields.Str(required=False)
+    service_types = fields.List(fields.Enum(ProjectServiceType, by_value=True), required=False)
     construction_supervision_number = fields.Str(required=False)
     engineering_coordinator_number = fields.Str(required=False)
     firefighting_number = fields.Str(required=False)

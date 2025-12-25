@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -122,6 +122,10 @@ const SidebarButton = styled.button<{ active: boolean }>`
 
   &:hover {
     background-color: rgb(227, 237, 246);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -274,7 +278,7 @@ const ProjectView: React.FC = () => {
 
   // Add tab state
   const [activeTab, setActiveTab] = useState<
-    "details" | "professionals" | "team" | "chat"
+    "details" | "start_work" | "eng_coord" | "form4" | "professionals" | "team" | "chat"
   >("chat");
   const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>(
     []
@@ -304,14 +308,38 @@ const ProjectView: React.FC = () => {
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+  const serviceTypes = useMemo(() => {
+    if (!formData) return [];
+    if (Array.isArray(formData.service_types)) return formData.service_types;
+    if (typeof (formData as any).service_types === "string") {
+      return (formData as any).service_types
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+    return [];
+  }, [formData]);
+
+  const isAllServices =
+    serviceTypes.length === 0 || serviceTypes.length >= 3;
+  const startWorkEnabled = isAllServices || serviceTypes.includes("START_WORK");
+  const engCoordEnabled = isAllServices || serviceTypes.includes("ENG_COORDINATOR");
+  const form4Enabled = isAllServices || serviceTypes.includes("FOUR");
+
   const loadData = async () => {
     try {
       const [proj, statuses] = await Promise.all([
         getProjectById(id),
         getProjectStatuses(),
       ]);
-      setFormData(proj);
-      originalData.current = proj;
+      const normalizedServiceTypes = Array.isArray(proj.service_types)
+        ? proj.service_types
+        : typeof (proj as any).service_types === "string"
+          ? (proj as any).service_types.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
+      const normalizedProject = { ...proj, service_types: normalizedServiceTypes };
+      setFormData(normalizedProject);
+      originalData.current = normalizedProject;
       setStatuses(statuses);
 
       // Fetch document types based on project's city
@@ -1019,6 +1047,182 @@ const ProjectView: React.FC = () => {
     }
   };
 
+  const renderProjectDetails = () => {
+    if (!formData) return null;
+    return (
+    <div style={{ minHeight: 0, overflow: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: 16,
+        }}
+      >
+        {!isEditingDetails ? (
+          <CompactButton onClick={() => setIsEditingDetails(true)}>
+            {renderIcon(FaIcons.FaEdit)} Edit
+          </CompactButton>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <CompactButton
+              onClick={async () => {
+                await saveChanges();
+                setIsEditingDetails(false);
+              }}
+              disabled={saving}
+            >
+              {renderIcon(FaIcons.FaCheck)} Save
+            </CompactButton>
+            <CompactButton
+              onClick={() => {
+                cancelEditing();
+                setIsEditingDetails(false);
+              }}
+              disabled={saving}
+            >
+              {renderIcon(FaIcons.FaTimes)} Cancel
+            </CompactButton>
+          </div>
+        )}
+      </div>
+      <CompactFormGrid>
+        <FullWidthField>
+          <CompactLabel>שם הפרויקט</CompactLabel>
+          <Input
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </FullWidthField>
+        <CompactField>
+          <CompactLabel>מספר בקשה</CompactLabel>
+          <Input
+            name="request_number"
+            value={formData.request_number}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <CompactField>
+          <CompactLabel>מספר היתר</CompactLabel>
+          <Input
+            name="permit_number"
+            value={formData.permit_number}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <CompactField>
+          <CompactLabel>מספר תיק טיפול</CompactLabel>
+          <Input
+            name="construction_supervision_number"
+            value={formData.construction_supervision_number}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <CompactField>
+          <CompactLabel>מספר תיאום הנדסי</CompactLabel>
+          <Input
+            name="engineering_coordinator_number"
+            value={formData.engineering_coordinator_number}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <CompactField>
+          <CompactLabel>מספר תיק כיבוי</CompactLabel>
+          <Input
+            name="firefighting_number"
+            value={formData.firefighting_number}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <CompactField>
+          <CompactLabel>סטטוס הפרויקט</CompactLabel>
+          <Select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          >
+            {statuses.map((s) => (
+              <option key={s} value={s}>
+                {getStatusLabel(s)}
+              </option>
+            ))}
+          </Select>
+        </CompactField>
+        <CompactField>
+          <CompactLabel>תאריך תחילת עבודות</CompactLabel>
+          <Input
+            name="status_due_date"
+            type="date"
+            value={formData.status_due_date || ""}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              height: "36px",
+            }}
+          />
+        </CompactField>
+        <FullWidthField>
+          <CompactLabel>תיאור הפרויקט</CompactLabel>
+          <TextArea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            disabled={!isEditingDetails}
+            style={{
+              borderRadius: "8px",
+              padding: "8px 10px",
+              minHeight: "60px",
+            }}
+          />
+        </FullWidthField>
+      </CompactFormGrid>
+    </div>
+  );};
+
   return (
     <PageContainer>
       <TopPanel>
@@ -1060,6 +1264,33 @@ const ProjectView: React.FC = () => {
                   onClick={() => setActiveTab("details")}
                 >
                   פרטי הפרויקט
+                </SidebarButton>
+                <SidebarButton
+                  active={activeTab === "start_work"}
+                  onClick={() => {
+                    if (startWorkEnabled) setActiveTab("start_work");
+                  }}
+                  disabled={!startWorkEnabled}
+                >
+                  תחילת עבודות
+                </SidebarButton>
+                <SidebarButton
+                  active={activeTab === "eng_coord"}
+                  onClick={() => {
+                    if (engCoordEnabled) setActiveTab("eng_coord");
+                  }}
+                  disabled={!engCoordEnabled}
+                >
+                  תיאום הנדסי
+                </SidebarButton>
+                <SidebarButton
+                  active={activeTab === "form4"}
+                  onClick={() => {
+                    if (form4Enabled) setActiveTab("form4");
+                  }}
+                  disabled={!form4Enabled}
+                >
+                  טופס 4
                 </SidebarButton>
 
                 <SidebarButton
@@ -1310,183 +1541,10 @@ const ProjectView: React.FC = () => {
                   </div>
                 </div>
 
-                {activeTab === "details" && (
-                  <div style={{ minHeight: 0, overflow: "auto" }}>
-                    {/* Document Status Indicator - Moved to project details section */}
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 16,
-                      }}
-                    >
-                      {!isEditingDetails ? (
-                        <CompactButton
-                          onClick={() => setIsEditingDetails(true)}
-                        >
-                          {renderIcon(FaIcons.FaEdit)} Edit
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <CompactButton
-                            onClick={async () => {
-                              await saveChanges();
-                              setIsEditingDetails(false);
-                            }}
-                            disabled={saving}
-                          >
-                            {renderIcon(FaIcons.FaCheck)} Save
-                          </CompactButton>
-                          <CompactButton
-                            onClick={() => {
-                              cancelEditing();
-                              setIsEditingDetails(false);
-                            }}
-                            disabled={saving}
-                          >
-                            {renderIcon(FaIcons.FaTimes)} Cancel
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
-                    <CompactFormGrid>
-                      <FullWidthField>
-                        <CompactLabel>שם הפרויקט</CompactLabel>
-                        <Input
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </FullWidthField>
-                      <CompactField>
-                        <CompactLabel>מספר בקשה</CompactLabel>
-                        <Input
-                          name="request_number"
-                          value={formData.request_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר היתר</CompactLabel>
-                        <Input
-                          name="permit_number"
-                          value={formData.permit_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק טיפול</CompactLabel>
-                        <Input
-                          name="construction_supervision_number"
-                          value={formData.construction_supervision_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיאום הנדסי</CompactLabel>
-                        <Input
-                          name="engineering_coordinator_number"
-                          value={formData.engineering_coordinator_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>מספר תיק כיבוי</CompactLabel>
-                        <Input
-                          name="firefighting_number"
-                          value={formData.firefighting_number}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>סטטוס הפרויקט</CompactLabel>
-                        <Select
-                          name="status"
-                          value={formData.status}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        >
-                          {statuses.map((s) => (
-                            <option key={s} value={s}>
-                              {getStatusLabel(s)}
-                            </option>
-                          ))}
-                        </Select>
-                      </CompactField>
-                      <CompactField>
-                        <CompactLabel>תאריך תחילת עבודות</CompactLabel>
-                        <Input
-                          name="status_due_date"
-                          type="date"
-                          value={formData.status_due_date || ""}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            height: "36px",
-                          }}
-                        />
-                      </CompactField>
-                      <FullWidthField>
-                        <CompactLabel>תיאור הפרויקט</CompactLabel>
-                        <TextArea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          disabled={!isEditingDetails}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 10px",
-                            minHeight: "60px",
-                          }}
-                        />
-                      </FullWidthField>
-                    </CompactFormGrid>
-                  </div>
-                )}
+                {activeTab === "details" && renderProjectDetails()}
+                {activeTab === "start_work" && renderProjectDetails()}
+                {activeTab === "eng_coord" && renderProjectDetails()}
+                {activeTab === "form4" && renderProjectDetails()}
 
                 {activeTab === "professionals" && (
                   <div style={{ minHeight: 0, overflow: "auto" }}>

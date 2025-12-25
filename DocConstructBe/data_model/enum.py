@@ -4,6 +4,12 @@ import os
 from config.sys_config import CONFIG
 
 
+
+class ProjectServiceType(Enum):
+    START_WORK = 'START_WORK'
+    ENG_COORDINATOR = 'ENG_COORDINATOR'
+    FOUR = 'FOUR'
+
 class ProjectStatus(Enum):
     PRE_PERMIT = 'Pre permit'
     POST_PERMIT = 'Post permit'
@@ -35,6 +41,8 @@ class ProjectDocumentType(Enum):
 class City(Enum):
     TLV = 'TelAviv'
     RG = 'RamatGan'
+    RH = 'RamatHasharon'
+    RN = 'Raanana'
 
 
 class ProjectDocPath(Enum):

@@ -57,7 +57,10 @@ export const getProjectById = async (projectId: string): Promise<Project> => {
 export const createProject = async (
   data: ProjectCreationFormData,
 ): Promise<Project> => {
-  const response = await axios.post(`${API_URL}/project`, data);
+  const response = await axios.post(`${API_URL}/project`, {
+    ...data,
+    service_types: data.service_types || [],
+  });
   return response.data;
 };
 
