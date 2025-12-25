@@ -28,6 +28,23 @@ import { CITY_LABELS } from "./ProjectCreationDialog";
 import SortableTableHeader from "../shared/SortableTableHeader";
 import useSort from "../../hooks/useSort";
 
+const SearchInput = styled.input`
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #314a67;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  &:hover { border-color: #c6d4e6; }
+  &:focus {
+    border-color: #9bb4d6;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+`;
+
 const ViewToggleButton = styled.button`
   display: flex;
   align-items: center;
@@ -75,6 +92,7 @@ const Projects: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
   
   // Sorting functionality
@@ -114,9 +132,18 @@ const Projects: React.FC = () => {
         return (p.city || '') === selectedCity;
       });
     }
+
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      filtered = filtered.filter((p) => {
+        const name = (p.name || '').toLowerCase();
+        const requestNumber = (p.request_number || '').toLowerCase();
+        return name.includes(term) || requestNumber.includes(term);
+      });
+    }
     
     return filtered;
-  }, [projects, selectedCity, selectedStatus]);
+  }, [projects, selectedCity, selectedStatus, searchTerm]);
 
   const fetchProjects = async () => {
     try {
@@ -392,6 +419,11 @@ const Projects: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ margin: 0, color: '#4b6b8e' }}>פרויקטים ({filteredProjects.length})</h2>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <SearchInput
+                  placeholder="חפש פרויקט"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
                 <CitySelect
                   value={selectedCity}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCity(e.target.value)}
