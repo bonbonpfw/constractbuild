@@ -1,35 +1,33 @@
 import { useEffect, useState } from "react";
-import Avatar from "../../shared/Avatar";
 import {
-  MessageContent,
-  Message as MessageWrapper,
-  MessageTimestamp,
-  MessageAuthor,
+  MessageRow,
+  MessageBubble,
+  MessageInfo,
+  AuthorName,
+  Timestamp,
   MessageActions,
-  MessageActionButton,
-  MessageEditInput,
+  ActionLink,
+  EditInput,
 } from "./Chat.styles";
-
 import { Comment } from "./Chat";
 
 type MessageProps = {
   comment: Comment;
+  isMine: boolean;
   canEdit?: boolean;
   onUpdate?: (commentId: string, content: string) => Promise<void>;
 };
 
 export default function Message({
   comment,
+  isMine,
   canEdit = false,
   onUpdate,
 }: MessageProps) {
-  const formattedDate = new Date(comment.created_at).toLocaleDateString(
-    "he-IL"
-  );
-
-  const formattedTime = new Date(comment.created_at).toLocaleTimeString(
-    "he-IL"
-  );
+  const formattedTime = new Date(comment.created_at).toLocaleTimeString("he-IL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [draftContent, setDraftContent] = useState(comment.content);
@@ -40,17 +38,6 @@ export default function Message({
       setDraftContent(comment.content);
     }
   }, [comment.content, isEditing]);
-
-  const stringToColor = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = Math.abs(hash) % 360;
-    return `hsl(${h}, 70%, 90%)`;
-  };
-
-  const userColor = stringToColor(comment.author_username);
 
   const handleSave = async () => {
     if (!onUpdate) {
@@ -69,52 +56,34 @@ export default function Message({
   };
 
   return (
-    <MessageWrapper>
-      <Avatar name={comment.author_username} />
-      <MessageContent $backgroundColor={userColor}>
-        <MessageAuthor>{comment.author_username}</MessageAuthor>
+    <MessageRow $isMine={isMine}>
+      <MessageInfo $isMine={isMine}>
+        <AuthorName>{isMine ? "אתה" : comment.author_username}</AuthorName>
+        <Timestamp>{formattedTime}</Timestamp>
+      </MessageInfo>
+      <MessageBubble $isMine={isMine}>
         {isEditing ? (
-          <MessageEditInput
-            value={draftContent}
-            onChange={(e) => setDraftContent(e.target.value)}
-            disabled={isSaving}
-          />
+          <>
+            <EditInput
+              value={draftContent}
+              onChange={(e) => setDraftContent(e.target.value)}
+              disabled={isSaving}
+              autoFocus
+            />
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <ActionLink style={{ color: "white" }} onClick={() => setIsEditing(false)}>ביטול</ActionLink>
+              <ActionLink style={{ color: "white", fontWeight: "bold" }} onClick={handleSave}>שמור</ActionLink>
+            </div>
+          </>
         ) : (
-          <span>{comment.content}</span>
+          <div>{comment.content}</div>
         )}
-        <MessageTimestamp>
-          {formattedDate} {formattedTime}
-        </MessageTimestamp>
-        {canEdit && (
-          <MessageActions>
-            {isEditing ? (
-              <>
-                <MessageActionButton
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  disabled={isSaving}
-                >
-                  ביטול
-                </MessageActionButton>
-                <MessageActionButton
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  שמור
-                </MessageActionButton>
-              </>
-            ) : (
-              <MessageActionButton
-                type="button"
-                onClick={() => setIsEditing(true)}
-              >
-                ערוך
-              </MessageActionButton>
-            )}
-          </MessageActions>
-        )}
-      </MessageContent>
-    </MessageWrapper>
+      </MessageBubble>
+      {canEdit && !isEditing && (
+        <MessageActions>
+          <ActionLink onClick={() => setIsEditing(true)}>ערוך</ActionLink>
+        </MessageActions>
+      )}
+    </MessageRow>
   );
 }

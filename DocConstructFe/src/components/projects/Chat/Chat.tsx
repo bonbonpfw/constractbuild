@@ -2,18 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChatContainer,
   ChatInput,
-  ChatWrapper,
   MessagesWrapper,
   SendButton,
+  InputWrapper,
 } from "./Chat.styles";
-import { Label } from "../../../styles/SharedStyles";
 import { FaArrowUp } from "react-icons/fa";
 import {
   getProjectComments,
   addProjectComment,
   updateProjectComment,
 } from "../../../api";
-import Avatar from "../../shared/Avatar";
 import Message from "./Message";
 
 export type Comment = {
@@ -28,23 +26,27 @@ export type Comment = {
 export default function Chat({ projectId }: { projectId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [input, setInput] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const chatRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSend = async () => {
-    if (isSending) return;
-    if (!input.trim()) return;
+    if (isSending || !input.trim()) return;
     setIsSending(true);
-    const newComment = await addProjectComment(projectId, input);
-    setComments([...comments, newComment]);
-    setInput("");
-    setIsSending(false);
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    try {
+      const newComment = await addProjectComment(projectId, input);
+      setComments((prev) => [...prev, newComment]);
+      setInput("");
+      setTimeout(scrollToBottom, 100);
+    } catch (err) {
+      console.error("Failed to send comment:", err);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -61,29 +63,40 @@ export default function Chat({ projectId }: { projectId: string }) {
   }, []);
 
   const handleUpdateComment = async (commentId: string, content: string) => {
-    const updatedComment = await updateProjectComment(
-      projectId,
-      commentId,
-      content
-    );
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === updatedComment.id ? updatedComment : comment
-      )
-    );
+    try {
+      const updatedComment = await updateProjectComment(
+        projectId,
+        commentId,
+        content
+      );
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment.id === updatedComment.id ? updatedComment : comment
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update comment:", err);
+    }
+  };
+
+  const loadChat = async () => {
+    try {
+      const chat = await getProjectComments(projectId);
+      setComments(chat);
+    } catch (err) {
+      console.error("Failed to load chat:", err);
+    }
   };
 
   useEffect(() => {
-    const fetchChat = async () => {
-      const chat = await getProjectComments(projectId);
-      setComments(chat);
-      console.log(chatRef.current);
-      if (chatRef.current) {
-        chatRef.current.scrollTop = chatRef.current.scrollHeight;
-      }
-    };
-    fetchChat();
+    loadChat();
+    const interval = setInterval(loadChat, 3000);
+    return () => clearInterval(interval);
   }, [projectId]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [comments]);
 
   const sortedComments = useMemo(() => {
     return [...comments].sort((a, b) => {
@@ -93,47 +106,36 @@ export default function Chat({ projectId }: { projectId: string }) {
     });
   }, [comments]);
 
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchChat = async () => {
-      const chat = await getProjectComments(projectId);
-      setComments(chat);
-    };
-
-    const interval = setInterval(() => {
-      fetchChat();
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [sortedComments]);
-
   return (
     <ChatContainer>
-      <ChatWrapper>
-        <MessagesWrapper ref={chatRef}>
-          {sortedComments.map((comment) => (
-            <Message
-              key={comment.id}
-              comment={comment}
-              canEdit={comment.author_user_id === currentUserId}
-              onUpdate={handleUpdateComment}
-            />
-          ))}
-        </MessagesWrapper>
+      <MessagesWrapper>
+        {sortedComments.map((comment) => (
+          <Message
+            key={comment.id}
+            comment={comment}
+            isMine={comment.author_user_id === currentUserId}
+            canEdit={comment.author_user_id === currentUserId}
+            onUpdate={handleUpdateComment}
+          />
+        ))}
+        <div ref={messagesEndRef} />
+      </MessagesWrapper>
+      <InputWrapper>
         <ChatInput
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="הקלד את התגובה שלך"
-          disabled={isSending}
+          placeholder="הקלד הודעה..."
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
         />
-        <SendButton onClick={handleSend}>
+        <SendButton $disabled={!input.trim() || isSending} onClick={handleSend}>
           <FaArrowUp />
         </SendButton>
-      </ChatWrapper>
+      </InputWrapper>
     </ChatContainer>
   );
 }

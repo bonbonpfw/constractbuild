@@ -4,11 +4,8 @@ import Link from "next/link";
 import {
   Button,
   Field,
-  FormGrid,
-  FullWidthField,
   IconButton,
   Input,
-  Label,
   PageContainer,
   PageContent,
   Select,
@@ -52,7 +49,6 @@ import { toast } from "react-toastify";
 import FileArea, { FileAreaDocument, FilePreview } from "../shared/FileArea";
 import styled from "styled-components";
 import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { Tab, Tabs } from "../shared/Tabs";
 import { Chat } from "./Chat";
 import EmailDialog from "./EmailDialog";
@@ -83,45 +79,114 @@ const StatusBadge = styled.span<{ status: string }>`
 
 const MainLayout = styled.div`
   display: grid;
-  grid-template-columns: 180px 1fr 0.7fr;
-  grid-template-rows: auto;
-  grid-template-areas: "sidebar project documents";
+  grid-template-columns: 180px 1fr 320px;
+  grid-template-rows: 1fr;
+  grid-template-areas: "sidebar project chat";
   gap: 16px;
   width: 100%;
+  height: calc(100vh - 140px);
   overflow: hidden;
+  padding: 0 16px;
+  direction: rtl;
+
+  @media (max-width: 1400px) {
+    grid-template-columns: 160px 1fr 280px;
+    gap: 12px;
+    padding: 0 12px;
+  }
+`;
+
+const ChatSidebar = styled.div`
+  grid-area: chat;
+  width: clamp(240px, 22vw, 300px);
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #f0f2f5;
+  direction: rtl;
+`;
+
+const ChatHeader = styled.div`
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+`;
+
+const ChatTitle = styled.span`
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+`;
+
+const ChatSubTitle = styled.span`
+  font-size: 12px;
+  color: #64748b;
 `;
 
 const SecondSidebar = styled.div`
   grid-area: sidebar;
-  width: 180px;
+  width: 200px;
   display: flex;
   flex-direction: column;
   direction: rtl;
+  border-right: 1px solid #eaeaea;
+  padding-right: 16px;
+
+  @media (max-width: 1400px) {
+    width: 170px;
+    padding-right: 12px;
+  }
 `;
 
 const SecondSidebarContent = styled.div`
-  margin-top: 60px;
+  margin-top: 20px;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const SidebarGroup = styled.div`
+  margin-bottom: 24px;
+`;
+
+const SidebarGroupTitle = styled.div`
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 15px 8px;
+  text-align: right;
 `;
 
 const SidebarButton = styled.button<{ active: boolean }>`
   width: 100%;
-  background: transparent;
+  background: ${(p) => (p.active ? "rgb(227, 237, 246)" : "transparent")};
   border: none;
-  height: 50px;
+  height: 36px;
   display: flex;
   align-items: center;
-  padding: 12px 15px;
-  font-size: 16px;
+  padding: 8px 12px;
+  font-size: 13px;
   font-weight: ${(p) => (p.active ? "600" : "400")};
-  color: #51789f;
+  color: ${(p) => (p.active ? "#1e40af" : "#51789f")};
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
   text-align: right;
+  border-radius: 6px;
 
   &:hover {
-    background-color: rgb(227, 237, 246);
+    background-color: rgb(235, 242, 250);
   }
   &:disabled {
     opacity: 0.5;
@@ -131,57 +196,180 @@ const SidebarButton = styled.button<{ active: boolean }>`
 
 const ProjectPanel = styled.div`
   grid-area: project;
-  padding: 0 0px;
-  overflow: hidden;
-`;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 
-const DocumentsPanel = styled.div`
-  grid-area: documents;
-  padding: 0 12px;
-  border-right: 1px solid #eaeaea;
-  overflow: hidden;
+  /* Custom Scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
 `;
 
 const Card = styled.div`
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  padding: 16px;
-  margin-bottom: 16px;
-  max-height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  max-height: 100%;
+  flex: 1;
   min-height: 0;
+  border: 1px solid #f0f2f5;
+  overflow: hidden;
 `;
 
-const CompactFormGrid = styled(FormGrid)`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+const TabContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+`;
+
+const TabPane = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  overflow: auto;
+  padding: 0 4px 8px;
+
+  /* Custom Scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
 `;
 
-const CompactField = styled(Field)`
-  margin-bottom: 8px;
+const CompactFormGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 8px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
 
-const CompactLabel = styled(Label)`
-  margin-bottom: 4px;
-  font-size: 14px;
+const CompactField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const CompactLabel = styled.label`
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  margin-right: 4px;
+`;
+
+const ModernInput = styled(Input)`
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+  height: 42px !important;
+  font-size: 14px !important;
+  background-color: ${(p) => (p.disabled ? "#f8fafc" : "#ffffff")} !important;
+  transition: all 0.2s ease !important;
+  color: #1e293b !important;
+
+  &:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+  }
+
+  &:disabled {
+    border-color: #f1f5f9 !important;
+    color: #64748b !important;
+    cursor: default;
+  }
+`;
+
+const ModernSelect = styled(Select)`
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0 14px !important;
+  height: 42px !important;
+  font-size: 14px !important;
+  background-color: ${(p) => (p.disabled ? "#f8fafc" : "#ffffff")} !important;
+  color: #1e293b !important;
+
+  &:disabled {
+    border-color: #f1f5f9 !important;
+    opacity: 1;
+  }
+`;
+
+const ModernTextArea = styled(TextArea)`
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+  background-color: ${(p) => (p.disabled ? "#f8fafc" : "#ffffff")} !important;
+  min-height: 100px !important;
+  line-height: 1.5 !important;
+
+  &:disabled {
+    border-color: #f1f5f9 !important;
+  }
 `;
 
 const CompactButton = styled(Button)`
-  padding: 6px 12px;
-  font-size: 13px;
-  height: auto;
-  border-radius: 16px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  background-color: #4b87c3;
+  gap: 8px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
 
   &:hover {
-    background-color: #4b87c3;
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px -1px rgba(59, 130, 246, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.cancel {
+    background-color: #f1f5f9;
+    color: #64748b;
+    box-shadow: none;
+
+    &:hover {
+      background-color: #e2e8f0;
+      color: #475569;
+    }
   }
 `;
 
@@ -213,6 +401,9 @@ const ProfessionalInfo = styled.div`
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
 `;
 
 const ProfessionalName = styled.a`
@@ -220,22 +411,24 @@ const ProfessionalName = styled.a`
   text-decoration: none;
   font-weight: 500;
   font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+  text-align: right;
 `;
 
 const ProfessionalType = styled.span`
   font-size: 12px;
   color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+  text-align: right;
 `;
-
-const docTabs: Tab[] = [
-  { label: "מסמכי תחילת עבודה", value: "categorized" },
-  { label: "מסמכים כלליים", value: "general" },
-];
-
-const projectTabs: Tab[] = [
-  { label: "סקירה כללית", value: "overview" },
-  { label: "לְשׂוֹחֵחַ", value: "chat" },
-];
 
 const ProjectView: React.FC = () => {
   const router = useRouter();
@@ -276,29 +469,22 @@ const ProjectView: React.FC = () => {
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
 
-  // Add tab state
+  // Categories and Tabs state
+  const [activeCategory, setActiveCategory] = useState<"general" | "stages">("general");
   const [activeTab, setActiveTab] = useState<
-    "details" | "start_work" | "eng_coord" | "form4" | "professionals" | "team" | "chat"
-  >("chat");
+    "details" | "start_work" | "eng_coord" | "form4" | "professionals" | "team" | "documents"
+  >("details");
+
   const [teamRoles, setTeamRoles] = useState<{ key: string; label: string }[]>(
     []
   );
   const [rolesLoading, setRolesLoading] = useState(true);
-  const [teamExpanded, setTeamExpanded] = useState<Record<string, boolean>>({});
   const [teamData, setTeamData] = useState<
     Record<
       string,
       { name: string; phone: string; email: string; address: string }
     >
   >({});
-
-  // In the DocumentsPanel, add tab state and tab buttons for document sections
-  const [activeDocTab, setActiveDocTab] = useState<string>(docTabs[0].value);
-
-  // In the ProjectPanel, add tab state and tab buttons for chat sections
-  const [activeProjectTab, setActiveProjectTab] = useState<string>(
-    projectTabs[0].value
-  );
 
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
@@ -307,7 +493,6 @@ const ProjectView: React.FC = () => {
   // Email dialog state
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-
   const serviceTypes = useMemo(() => {
     if (!formData) return [];
     if (Array.isArray(formData.service_types)) return formData.service_types;
@@ -421,13 +606,11 @@ const ProjectView: React.FC = () => {
 
   useEffect(() => {
     if (teamRoles.length > 0) {
-      const expanded: Record<string, boolean> = {};
       const data: Record<
         string,
         { name: string; phone: string; email: string; address: string }
       > = {};
       teamRoles.forEach((role) => {
-        expanded[role.key] = role.key === "PERMIT_OWNER";
         // Find the team member for this role
         const member = teamMembers.find((m: any) => m.role === role.label);
         data[role.key] = {
@@ -437,7 +620,6 @@ const ProjectView: React.FC = () => {
           address: member?.address || "",
         };
       });
-      setTeamExpanded(expanded);
       setTeamData(data);
     }
   }, [teamRoles, teamMembers]);
@@ -688,6 +870,8 @@ const ProjectView: React.FC = () => {
       });
     }
   });
+
+  const startWorkFiles = filesData.filter((f) => f.fileType !== "כללי");
 
   const handleFileUpload = async (
     fileType: string,
@@ -989,6 +1173,28 @@ const ProjectView: React.FC = () => {
     });
   });
 
+  const generalTabs: Tab[] = [
+    { label: "פרטי פרויקט", value: "details", icon: <FaIcons.FaInfoCircle /> },
+    { label: "בעלי מקצוע", value: "professionals", icon: <FaIcons.FaUserTie /> },
+    { label: "צוות הפרויקט", value: "team", icon: <FaIcons.FaUsers /> },
+    { label: "מסמכים כלליים", value: "documents", icon: <FaIcons.FaFileAlt /> },
+  ];
+
+  const stageTabs: Tab[] = useMemo(() => [
+    { label: "תחילת עבודות", value: "start_work", disabled: !startWorkEnabled, icon: <FaIcons.FaPlay /> },
+    { label: "תיאום הנדסי", value: "eng_coord", disabled: !engCoordEnabled, icon: <FaIcons.FaCogs /> },
+    { label: "טופס 4", value: "form4", disabled: !form4Enabled, icon: <FaIcons.FaClipboardCheck /> },
+  ], [startWorkEnabled, engCoordEnabled, form4Enabled]);
+
+  const handleCategoryChange = (category: "general" | "stages") => {
+    setActiveCategory(category);
+    if (category === "general") {
+      setActiveTab("details");
+    } else if (category === "stages") {
+      setActiveTab("start_work");
+    }
+  };
+
   const saveTeam = async (data: typeof teamData) => {
     if (!id) return;
     const currentMembers = await getProjectTeamMembers(id);
@@ -1014,11 +1220,11 @@ const ProjectView: React.FC = () => {
       }
 
       // If some fields are filled but not all required, show error and skip
-      if (!memberData.name || !memberData.address || !memberData.phone) {
-        hasValidationError = true;
-        toast.error(`יש למלא שם, כתובת וטלפון עבור תפקיד: ${role.label}`);
-        continue;
-      }
+      // if (!memberData.name || !memberData.address || !memberData.phone) {
+      //   hasValidationError = true;
+      //   toast.error(`יש למלא שם, כתובת וטלפון עבור תפקיד: ${role.label}`);
+      //   continue;
+      // }
 
       // All required fields are filled, create or update
       if (existing) {
@@ -1050,20 +1256,24 @@ const ProjectView: React.FC = () => {
   const renderProjectDetails = () => {
     if (!formData) return null;
     return (
-    <div style={{ minHeight: 0, overflow: "auto" }}>
+    <div>
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
-          marginTop: 16,
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+          borderBottom: "1px solid #f1f5f9",
+          paddingBottom: 16
         }}
       >
+        <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>פרטי הפרויקט</h2>
         {!isEditingDetails ? (
           <CompactButton onClick={() => setIsEditingDetails(true)}>
-            {renderIcon(FaIcons.FaEdit)} Edit
+            {renderIcon(FaIcons.FaEdit, 14)} עריכה
           </CompactButton>
         ) : (
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 12 }}>
             <CompactButton
               onClick={async () => {
                 await saveChanges();
@@ -1071,154 +1281,134 @@ const ProjectView: React.FC = () => {
               }}
               disabled={saving}
             >
-              {renderIcon(FaIcons.FaCheck)} Save
+              {renderIcon(FaIcons.FaCheck, 14)} שמירה
             </CompactButton>
             <CompactButton
+              className="cancel"
               onClick={() => {
                 cancelEditing();
                 setIsEditingDetails(false);
               }}
               disabled={saving}
             >
-              {renderIcon(FaIcons.FaTimes)} Cancel
+              {renderIcon(FaIcons.FaTimes, 14)} ביטול
             </CompactButton>
           </div>
         )}
       </div>
-      <CompactFormGrid>
-        <FullWidthField>
-          <CompactLabel>שם הפרויקט</CompactLabel>
-          <Input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
-          />
-        </FullWidthField>
-        <CompactField>
-          <CompactLabel>מספר בקשה</CompactLabel>
-          <Input
+      
+      <CompactFormGrid style={{ gap: "12px" }}>
+        <div style={{ gridColumn: "span 3" }}>
+          <CompactField style={{ gap: "4px" }}>
+            <CompactLabel style={{ fontSize: "12px" }}>שם הפרויקט</CompactLabel>
+            <ModernInput
+              style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              disabled={!isEditingDetails}
+              placeholder="הכנס שם פרויקט..."
+            />
+          </CompactField>
+        </div>
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>מספר בקשה</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="request_number"
             value={formData.request_number}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <CompactField>
-          <CompactLabel>מספר היתר</CompactLabel>
-          <Input
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>מספר היתר</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="permit_number"
             value={formData.permit_number}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <CompactField>
-          <CompactLabel>מספר תיק טיפול</CompactLabel>
-          <Input
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>מספר תיק טיפול</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="construction_supervision_number"
             value={formData.construction_supervision_number}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <CompactField>
-          <CompactLabel>מספר תיאום הנדסי</CompactLabel>
-          <Input
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>מספר תיאום הנדסי</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="engineering_coordinator_number"
             value={formData.engineering_coordinator_number}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <CompactField>
-          <CompactLabel>מספר תיק כיבוי</CompactLabel>
-          <Input
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>מספר תיק כיבוי</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="firefighting_number"
             value={formData.firefighting_number}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <CompactField>
-          <CompactLabel>סטטוס הפרויקט</CompactLabel>
-          <Select
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>סטטוס הפרויקט</CompactLabel>
+          <ModernSelect
+            style={{ height: "32px", padding: "0 10px", fontSize: "13px" }}
             name="status"
             value={formData.status}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           >
             {statuses.map((s) => (
               <option key={s} value={s}>
                 {getStatusLabel(s)}
               </option>
             ))}
-          </Select>
+          </ModernSelect>
         </CompactField>
-        <CompactField>
-          <CompactLabel>תאריך תחילת עבודות</CompactLabel>
-          <Input
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>תאריך תחילת עבודות</CompactLabel>
+          <ModernInput
+            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
             name="status_due_date"
             type="date"
             value={formData.status_due_date || ""}
             onChange={handleChange}
             disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              height: "36px",
-            }}
           />
         </CompactField>
-        <FullWidthField>
-          <CompactLabel>תיאור הפרויקט</CompactLabel>
-          <TextArea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            disabled={!isEditingDetails}
-            style={{
-              borderRadius: "8px",
-              padding: "8px 10px",
-              minHeight: "60px",
-            }}
-          />
-        </FullWidthField>
+
+        <div style={{ gridColumn: "span 3" }}>
+          <CompactField style={{ gap: "4px" }}>
+            <CompactLabel style={{ fontSize: "12px" }}>תיאור הפרויקט</CompactLabel>
+            <ModernTextArea
+              style={{ minHeight: "60px", padding: "8px 10px", fontSize: "13px" }}
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              disabled={!isEditingDetails}
+              placeholder="הוסף תיאור קצר לפרויקט..."
+            />
+          </CompactField>
+        </div>
       </CompactFormGrid>
     </div>
   );};
@@ -1228,7 +1418,7 @@ const ProjectView: React.FC = () => {
       <TopPanel>
         <TopPanelLogo />
         <TopPanelTitleHolder>
-          <TopPanelTitle>{formData?.name || "Project Details"}</TopPanelTitle>
+          <TopPanelTitle>{formData?.name || "פרטי הפרויקט"}</TopPanelTitle>
         </TopPanelTitleHolder>
         <TopPanelGroup>
           <IconOnlyButton onClick={() => router.back()} title="Back">
@@ -1245,316 +1435,82 @@ const ProjectView: React.FC = () => {
           </IconOnlyButton>
         </TopPanelGroup>
       </TopPanel>
-      <PageContent style={{ padding: "16px 0 0 0", overflow: "hidden" }}>
+      <PageContent style={{ padding: "12px 0", overflow: "hidden" }}>
         {!formData ? (
           <EmptyStatePlaceholder msg="Project not found" />
         ) : (
           <MainLayout>
-            {/* Second Sidebar with Navigation */}
+            <ChatSidebar>
+              <ChatHeader>
+                <ChatTitle>הודעות הפרויקט</ChatTitle>
+  
+              </ChatHeader>
+              <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+                <Chat projectId={id} />
+              </div>
+            </ChatSidebar>
+
+            {/* Navigation Sidebar (Categories) */}
             <SecondSidebar>
               <SecondSidebarContent>
-                <SidebarButton
-                  active={activeTab === "chat"}
-                  onClick={() => setActiveTab("chat")}
-                >
-                  תגובות
-                </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "details"}
-                  onClick={() => setActiveTab("details")}
-                >
-                  פרטי הפרויקט
-                </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "start_work"}
-                  onClick={() => {
-                    if (startWorkEnabled) setActiveTab("start_work");
-                  }}
-                  disabled={!startWorkEnabled}
-                >
-                  תחילת עבודות
-                </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "eng_coord"}
-                  onClick={() => {
-                    if (engCoordEnabled) setActiveTab("eng_coord");
-                  }}
-                  disabled={!engCoordEnabled}
-                >
-                  תיאום הנדסי
-                </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "form4"}
-                  onClick={() => {
-                    if (form4Enabled) setActiveTab("form4");
-                  }}
-                  disabled={!form4Enabled}
-                >
-                  טופס 4
-                </SidebarButton>
-
-                <SidebarButton
-                  active={activeTab === "professionals"}
-                  onClick={() => setActiveTab("professionals")}
-                >
-                  בעלי מקצוע
-                </SidebarButton>
-                <SidebarButton
-                  active={activeTab === "team"}
-                  onClick={() => setActiveTab("team")}
-                >
-                  צוות הפרויקט
-                </SidebarButton>
+                <SidebarGroup>
+            
+                  <SidebarButton
+                    active={activeCategory === "general"}
+                    onClick={() => handleCategoryChange("general")}
+                  >
+                    מידע כללי
+                  </SidebarButton>
+                  <SidebarButton
+                    active={activeCategory === "stages"}
+                    onClick={() => handleCategoryChange("stages")}
+                    disabled={!startWorkEnabled && !engCoordEnabled && !form4Enabled}
+                  >
+                    שלבי הפרויקט
+                  </SidebarButton>
+                </SidebarGroup>
               </SecondSidebarContent>
             </SecondSidebar>
 
-            {/* Project Panel */}
+            {/* Main Content Panel */}
             <ProjectPanel>
-              <Card
-                style={{ marginTop: "60px", maxHeight: "calc(100% - 60px)" }}
-              >
-                <div
-                  style={{
-                    marginBottom: 20,
-                    padding: "15px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "10px",
-                    border: "1px solid #e0e0e0",
-                  }}
-                >
-                  <div
-                    style={{
-                      marginBottom: "10px",
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                    }}
-                  >
-                    סטטוס מסמכי תחילת עבודה
-                  </div>
+              <Card style={{ marginBottom: "24px", flex: 1 }}>
+                {/* Top Sub-Tabs */}
+                {activeCategory === "general" && (
+                  <Tabs
+                    tabs={generalTabs}
+                    activeTab={activeTab}
+                    onTabChange={(tab) => setActiveTab(tab as any)}
+                  />
+                )}
+                {activeCategory === "stages" && (
+                  <Tabs
+                    tabs={stageTabs}
+                    activeTab={activeTab}
+                    onTabChange={(tab) => setActiveTab(tab as any)}
+                  />
+                )}
 
-                  {/* Progress Bar Container */}
-                  <div
-                    style={{
-                      display: "flex",
-                      height: "12px",
-                      borderRadius: "6px",
-                      overflow: "hidden",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    {/* Calculate document counts by status */}
-                    {(() => {
-                      const categorizedDocs = filesData.filter(
-                        (f) => f.fileType !== "כללי"
-                      );
-                      const totalDocs = categorizedDocs.length;
-
-                      const missingCount = categorizedDocs.filter(
-                        (f) => f.state === DocumentState.MISSING
-                      ).length;
-                      const uploadedCount = categorizedDocs.filter(
-                        (f) =>
-                          f.status === DocumentState.UPLOADED &&
-                          f.state !== DocumentState.MISSING
-                      ).length;
-                      const filledCount = categorizedDocs.filter(
-                        (f) => f.status === DocumentState.FILLED
-                      ).length;
-                      const signedCount = categorizedDocs.filter(
-                        (f) => f.status === DocumentState.SIGNED
-                      ).length;
-
-                      // Calculate percentages
-                      const missingPercent =
-                        totalDocs > 0 ? (missingCount / totalDocs) * 100 : 0;
-                      const uploadedPercent =
-                        totalDocs > 0 ? (uploadedCount / totalDocs) * 100 : 0;
-                      const filledPercent =
-                        totalDocs > 0 ? (filledCount / totalDocs) * 100 : 0;
-                      const signedPercent =
-                        totalDocs > 0 ? (signedCount / totalDocs) * 100 : 0;
-
-                      return (
-                        <>
-                          {/* Missing segment */}
-                          {missingCount > 0 && (
-                            <div
-                              style={{
-                                width: `${missingPercent}%`,
-                                backgroundColor: "#ff6b6b",
-                              }}
-                            ></div>
-                          )}
-
-                          {/* Uploaded segment */}
-                          {uploadedCount > 0 && (
-                            <div
-                              style={{
-                                width: `${uploadedPercent}%`,
-                                backgroundColor: "#0071e3",
-                              }}
-                            ></div>
-                          )}
-
-                          {/* Filled segment */}
-                          {filledCount > 0 && (
-                            <div
-                              style={{
-                                width: `${filledPercent}%`,
-                                backgroundColor: "#b0851f",
-                              }}
-                            ></div>
-                          )}
-
-                          {/* Signed segment */}
-                          {signedCount > 0 && (
-                            <div
-                              style={{
-                                width: `${signedPercent}%`,
-                                backgroundColor: "#1d8450",
-                              }}
-                            ></div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Legend */}
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "12px",
-                      fontSize: "12px",
-                    }}
-                  >
-                    {/* Calculate document counts by status */}
-                    {(() => {
-                      const categorizedDocs = filesData.filter(
-                        (f) => f.fileType !== "כללי"
-                      );
-                      const totalDocs = categorizedDocs.length;
-
-                      const missingCount = categorizedDocs.filter(
-                        (f) => f.state === DocumentState.MISSING
-                      ).length;
-                      const uploadedCount = categorizedDocs.filter(
-                        (f) =>
-                          f.status === DocumentState.UPLOADED &&
-                          f.state !== DocumentState.MISSING
-                      ).length;
-                      const filledCount = categorizedDocs.filter(
-                        (f) => f.status === DocumentState.FILLED
-                      ).length;
-                      const signedCount = categorizedDocs.filter(
-                        (f) => f.status === DocumentState.SIGNED
-                      ).length;
-
-                      return (
-                        <>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "10px",
-                                height: "10px",
-                                backgroundColor: "#ff6b6b",
-                                borderRadius: "2px",
-                              }}
-                            ></div>
-                            <span>חסרים: {missingCount}</span>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "10px",
-                                height: "10px",
-                                backgroundColor: "#0071e3",
-                                borderRadius: "2px",
-                              }}
-                            ></div>
-                            <span>ריקים: {uploadedCount}</span>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "10px",
-                                height: "10px",
-                                backgroundColor: "#b0851f",
-                                borderRadius: "2px",
-                              }}
-                            ></div>
-                            <span>מלאים: {filledCount}</span>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "10px",
-                                height: "10px",
-                                backgroundColor: "#1d8450",
-                                borderRadius: "2px",
-                              }}
-                            ></div>
-                            <span>חתומים: {signedCount}</span>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "5px",
-                              marginRight: "auto",
-                            }}
-                          >
-                            <span>סה"כ: {totalDocs}</span>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {activeTab === "details" && renderProjectDetails()}
-                {activeTab === "start_work" && renderProjectDetails()}
-                {activeTab === "eng_coord" && renderProjectDetails()}
-                {activeTab === "form4" && renderProjectDetails()}
-
+                <TabContent>
+                  {activeTab === "details" && (
+                    <TabPane style={{ padding: 0 }}>
+                      {renderProjectDetails()}
+                    </TabPane>
+                  )}
+                
                 {activeTab === "professionals" && (
-                  <div style={{ minHeight: 0, overflow: "auto" }}>
+                  <TabPane>
                     <div
                       style={{
                         display: "flex",
-                        justifyContent: "flex-end",
-                        marginBottom: "12px",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 12,
+                        borderBottom: "1px solid #f1f5f9",
+                        paddingBottom: 12
                       }}
                     >
+                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: 0 }}>בעלי מקצוע</h2>
                       <CompactButton onClick={handleAddProfessional}>
                         {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
                       </CompactButton>
@@ -1567,12 +1523,13 @@ const ProjectView: React.FC = () => {
                     ) : professionals.length === 0 ? (
                       <div
                         style={{
-                          padding: "16px 12px",
+                          padding: "24px",
                           textAlign: "center",
-                          backgroundColor: "#f9f9fb",
-                          borderRadius: "8px",
-                          color: "#666",
-                          fontSize: "13px",
+                          backgroundColor: "#f8fafc",
+                          borderRadius: "12px",
+                          color: "#64748b",
+                          fontSize: "14px",
+                          border: "1px dashed #cbd5e1"
                         }}
                       >
                         אין בעלי מקצוע מצורפים לפרויקט
@@ -1580,31 +1537,44 @@ const ProjectView: React.FC = () => {
                     ) : (
                       <div
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                          gap: "12px",
                         }}
                       >
                         {professionals.map((professional) => (
                           <ProfessionalCard
-                            className="professional-card"
                             key={professional.id}
+                            style={{ 
+                              border: "1px solid #e2e8f0", 
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                              padding: "12px",
+                              borderRadius: "12px"
+                            }}
                           >
-                            <ProfessionalInfo className="professional-info">
+                            <ProfessionalInfo style={{ flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
                               <Link
                                 href={`/professionals/${professional.id}`}
                                 passHref
                               >
-                                <ProfessionalName>
+                                <ProfessionalName
+                                  style={{ fontSize: "15px", fontWeight: 700 }}
+                                  title={professional.name}
+                                >
                                   {professional.name}
                                 </ProfessionalName>
                               </Link>
-                              <ProfessionalType>
+                              <ProfessionalType
+                                style={{ color: "#64748b" }}
+                                title={professional.professional_type}
+                              >
                                 {professional.professional_type}
                               </ProfessionalType>
-                              <StatusBadge status={professional.status}>
-                                {professional.status}
-                              </StatusBadge>
+                              <div style={{ marginTop: "8px" }}>
+                                <StatusBadge status={professional.status}>
+                                  {professional.status}
+                                </StatusBadge>
+                              </div>
                             </ProfessionalInfo>
                             <IconOnlyButton
                               onClick={() =>
@@ -1613,35 +1583,41 @@ const ProjectView: React.FC = () => {
                               title="הסר בעל מקצוע"
                               style={{
                                 margin: "0",
-                                width: "24px",
-                                height: "24px",
-                                fontSize: "12px",
+                                width: "32px",
+                                height: "32px",
+                                backgroundColor: "#fff1f2",
+                                color: "#e11d48",
+                                border: "none"
                               }}
                             >
-                              {renderIcon(FaIcons.FaTrash, 12)}
+                              {renderIcon(FaIcons.FaTrash, 14)}
                             </IconOnlyButton>
                           </ProfessionalCard>
                         ))}
                       </div>
                     )}
-                  </div>
+                  </TabPane>
                 )}
 
                 {activeTab === "team" && (
-                  <div style={{ minHeight: 0, overflow: "auto" }}>
+                  <TabPane>
                     <div
                       style={{
                         display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 16,
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 12,
+                        borderBottom: "1px solid #f1f5f9",
+                        paddingBottom: 12
                       }}
                     >
+                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: 0 }}>צוות הפרויקט</h2>
                       {!isEditingTeam ? (
                         <CompactButton onClick={() => setIsEditingTeam(true)}>
-                          {renderIcon(FaIcons.FaEdit)} Edit
+                          {renderIcon(FaIcons.FaEdit, 14)} עריכה
                         </CompactButton>
                       ) : (
-                        <div style={{ display: "flex", gap: 8 }}>
+                        <div style={{ display: "flex", gap: 12 }}>
                           <CompactButton
                             onClick={async () => {
                               await saveTeam(teamData);
@@ -1649,305 +1625,254 @@ const ProjectView: React.FC = () => {
                             }}
                             disabled={saving}
                           >
-                            {renderIcon(FaIcons.FaCheck)} Save
+                            {renderIcon(FaIcons.FaCheck, 14)} שמירה
                           </CompactButton>
                           <CompactButton
+                            className="cancel"
                             onClick={() => {
                               setIsEditingTeam(false);
                               loadTeamMembers();
                             }}
                             disabled={saving}
                           >
-                            {renderIcon(FaIcons.FaTimes)} Cancel
+                            {renderIcon(FaIcons.FaTimes, 14)} ביטול
                           </CompactButton>
                         </div>
                       )}
                     </div>
                     {rolesLoading ? (
-                      <div>Loading roles...</div>
+                      <div>טוען תפקידים...</div>
                     ) : (
-                      teamRoles.map((member) => (
-                        <Card key={member.key} style={{ marginBottom: 12 }}>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              cursor: "pointer",
-                            }}
-                            onClick={() =>
-                              setTeamExpanded((prev) => ({
-                                ...prev,
-                                [member.key]: !prev[member.key],
-                              }))
-                            }
-                          >
-                            <span style={{ fontWeight: 600 }}>
-                              {member.label}
-                            </span>
-                            {teamExpanded[member.key] ? (
-                              <FaChevronUp />
-                            ) : (
-                              <FaChevronDown />
-                            )}
-                          </div>
-                          {teamExpanded[member.key] && (
-                            <div style={{ marginTop: 12 }}>
-                              <CompactFormGrid>
-                                <CompactField>
-                                  <CompactLabel>שם מלא</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.name || ""}
-                                    onChange={(e) =>
-                                      setTeamData((prev) => ({
-                                        ...prev,
-                                        [member.key]: {
-                                          ...prev[member.key],
-                                          name: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    placeholder="שם מלא"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>טלפון</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.phone || ""}
-                                    onChange={(e) =>
-                                      setTeamData((prev) => ({
-                                        ...prev,
-                                        [member.key]: {
-                                          ...prev[member.key],
-                                          phone: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    placeholder="טלפון"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>דוא"ל</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.email || ""}
-                                    onChange={(e) =>
-                                      setTeamData((prev) => ({
-                                        ...prev,
-                                        [member.key]: {
-                                          ...prev[member.key],
-                                          email: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    placeholder={'דוא"ל'}
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                                <CompactField>
-                                  <CompactLabel>כתובת</CompactLabel>
-                                  <Input
-                                    value={teamData[member.key]?.address || ""}
-                                    onChange={(e) =>
-                                      setTeamData((prev) => ({
-                                        ...prev,
-                                        [member.key]: {
-                                          ...prev[member.key],
-                                          address: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    placeholder="כתובת"
-                                    disabled={!isEditingTeam}
-                                  />
-                                </CompactField>
-                              </CompactFormGrid>
+                      <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "repeat(3, minmax(180px, 1fr))", 
+                        gap: "12px",
+                        width: "100%"
+                      }}>
+                        {teamRoles.map((member) => (
+                          <Card key={member.key} style={{ 
+                            marginBottom: 0, 
+                            padding: "10px", 
+                            borderRadius: "10px",
+                            border: "1px solid #e2e8f0",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                            height: "fit-content"
+                          }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginBottom: 10
+                              }}
+                            >
+                              <span style={{ fontWeight: 700, color: "#1e293b", fontSize: "13px" }}>
+                                {member.label}
+                              </span>
                             </div>
-                          )}
-                        </Card>
-                      ))
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              <CompactField style={{ gap: "4px" }}>
+                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>שם מלא</CompactLabel>
+                                <ModernInput
+                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
+                                  value={teamData[member.key]?.name || ""}
+                                  onChange={(e) =>
+                                    setTeamData((prev) => ({
+                                      ...prev,
+                                      [member.key]: {
+                                        ...prev[member.key],
+                                        name: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder="שם מלא"
+                                  disabled={!isEditingTeam}
+                                />
+                              </CompactField>
+                              <CompactField style={{ gap: "4px" }}>
+                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>טלפון</CompactLabel>
+                                <ModernInput
+                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
+                                  value={teamData[member.key]?.phone || ""}
+                                  onChange={(e) =>
+                                    setTeamData((prev) => ({
+                                      ...prev,
+                                      [member.key]: {
+                                        ...prev[member.key],
+                                        phone: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder="טלפון"
+                                  disabled={!isEditingTeam}
+                                />
+                              </CompactField>
+                              <CompactField style={{ gap: "4px" }}>
+                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>דוא"ל</CompactLabel>
+                                <ModernInput
+                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
+                                  value={teamData[member.key]?.email || ""}
+                                  onChange={(e) =>
+                                    setTeamData((prev) => ({
+                                      ...prev,
+                                      [member.key]: {
+                                        ...prev[member.key],
+                                        email: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder={'דוא"ל'}
+                                  disabled={!isEditingTeam}
+                                />
+                              </CompactField>
+                              <CompactField style={{ gap: "4px" }}>
+                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>כתובת</CompactLabel>
+                                <ModernInput
+                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
+                                  value={teamData[member.key]?.address || ""}
+                                  onChange={(e) =>
+                                    setTeamData((prev) => ({
+                                      ...prev,
+                                      [member.key]: {
+                                        ...prev[member.key],
+                                        address: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder="כתובת"
+                                  disabled={!isEditingTeam}
+                                />
+                              </CompactField>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
                     )}
-                  </div>
+                  </TabPane>
                 )}
 
-                {activeTab === "chat" && <Chat projectId={id} />}
-              </Card>
-            </ProjectPanel>
-
-            {/* Documents Panel */}
-            <DocumentsPanel>
-              <Card style={{ height: "auto", padding: "20px" }}>
-                <Tabs
-                  tabs={docTabs}
-                  activeTab={activeDocTab}
-                  onTabChange={(tab) => setActiveDocTab(tab)}
-                />
-                {activeDocTab === "categorized" && (
-                  <>
-                    {/* Action Buttons */}
+                {activeTab === "documents" && (
+                  <TabPane>
                     <div
                       style={{
                         display: "flex",
-                        justifyContent: "flex-start",
-                        marginBottom: 16,
-                        gap: 8,
-                      }}
-                    >
-                      <button
-                        onClick={handleDownloadAllFiles}
-                        disabled={
-                          filesData.filter(
-                            (f) =>
-                              f.fileType !== "כללי" &&
-                              f.state === DocumentState.UPLOADED
-                          ).length === 0
-                        }
-                        style={{
-                          background: "#648fbf",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 8,
-                          padding: "8px 16px",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          cursor:
-                            filesData.filter(
-                              (f) =>
-                                f.fileType !== "כללי" &&
-                                f.state === DocumentState.UPLOADED
-                            ).length === 0
-                              ? "not-allowed"
-                              : "pointer",
-                          opacity:
-                            filesData.filter(
-                              (f) =>
-                                f.fileType !== "כללי" &&
-                                f.state === DocumentState.UPLOADED
-                            ).length === 0
-                              ? 0.5
-                              : 1,
-                          marginBottom: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 8,
-                        }}
-                      >
-                        {renderIcon(FaIcons.FaDownload, 16)}
-                        הורד הכל
-                      </button>
-                      <button
-                        onClick={handleEmailAllFiles}
-                        disabled={
-                          filesData.filter(
-                            (f) =>
-                              f.fileType !== "כללי" &&
-                              f.status === DocumentState.FILLED
-                          ).length === 0
-                        }
-                        style={{
-                          background: "#648fbf",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 8,
-                          padding: "8px 16px",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          cursor:
-                            filesData.filter(
-                              (f) =>
-                                f.fileType !== "כללי" &&
-                                f.status === DocumentState.FILLED
-                            ).length === 0
-                              ? "not-allowed"
-                              : "pointer",
-                          opacity:
-                            filesData.filter(
-                              (f) =>
-                                f.fileType !== "כללי" &&
-                                f.status === DocumentState.FILLED
-                            ).length === 0
-                              ? 0.5
-                              : 1,
-                          marginBottom: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 8,
-                        }}
-                      >
-                        {renderIcon(FaIcons.FaEnvelope, 16)}
-                        שלח במייל
-                      </button>
-                    </div>
-                  </>
-                )}
-                {activeDocTab === "general" && (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      marginBottom: 12,
-                      gap: 8,
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        const input = document.createElement("input");
-                        input.type = "file";
-                        input.multiple = true;
-                        input.accept = ".pdf,.jpg,.jpeg,.png";
-                        input.onchange = (e: Event) => {
-                          const files = (e.target as HTMLInputElement).files;
-                          if (!files || files.length === 0) return;
-                          Array.from(files).forEach((f) =>
-                            handleUploadGeneralFile(f)
-                          );
-                        };
-                        input.click();
-                      }}
-                      style={{
-                        background: "#648fbf",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 8,
-                        padding: "8px 16px",
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: "pointer",
-                        marginBottom: 0,
-                        display: "flex",
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
+                        marginBottom: 24,
+                        borderBottom: "1px solid #f1f5f9",
+                        paddingBottom: 16
                       }}
                     >
-                      {renderIcon(FaIcons.FaUpload, 16)}
-                      העלאת קבצים
-                    </button>
-                  </div>
+                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>מסמכים כלליים</h2>
+                      <CompactButton
+                        onClick={() => {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.multiple = true;
+                          input.accept = ".pdf,.jpg,.jpeg,.png";
+                          input.onchange = (e: Event) => {
+                            const files = (e.target as HTMLInputElement).files;
+                            if (!files || files.length === 0) return;
+                            Array.from(files).forEach((f) => handleUploadGeneralFile(f));
+                          };
+                          input.click();
+                        }}
+                      >
+                        {renderIcon(FaIcons.FaUpload, 14)} העלאת קבצים
+                      </CompactButton>
+                    </div>
+                    <FileArea
+                      files={generalFiles}
+                      disabled={false}
+                      onUpload={handleFileUpload}
+                      onDelete={handleFileDelete}
+                      onPreview={handleFilePreview}
+                      onAutoFill={handleAutoFill}
+                      onDownloadVersion={handleVersionDownload}
+                      isAutoFill={false}
+                      autoFillingDocId={autoFillingDocId}
+                      onUploadGeneral={handleUploadGeneralFile}
+                    />
+                  </TabPane>
                 )}
-                <FileArea
-                  files={
-                    activeDocTab === "categorized"
-                      ? filesData.filter((f) => f.fileType !== "כללי")
-                      : generalFiles
-                  }
-                  disabled={false}
-                  onUpload={handleFileUpload}
-                  onDelete={handleFileDelete}
-                  onPreview={handleFilePreview}
-                  onAutoFill={handleAutoFill}
-                  onDownloadVersion={handleVersionDownload}
-                  isAutoFill={activeDocTab === "categorized"}
-                  autoFillingDocId={autoFillingDocId}
-                  {...(activeDocTab === "general" && {
-                    onUploadGeneral: handleUploadGeneralFile,
-                  })}
-                />
+
+                {/* Contextual Area for Stages */}
+                {(["start_work", "eng_coord", "form4"].includes(activeTab)) && (
+                  <TabPane>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 24,
+                        borderBottom: "1px solid #f1f5f9",
+                        paddingBottom: 16
+                      }}
+                    >
+                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>
+                        {activeTab === "start_work" ? "מסמכי תחילת עבודה" :
+                         activeTab === "eng_coord" ? "תיאום הנדסי" : "טופס 4"}
+                      </h2>
+                      {activeTab === "start_work" && (
+                        <div style={{ display: "flex", gap: "12px" }}>
+                          <CompactButton
+                            onClick={handleDownloadAllFiles}
+                            disabled={startWorkFiles.filter(f => f.state === DocumentState.UPLOADED).length === 0}
+                          >
+                            {renderIcon(FaIcons.FaDownload, 14)} הורד הכל
+                          </CompactButton>
+                          <CompactButton
+                            onClick={handleEmailAllFiles}
+                            disabled={startWorkFiles.filter(f => f.status === DocumentState.FILLED).length === 0}
+                          >
+                            {renderIcon(FaIcons.FaEnvelope, 14)} שלח במייל
+                          </CompactButton>
+                        </div>
+                      )}
+                    </div>
+
+                    {activeTab === "start_work" ? (
+                      <FileArea
+                        files={startWorkFiles}
+                        disabled={false}
+                        onUpload={handleFileUpload}
+                        onDelete={handleFileDelete}
+                        onPreview={handleFilePreview}
+                        onAutoFill={handleAutoFill}
+                        onDownloadVersion={handleVersionDownload}
+                        isAutoFill={true}
+                        autoFillingDocId={autoFillingDocId}
+                      />
+                    ) : (
+                      <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                        <p style={{ color: "#64748b", marginBottom: "20px", fontWeight: 600 }}>שלב זה נמצא כרגע בתהליך איפיון. להלן שדות לדוגמה:</p>
+                        <CompactFormGrid>
+                          <CompactField>
+                            <CompactLabel>סטטוס {activeTab === "eng_coord" ? "תיאום" : "טופס"}</CompactLabel>
+                            <ModernInput disabled placeholder="PLACEHOLDER - סטטוס נוכחי" />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>תאריך יעד משוער</CompactLabel>
+                            <ModernInput type="date" disabled />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>איש קשר לביצוע</CompactLabel>
+                            <ModernInput disabled placeholder="PLACEHOLDER - שם איש קשר" />
+                          </CompactField>
+                          <div style={{ gridColumn: "span 3" }}>
+                            <CompactField>
+                              <CompactLabel>הערות ומשימות לביצוע</CompactLabel>
+                              <ModernTextArea disabled placeholder="PLACEHOLDER - כאן יופיעו הערות ומשימות הקשורות לשלב זה..." />
+                            </CompactField>
+                          </div>
+                        </CompactFormGrid>
+                      </div>
+                    )}
+                  </TabPane>
+                )}
+                </TabContent>
               </Card>
-            </DocumentsPanel>
+            </ProjectPanel>
           </MainLayout>
         )}
         <DeletionDialog
