@@ -154,7 +154,7 @@ class DocumentFiller:
             print(f"שגיאה בחילוץ קואורדינטות: {e}")
         
         coordinates = self._adjust_pesticidal_doc(coordinates)
-        if type == ProjectDocumentType.TLV_GREEN_BUILD.name:
+        if type == ProjectDocumentType.TLV_SW_GREEN_BUILD.name:
             coordinates = self._adjust_green_build_doc(coordinates)
       
         return coordinates
@@ -284,7 +284,7 @@ class DocumentFiller:
         return coordinates
 
     def get_doc_coordinates(self,pdf_path):
-        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.TLV_GREEN_BUILD.name:
+        if self.document_name == ProjectDocumentType.TLV_SW_PESTICIDAL_OWNER.name or self.document_name == ProjectDocumentType.TLV_SW_GREEN_BUILD.name:
             return self.get_doc_coordinates_by_field(pdf_path,self.document_name)
         elif self.document_name in TEAM_PROJECT_TYPES:
             return self.get_table_cell_coordinates(pdf_path)
@@ -295,7 +295,8 @@ class DocumentFiller:
         if output_path is None:
             base_name = os.path.splitext(pdf_path)[0]
             output_path = f"{base_name}_filled.pdf"
-        path  = project_doc_path_for_city(city=city,doc=self.document_name)
+        version = len(coordinates)
+        path  = project_doc_path_for_city(city=city,doc=self.document_name,version=version)
         self.document_positions = DocumentMap.load_prof_doc_config(path)
         required_members = [member for member in self.doc_required_members if member.role.name.lower() in self.document_positions.get("TYPES")]
         
@@ -388,7 +389,7 @@ class DocumentFiller:
         coordinates = self.get_doc_coordinates(self.src_pdf_path)
         if not coordinates:
             raise NoCoordinatesFound()  
-        if self.document_name == ProjectDocumentType.TLV_PESTICIDAL_OWNER.name:
+        if self.document_name == ProjectDocumentType.TLV_SW_PESTICIDAL_OWNER.name:
             output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates, page=1)
         else:
             output_path = self.overlay_filled_on_original_pdf(city,self.src_pdf_path, coordinates)

@@ -155,6 +155,8 @@ class ProjectTeamRole(Enum):
 def enum_to_value(enum_member_or_value):
     return enum_member_or_value.value if hasattr(enum_member_or_value, "value") else enum_member_or_value
 
-def project_doc_path_for_city(*, city: str, doc: str) -> str:
-   
-    return os.path.join(CONFIG, "docs", city,doc+".yaml")
+def project_doc_path_for_city(*, city: str, doc: str, version: int | None = None) -> str:
+   path = os.path.join(CONFIG, "docs", city,doc+f"_v{version}.yaml")
+   if not os.path.exists(path):
+      path = os.path.join(CONFIG, "docs", city,doc+".yaml")
+   return path
