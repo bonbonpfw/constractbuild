@@ -141,7 +141,7 @@ const FileInfo = styled.div`
 `;
 
 const FileName = styled.div`
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #1e293b;
   display: -webkit-box;
@@ -373,7 +373,7 @@ const FileItem: React.FC<{
 
   const getStatusLabelHe = (status?: string, state?: DocumentState) => {
     if (status === "Signed") return "חתום";
-    if (status === "Filled") return "מולא";
+    if (status === "Filled") return "מלא";
     if (state === DocumentState.MISSING) return "חסר";
     return "הועלה";
   };
@@ -384,8 +384,12 @@ const FileItem: React.FC<{
         <StatusBadge state={state} status={status}>{getStatusLabelHe(status, state)}</StatusBadge>
         <FilePreviewArea state={state} status={status}>{renderFileIcon()}</FilePreviewArea>
         <FileInfo>
-          <FileName title={fileName || fileType}>{state === DocumentState.UPLOADED ? fileName : fileType}</FileName>
-          <FileTypeLabel>{state === DocumentState.UPLOADED && fileName}</FileTypeLabel>
+          <FileName title={fileType || fileName || ""}>
+            {fileType || fileName}
+          </FileName>
+          <FileTypeLabel>
+            {state === DocumentState.UPLOADED ? fileName : ""}
+          </FileTypeLabel>
         </FileInfo>
         <ActionOverlay>
           {state === DocumentState.MISSING ? (
