@@ -327,7 +327,7 @@ class DocumentFiller:
                 pdfmetrics.registerFont(TTFont("ArialHebrew", TTF_PATH))
                 logger.info(f"Page coords: {page_coords}")
                 for i, coord in enumerate(page_coords):
-                    x = coord['x']
+                    x = coord['x'] + 10
                     y = coord['y']
                     width = coord['width']
                     field_type = coord.get('type', 'underline')
