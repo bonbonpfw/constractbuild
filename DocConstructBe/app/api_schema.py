@@ -95,6 +95,7 @@ class ProjectDocumentUpdateSchema(Schema):
 
 class ProjectDocumentTypesSchema(Schema):
     city = fields.Str(required=True)
+    service_type = fields.Enum(ProjectServiceType, by_value=True, required=False)
 
 
 # Professional Schemas

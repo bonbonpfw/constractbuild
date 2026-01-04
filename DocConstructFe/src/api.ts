@@ -40,6 +40,14 @@ axios.interceptors.request.use(
 
 // Projects API
 
+
+export enum ServiceType {
+  SW = 'SW',
+  ENG = 'ENG',
+  FOUR = 'FOUR',
+}
+
+
 export const getProjects = async (): Promise<Project[]> => {
   const response = await axios.get(`${API_URL}/projects`);
   return response.data.projects;
@@ -310,11 +318,15 @@ export const deleteProjectDocument = async (
 
 export const getProjectDocumentTypes = async (
   city: string,
+  serviceType?: string,
 ): Promise<string[]> => {
+  const params: Record<string, string> = { city };
+  if (serviceType) {
+    params.service_type = serviceType;
+  }
+
   const response = await axios.get(`${API_URL}/project/document/types`, {
-    params: {
-      city: city,
-    },
+    params,
   });
   return response.data.document_types;
 };

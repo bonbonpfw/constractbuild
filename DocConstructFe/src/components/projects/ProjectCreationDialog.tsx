@@ -17,7 +17,7 @@ import {
   Select, TextArea,
 } from "../../styles/SharedStyles";
 import {errorHandler, ErrorResponseData} from "../shared/ErrorHandler";
-import {createProject, getProjectCities} from "../../api";
+import {createProject, getProjectCities, ServiceType} from "../../api";
 
 export const CITY_LABELS: Record<string, string> = {
   TelAviv: 'תל אביב',
@@ -26,14 +26,10 @@ export const CITY_LABELS: Record<string, string> = {
   RamatHasharon: 'רמת השרון',
 };
 
-export enum ServiceType {
-  START_WORK = 'START_WORK',
-  ENG_COORDINATOR = 'ENG_COORDINATOR',
-  FOUR = 'FOUR',
-}
+
 const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
-  { value: ServiceType.START_WORK, label: 'תחילת עבודות' },
-  { value: ServiceType.ENG_COORDINATOR, label: 'תיאום הנדסי' },
+  { value: ServiceType.SW, label: 'תחילת עבודות' },
+  { value: ServiceType.ENG, label: 'תיאום הנדסי' },
   { value: ServiceType.FOUR, label: 'טופס 4' },
 ];
 export const DefaultProjectCreationFormData: ProjectCreationFormData = {

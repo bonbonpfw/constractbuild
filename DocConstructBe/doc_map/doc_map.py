@@ -20,8 +20,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-TEAM_PROJECT_TYPES = [ProjectDocumentType.TLV_PROJECT_TEAMS.name,
-                ProjectDocumentType.RG_PROJECT_TEAMS.name]
+TEAM_PROJECT_TYPES = [ProjectDocumentType.TLV_SW_PROJECT_TEAMS.name,
+                ProjectDocumentType.RG_SW_PROJECT_TEAMS.name]
 class DocumentMap:
     _document_professional_map = None
     

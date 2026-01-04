@@ -241,15 +241,15 @@ class ProjectManager:
         db_session.commit()
 
     @staticmethod
-    def get_document_types(city: str) -> list[str]:
+    def get_document_types(city: str,service_type: ProjectServiceType) -> list[str]:
         if city == City.TLV.value:
-            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('TLV_')]
+            tlv_doc =  [document_type for document_type in ProjectDocumentType if document_type.name.startswith('TLV_')]
+            service_doc = [document_type.value for document_type in tlv_doc if document_type.name[4:].startswith(service_type.value)]
+            return service_doc
         elif city == City.RG.value:
-            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RG_')]
-        elif city == City.RH.value:
-            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RH_')]
-        elif city == City.RN.value:
-            return [document_type.value for document_type in ProjectDocumentType if document_type.name.startswith('RN_')]
+            rg_doc = [document_type for document_type in ProjectDocumentType if document_type.name.startswith('RG_')]
+            service_doc = [document_type.value for document_type in rg_doc if document_type.name[3:].startswith(service_type.value)]
+            return service_doc
         else:
             raise InvalidCityError(city=city)
     

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -39,6 +39,7 @@ import {
   deleteProjectTeamMember,
   autoFillDocument,
   sendFilledProjectDocuments,
+  ServiceType,
 } from "../../api";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
@@ -465,6 +466,13 @@ const ProjectView: React.FC = () => {
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [autoFillingDocId, setAutoFillingDocId] = useState<string | null>(null);
+  const [engCoordForm, setEngCoordForm] = useState({
+    status: "",
+    target_date: "",
+    contact_name: "",
+    contact_phone: "",
+    notes: "",
+  });
 
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
@@ -507,9 +515,11 @@ const ProjectView: React.FC = () => {
 
   const isAllServices =
     serviceTypes.length === 0 || serviceTypes.length >= 3;
-  const startWorkEnabled = isAllServices || serviceTypes.includes("START_WORK");
-  const engCoordEnabled = isAllServices || serviceTypes.includes("ENG_COORDINATOR");
-  const form4Enabled = isAllServices || serviceTypes.includes("FOUR");
+  const hasService = (value: string, legacy?: string) =>
+    serviceTypes.includes(value) || (legacy ? serviceTypes.includes(legacy) : false);
+  const startWorkEnabled = isAllServices || hasService(ServiceType.SW, "START_WORK");
+  const engCoordEnabled = isAllServices || hasService(ServiceType.ENG, "ENG_COORDINATOR");
+  const form4Enabled = isAllServices || hasService(ServiceType.FOUR, "FOUR");
 
   const loadData = async () => {
     try {
@@ -526,10 +536,6 @@ const ProjectView: React.FC = () => {
       setFormData(normalizedProject);
       originalData.current = normalizedProject;
       setStatuses(statuses);
-
-      // Fetch document types based on project's city
-      const docTypes = await getProjectDocumentTypes(proj.city || "");
-      setDocumentTypes([...docTypes]);
 
       // Extract professionals data directly from the project
       setIsLoadingProfessionals(true);
@@ -871,7 +877,11 @@ const ProjectView: React.FC = () => {
     }
   });
 
-  const startWorkFiles = filesData.filter((f) => f.fileType !== "כללי");
+  const stageFiles = filesData.filter(
+    (f) =>
+      f.fileType !== "כללי" &&
+      (documentTypes.length === 0 || documentTypes.includes(f.fileType))
+  );
 
   const handleFileUpload = async (
     fileType: string,
@@ -1186,14 +1196,59 @@ const ProjectView: React.FC = () => {
     { label: "טופס 4", value: "form4", disabled: !form4Enabled, icon: <FaIcons.FaClipboardCheck /> },
   ], [startWorkEnabled, engCoordEnabled, form4Enabled]);
 
+  const getServiceTypeForTab = useCallback((tab: string): string | undefined => {
+    if (tab === "start_work") return ServiceType.SW;
+    if (tab === "eng_coord") return ServiceType.ENG;
+    if (tab === "form4") return ServiceType.FOUR;
+    return undefined;
+  }, []);
+
+  const getFirstEnabledStage = useCallback((): "start_work" | "eng_coord" | "form4" | "details" => {
+    if (startWorkEnabled) return "start_work";
+    if (engCoordEnabled) return "eng_coord";
+    if (form4Enabled) return "form4";
+    return "details";
+  }, [startWorkEnabled, engCoordEnabled, form4Enabled]);
+
   const handleCategoryChange = (category: "general" | "stages") => {
     setActiveCategory(category);
     if (category === "general") {
       setActiveTab("details");
     } else if (category === "stages") {
-      setActiveTab("start_work");
+      setActiveTab(getFirstEnabledStage());
     }
   };
+
+  useEffect(() => {
+    if (activeCategory !== "stages") return;
+    const tabEnabled: Record<string, boolean> = {
+      start_work: startWorkEnabled,
+      eng_coord: engCoordEnabled,
+      form4: form4Enabled,
+    };
+    if (!tabEnabled[activeTab]) {
+      setActiveTab(getFirstEnabledStage());
+    }
+  }, [activeCategory, activeTab, startWorkEnabled, engCoordEnabled, form4Enabled, getFirstEnabledStage]);
+
+  useEffect(() => {
+    if (!formData?.city) return;
+    if (!["start_work", "eng_coord", "form4"].includes(activeTab)) return;
+    const serviceType = getServiceTypeForTab(activeTab);
+    const loadDocTypes = async () => {
+      try {
+        const docTypes = await getProjectDocumentTypes(
+          formData.city || "",
+          serviceType,
+        );
+        setDocumentTypes([...docTypes]);
+      } catch (error) {
+        errorHandler(error as ErrorResponseData, "Failed to load document types");
+        setDocumentTypes([]);
+      }
+    };
+    loadDocTypes();
+  }, [activeTab, formData?.city, getServiceTypeForTab]);
 
   const saveTeam = async (data: typeof teamData) => {
     if (!id) return;
@@ -1817,13 +1872,17 @@ const ProjectView: React.FC = () => {
                         <div style={{ display: "flex", gap: "12px" }}>
                           <CompactButton
                             onClick={handleDownloadAllFiles}
-                            disabled={startWorkFiles.filter(f => f.state === DocumentState.UPLOADED).length === 0}
+                            disabled={
+                              stageFiles.filter((f: FileAreaDocument) => f.state === DocumentState.UPLOADED).length === 0
+                            }
                           >
                             {renderIcon(FaIcons.FaDownload, 14)} הורד הכל
                           </CompactButton>
                           <CompactButton
                             onClick={handleEmailAllFiles}
-                            disabled={startWorkFiles.filter(f => f.status === DocumentState.FILLED).length === 0}
+                            disabled={
+                              stageFiles.filter((f: FileAreaDocument) => f.status === DocumentState.FILLED).length === 0
+                            }
                           >
                             {renderIcon(FaIcons.FaEnvelope, 14)} שלח במייל
                           </CompactButton>
@@ -1833,7 +1892,7 @@ const ProjectView: React.FC = () => {
 
                     {activeTab === "start_work" ? (
                       <FileArea
-                        files={startWorkFiles}
+                        files={stageFiles}
                         disabled={false}
                         onUpload={handleFileUpload}
                         onDelete={handleFileDelete}
@@ -1843,12 +1902,96 @@ const ProjectView: React.FC = () => {
                         isAutoFill={true}
                         autoFillingDocId={autoFillingDocId}
                       />
+                    ) : activeTab === "eng_coord" ? (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(2, minmax(240px, 1fr))",
+                          gap: "16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "16px",
+                        }}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <CompactField>
+                            <CompactLabel>סטטוס תיאום</CompactLabel>
+                            <ModernInput
+                              value={engCoordForm.status}
+                              onChange={(e) =>
+                                setEngCoordForm((prev) => ({ ...prev, status: e.target.value }))
+                              }
+                              placeholder="לדוגמה: בתהליך / נשלח / הושלם"
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>תאריך יעד</CompactLabel>
+                            <ModernInput
+                              type="date"
+                              value={engCoordForm.target_date}
+                              onChange={(e) =>
+                                setEngCoordForm((prev) => ({ ...prev, target_date: e.target.value }))
+                              }
+                            />
+                          </CompactField>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <CompactField>
+                            <CompactLabel>איש קשר</CompactLabel>
+                            <ModernInput
+                              value={engCoordForm.contact_name}
+                              onChange={(e) =>
+                                setEngCoordForm((prev) => ({ ...prev, contact_name: e.target.value }))
+                              }
+                              placeholder="שם איש הקשר"
+                            />
+                          </CompactField>
+                          <CompactField>
+                            <CompactLabel>טלפון איש קשר</CompactLabel>
+                            <ModernInput
+                              value={engCoordForm.contact_phone}
+                              onChange={(e) =>
+                                setEngCoordForm((prev) => ({ ...prev, contact_phone: e.target.value }))
+                              }
+                              placeholder="לדוגמה: 050-1234567"
+                            />
+                          </CompactField>
+                        </div>
+                        <div style={{ gridColumn: "span 2" }}>
+                          <CompactField>
+                            <CompactLabel>הערות</CompactLabel>
+                            <ModernTextArea
+                              value={engCoordForm.notes}
+                              onChange={(e) =>
+                                setEngCoordForm((prev) => ({ ...prev, notes: e.target.value }))
+                              }
+                              placeholder="הוסף הערות/משימות לתיאום ההנדסי"
+                              style={{ minHeight: "80px" }}
+                            />
+                          </CompactField>
+                        </div>
+                        <div style={{ gridColumn: "span 2", marginTop: "8px" }}>
+                          <h4 style={{ margin: "0 0 8px 0", color: "#1f2937" }}>מסמכי תיאום הנדסי</h4>
+                          <FileArea
+                            files={stageFiles}
+                            disabled={false}
+                            onUpload={handleFileUpload}
+                            onDelete={handleFileDelete}
+                            onPreview={handleFilePreview}
+                            onAutoFill={handleAutoFill}
+                            onDownloadVersion={handleVersionDownload}
+                            isAutoFill={false}
+                            autoFillingDocId={autoFillingDocId}
+                          />
+                        </div>
+                      </div>
                     ) : (
                       <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
                         <p style={{ color: "#64748b", marginBottom: "20px", fontWeight: 600 }}>שלב זה נמצא כרגע בתהליך איפיון. להלן שדות לדוגמה:</p>
                         <CompactFormGrid>
                           <CompactField>
-                            <CompactLabel>סטטוס {activeTab === "eng_coord" ? "תיאום" : "טופס"}</CompactLabel>
+                            <CompactLabel>סטטוס טופס</CompactLabel>
                             <ModernInput disabled placeholder="PLACEHOLDER - סטטוס נוכחי" />
                           </CompactField>
                           <CompactField>

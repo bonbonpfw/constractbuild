@@ -304,14 +304,6 @@ const Projects: React.FC = () => {
             >
               עיר
             </SortableTableHeader>
-            <SortableTableHeader
-              sortKey="warnings"
-              currentSortKey={sortKey}
-              currentSortDirection={sortDirection}
-              onSort={handleSort}
-            >
-              התראות
-            </SortableTableHeader>
           </tr>
         </thead>
         <tbody>
@@ -330,67 +322,6 @@ const Projects: React.FC = () => {
               </TableBody>
               <TableBody>{project.permit_number || 'לא זמין'}</TableBody>
               <TableBody>{project.city || 'לא זמין'}</TableBody>
-              <TableBody>
-                {project.is_expired && (
-                  <TableWarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
-                    <FaExclamationTriangle />
-                  </TableWarningBadge>
-                )}
-                {!project.is_expired && project.is_warning && (
-                  <TableWarningBadge color="#f57c00" title="יש בעלי מקצוע עם רישיון שעומד לפוג (פחות מחודש)!">
-                    <FaExclamationTriangle />
-                  </TableWarningBadge>
-                )}
-                {/* Document status indicator in table view */}
-                <div style={{ 
-                  display: 'flex', 
-                  height: '4px', 
-                  width: '80px',
-                  borderRadius: '2px',
-                  overflow: 'hidden',
-                  marginTop: '4px'
-                }}
-                title={project.documents ? `מסמכים: ${project.documents.length}` : 'אין מסמכים'}>
-                  {(() => {
-                    // For testing purposes, we'll create mock document counts
-                    const mockDocuments = [
-                      { id: '1', status: 'Missing' },
-                      { id: '2', status: 'Missing' },
-                      { id: '3', status: 'Uploaded' },
-                      { id: '4', status: 'Uploaded' },
-                      { id: '5', status: 'Uploaded' },
-                      { id: '6', status: 'Filled' },
-                      { id: '7', status: 'Filled' },
-                      { id: '8', status: 'Signed' },
-                    ];
-                    
-                    // Use real documents if available, otherwise use mock data
-                    const docs = project.documents && project.documents.length > 0 ? project.documents : mockDocuments;
-                    const total = docs.length;
-                    
-                    if (total === 0) return null;
-                    
-                    const missing = docs.filter(doc => doc.status === 'Missing' ).length;
-                    const uploaded = docs.filter(doc => doc.status === 'Uploaded').length;
-                    const filled = docs.filter(doc => doc.status === 'Filled').length;
-                    const signed = docs.filter(doc => doc.status === 'Signed').length;
-                    
-                    const missingPercent = total > 0 ? (missing / total) * 100 : 0;
-                    const uploadedPercent = total > 0 ? (uploaded / total) * 100 : 0;
-                    const filledPercent = total > 0 ? (filled / total) * 100 : 0;
-                    const signedPercent = total > 0 ? (signed / total) * 100 : 0;
-                    
-                    return (
-                      <>
-                        {missing > 0 && <div style={{ width: `${missingPercent}%`, backgroundColor: '#ff6b6b' }}></div>}
-                        {uploaded > 0 && <div style={{ width: `${uploadedPercent}%`, backgroundColor: '#0071e3' }}></div>}
-                        {filled > 0 && <div style={{ width: `${filledPercent}%`, backgroundColor: '#b0851f' }}></div>}
-                        {signed > 0 && <div style={{ width: `${signedPercent}%`, backgroundColor: '#1d8450' }}></div>}
-                      </>
-                    );
-                  })()}
-                </div>
-              </TableBody>
             </tr>
           ))}
         </tbody>

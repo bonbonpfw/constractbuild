@@ -144,7 +144,7 @@ class ProfessionalDoesNotExist(ApiError):
 class InvalidCityError(ApiError):
     def __init__(self, city: str):
         super().__init__(
-            msg=f'עיר לא נתמכת: {city}',
+            msg=f'לא נמצאו מסמכים עבור: {city}',
             code='unsupported_city'
         )
 

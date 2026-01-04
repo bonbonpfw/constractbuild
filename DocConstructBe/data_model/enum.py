@@ -6,8 +6,8 @@ from config.sys_config import CONFIG
 
 
 class ProjectServiceType(Enum):
-    START_WORK = 'START_WORK'
-    ENG_COORDINATOR = 'ENG_COORDINATOR'
+    START_WORK = 'SW'
+    ENG_COORDINATOR = 'ENG'
     FOUR = 'FOUR'
 
 class ProjectStatus(Enum):
@@ -15,28 +15,35 @@ class ProjectStatus(Enum):
     POST_PERMIT = 'Post permit'
     FINAL = 'Final'
 
+
+
+
 class ProjectDocumentType(Enum):
-    TLV_TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
-    TLV_ADAPTER_AGREEMENT = 'אחראי לתיאום עם מכון בקרה'
-    TLV_START_WORK_REQUEST = 'בקשה לתחילת עבודות'
-    TLV_STRUCTURAL_SUPERVISOR = 'מינוי אחראי לביצוע שלד (101)'
-    TLV_EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
-    TLV_PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
-    TLV_CONTRACTOR_OWNER = 'מינוי קבלן רשום'
-    TLV_GREEN_BUILD = 'מינוי בניה ירוקה'
-    TLV_PROJECT_TEAMS = 'רשימת בעלי תפקידים'
-    RG_CHARGE_INSPECTION = 'מינוי אחראי לביקורת'
-    RG_CHARGE_STRACTURAL = 'מינוי אחראי לביצוע שלד'
-    RG_CHARGE_CONTRACTOR = 'מינוי קבלן'
-    RG_ADAPTER_AGREEMENT = 'מינוי אחראי לתיאום עם מכון בקרה'
-    RG_ANNOUN_INSPECTION = 'הצהרה אחראי לביקורת'
-    RG_ANNOUN_STRACTURAL = 'הצהרת אחרי שלד'
-    RG_ANNOUN_CONTRACTOR = 'הצהרת קבלן'
-    RG_ANNOUN_STABLE = 'הצהרת אחראי לבקורת ליציבות גדרות'
-    RG_MODED = 'אישור מודד'
-    RG_REQ_START_WORK ='בקשה להתחלת עבודות'
-    RG_PROJECT_TEAMS = 'בפרויקט בעלי תפקידים'
+    TLV_SW_TRASH_INSPECTION = 'אחראי לביקורת על הפסולת'
+    TLV_SW_ADAPTER_AGREEMENT = 'אחראי לתיאום עם מכון בקרה'
+    TLV_SW_START_WORK_REQUEST = 'בקשה לתחילת עבודות'
+    TLV_SW_STRUCTURAL_SUPERVISOR = 'מינוי אחראי לביצוע שלד (101)'
+    TLV_SW_EXECUTION_INSPECTION = 'מינוי אחראי לביקורת על הביצוע'
+    TLV_SW_PESTICIDAL_OWNER = 'מינוי מדביר מוסמך'
+    TLV_SW_CONTRACTOR_OWNER = 'מינוי קבלן רשום'
+    TLV_SW_GREEN_BUILD = 'מינוי בניה ירוקה'
+    TLV_SW_PROJECT_TEAMS = 'רשימת בעלי תפקידים'
+    RG_SW_CHARGE_INSPECTION = 'מינוי אחראי לביקורת'
+    RG_SW_CHARGE_STRACTURAL = 'מינוי אחראי לביצוע שלד'
+    RG_SW_ADAPTER_AGREEMENT = 'מינוי אחראי לתיאום עם מכון בקרה'
+    RG_SW_ANNOUN_INSPECTION = 'הצהרה אחראי לביקורת'
+    RG_SW_ANNOUN_STRACTURAL = 'הצהרת אחרי שלד'
+    RG_SW_ANNOUN_CONTRACTOR = 'הצהרת קבלן'
+    RG_SW_CHARGE_CONTRACTOR = 'מינוי קבלן'
+    RG_SW_ANNOUN_STABLE = 'הצהרת אחראי לבקורת ליציבות גדרות'
+    RG_SW_MODED = 'אישור מודד'
+    RG_SW_REQ_START_WORK = 'בקשה להתחלת עבודות'
+    RG_SW_PROJECT_TEAMS = 'בפרויקט בעלי תפקידים'
     GENERAL = 'כללי'
+    TLV_ENG_FORCE_MAJORITY = 'יפוי כח יזם'
+    TLV_ENG_COMMITMENT_TO_SIGN_CONTRACTOR = 'התחייבות לחתימת קבלן'
+    TLV_ENG_TRAFFIC_ORDER = 'הסדרי תנועה'
+   
 
 class City(Enum):
     TLV = 'TelAviv'
