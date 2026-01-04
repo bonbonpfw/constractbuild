@@ -8,7 +8,7 @@ from sqlalchemy import Column, Boolean, String, Date, ForeignKey, UniqueConstrai
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from DocConstructBe.data_model.enum import ProjectServiceType
+from data_model.enum import ProjectServiceType
 from app.errors import ValidationError
 from database.base_model import Base
 from database.database import engine
