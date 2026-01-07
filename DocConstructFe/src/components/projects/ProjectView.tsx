@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import {
   Button,
-  Field,
   IconButton,
   Input,
   PageContainer,
@@ -40,6 +39,7 @@ import {
   autoFillDocument,
   sendFilledProjectDocuments,
   ServiceType,
+  SERVICE_TYPE_OPTIONS,
 } from "../../api";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
 import * as FaIcons from "react-icons/fa";
@@ -337,6 +337,7 @@ const ModernTextArea = styled(TextArea)`
   }
 `;
 
+
 const CompactButton = styled(Button)`
   padding: 8px 20px;
   font-size: 14px;
@@ -515,11 +516,10 @@ const ProjectView: React.FC = () => {
 
   const isAllServices =
     serviceTypes.length === 0 || serviceTypes.length >= 3;
-  const hasService = (value: string, legacy?: string) =>
-    serviceTypes.includes(value) || (legacy ? serviceTypes.includes(legacy) : false);
-  const startWorkEnabled = isAllServices || hasService(ServiceType.SW, "START_WORK");
-  const engCoordEnabled = isAllServices || hasService(ServiceType.ENG, "ENG_COORDINATOR");
-  const form4Enabled = isAllServices || hasService(ServiceType.FOUR, "FOUR");
+  const hasService = (value: string) => serviceTypes.includes(value);
+  const startWorkEnabled = isAllServices || hasService(ServiceType.SW);
+  const engCoordEnabled = isAllServices || hasService(ServiceType.ENG);
+  const form4Enabled = isAllServices || hasService(ServiceType.FOUR);
 
   const loadData = async () => {
     try {
@@ -527,14 +527,8 @@ const ProjectView: React.FC = () => {
         getProjectById(id),
         getProjectStatuses(),
       ]);
-      const normalizedServiceTypes = Array.isArray(proj.service_types)
-        ? proj.service_types
-        : typeof (proj as any).service_types === "string"
-          ? (proj as any).service_types.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : [];
-      const normalizedProject = { ...proj, service_types: normalizedServiceTypes };
-      setFormData(normalizedProject);
-      originalData.current = normalizedProject;
+      setFormData(proj as Project);
+      originalData.current = proj as Project;
       setStatuses(statuses);
 
       // Extract professionals data directly from the project
@@ -721,6 +715,24 @@ const ProjectView: React.FC = () => {
     setIsEditingDetails(false);
   };
 
+  const handleServiceTypeToggle = (value: ServiceType) => {
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const existing = Array.isArray(prev.service_types)
+        ? prev.service_types
+        : typeof (prev as any).service_types === "string"
+          ? (prev as any).service_types
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter(Boolean)
+          : [];
+      const next = existing.includes(value)
+        ? existing.filter((v: string) => v !== value)
+        : [...existing, value];
+      return { ...(prev as Project), service_types: next };
+    });
+  };
+
   const saveChanges = async () => {
     if (!formData) return;
     setSaving(true);
@@ -731,8 +743,8 @@ const ProjectView: React.FC = () => {
       // Fetch the updated project data
       try {
         const updatedProject = await getProjectById(id);
-        setFormData(updatedProject);
-        originalData.current = updatedProject;
+        setFormData(updatedProject as Project);
+        originalData.current = updatedProject as Project;
 
         // Update professionals list from the updated project data
         if (
@@ -1437,6 +1449,33 @@ const ProjectView: React.FC = () => {
               </option>
             ))}
           </ModernSelect>
+        </CompactField>
+
+        <CompactField style={{ gap: "4px" }}>
+          <CompactLabel style={{ fontSize: "12px" }}>סוג השירות</CompactLabel>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {SERVICE_TYPE_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: "13px",
+                  color: "#334155",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={serviceTypes.includes(option.value)}
+                  onChange={() => handleServiceTypeToggle(option.value)}
+                  disabled={!isEditingDetails}
+                  style={{ cursor: isEditingDetails ? "pointer" : "default" }}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
         </CompactField>
 
         <CompactField style={{ gap: "4px" }}>

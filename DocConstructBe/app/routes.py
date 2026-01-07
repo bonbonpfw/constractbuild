@@ -192,6 +192,7 @@ def init_routes(app):
         ProjectManager().update(
             project_id=str(data.get('id')),
             name=data.get('name'),
+            service_types=data.get('service_types') if data.get('service_types') else [],
             request_number=data.get('request_number'),
             description=data.get('description'),
             status=data.get('status'),

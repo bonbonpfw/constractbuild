@@ -25,8 +25,6 @@ export const CITY_LABELS: Record<string, string> = {
   Raanana: 'רעננה',
   RamatHasharon: 'רמת השרון',
 };
-
-
 const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: ServiceType.SW, label: 'תחילת עבודות' },
   { value: ServiceType.ENG, label: 'תיאום הנדסי' },

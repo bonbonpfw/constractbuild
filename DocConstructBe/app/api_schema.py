@@ -32,6 +32,7 @@ class ProjectUpdateSchema (Schema):
     id = fields.UUID(required=True)
     name = fields.Str(required=False, validate=validate.Length(min=1))
     city = fields.Str(required=False, allow_none=True)
+    service_types = fields.List(fields.Enum(ProjectServiceType, by_value=True), required=False)
     request_number = fields.Str(required=False,allow_none=True)
     permit_number = fields.Str(required=False,allow_none=True)
     construction_supervision_number = fields.Str(required=False,allow_none=True)

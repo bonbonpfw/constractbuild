@@ -97,13 +97,17 @@ class ProjectManager:
         db_session.commit()
         return project
 
-    def update(self, project_id: str, name: str, status: ProjectStatus, description: str = None,
+    def update(self, project_id: str, name: str, status: ProjectStatus, service_types: list[ProjectServiceType] = None, description: str = None,
                status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None,
                engineering_coordinator_number: str = None, firefighting_number: str = None,
                permit_number: str = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
         project.description = description
+        if service_types:
+            serialized_service_types = ",".join([enum_to_value(st) for st in service_types])
+            project.service_types = serialized_service_types
+     
         project.request_number = request_number
         project.construction_supervision_number = construction_supervision_number
         project.engineering_coordinator_number = engineering_coordinator_number

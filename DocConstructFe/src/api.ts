@@ -47,6 +47,12 @@ export enum ServiceType {
   FOUR = 'FOUR',
 }
 
+export const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
+  { value: ServiceType.SW, label: 'תחילת עבודות' },
+  { value: ServiceType.ENG, label: 'תיאום הנדסי' },
+  { value: ServiceType.FOUR, label: 'טופס 4' },
+];
+
 
 export const getProjects = async (): Promise<Project[]> => {
   const response = await axios.get(`${API_URL}/projects`);
