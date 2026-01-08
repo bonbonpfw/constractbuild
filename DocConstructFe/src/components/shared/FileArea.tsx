@@ -660,6 +660,26 @@ const FileArea: React.FC<FileAreaProps> = ({
           <EmptyStateContainer>
             <FaFile size={40} style={{ opacity: 0.5 }} />
             <div>אין מסמכים זמינים</div>
+            {onUploadGeneral && (
+              <TableIconButton
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.multiple = true;
+                  input.onchange = (e: Event) => {
+                    const inputFiles = (e.target as HTMLInputElement).files;
+                    if (inputFiles?.length) {
+                      Array.from(inputFiles).forEach((f) => onUploadGeneral(f));
+                    }
+                  };
+                  input.click();
+                }}
+                title="העלאת קבצים"
+                style={{ marginTop: 12 }}
+              >
+                <FaUpload />
+              </TableIconButton>
+            )}
           </EmptyStateContainer>
         ) : (
           <>
