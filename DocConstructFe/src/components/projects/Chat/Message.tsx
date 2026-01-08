@@ -5,6 +5,7 @@ import {
   MessageInfo,
   AuthorName,
   Timestamp,
+  MessageDate,
   MessageActions,
   ActionLink,
   EditInput,
@@ -24,9 +25,14 @@ export default function Message({
   canEdit = false,
   onUpdate,
 }: MessageProps) {
-  const formattedTime = new Date(comment.created_at).toLocaleTimeString("he-IL", {
+  const messageDate = new Date(comment.created_at);
+  const formattedTime = messageDate.toLocaleTimeString("he-IL", {
     hour: "2-digit",
     minute: "2-digit",
+  });
+  const formattedDate = messageDate.toLocaleDateString("he-IL", {
+    day: "numeric",
+    month: "short",
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -60,6 +66,7 @@ export default function Message({
       <MessageInfo $isMine={isMine}>
         <AuthorName>{isMine ? "אתה" : comment.author_username}</AuthorName>
         <Timestamp>{formattedTime}</Timestamp>
+        <MessageDate>{formattedDate}</MessageDate>
       </MessageInfo>
       <MessageBubble $isMine={isMine}>
         {isEditing ? (

@@ -19,7 +19,7 @@ export const MessagesWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background-color: #f9f9f9;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fef6f3 100%);
 
   /* Custom Scrollbar */
   &::-webkit-scrollbar {
@@ -29,7 +29,7 @@ export const MessagesWrapper = styled.div`
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: #c7d2fe;
     border-radius: 10px;
   }
 `;
@@ -48,18 +48,18 @@ export const MessageBubble = styled.div<{ $isMine: boolean }>`
   font-size: 14px;
   line-height: 1.4;
   position: relative;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   ${(props) =>
     props.$isMine
       ? `
-    background-color: #007aff;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: white;
     border-bottom-right-radius: 4px;
   `
       : `
-    background-color: #e9e9eb;
-    color: #1c1c1e;
+    background: linear-gradient(135deg, #fda4af 0%, #fb7185 100%);
+    color: white;
     border-bottom-left-radius: 4px;
   `}
 `;
@@ -70,8 +70,13 @@ export const MessageInfo = styled.div<{ $isMine: boolean }>`
   gap: 8px;
   margin-bottom: 4px;
   font-size: 11px;
-  color: #8e8e93;
+  color: #64748b;
   flex-direction: ${(props) => (props.$isMine ? "row" : "row-reverse")};
+`;
+
+export const MessageDate = styled.span`
+  font-size: 10px;
+  color: #94a3b8;
 `;
 
 export const AuthorName = styled.span`
@@ -106,9 +111,9 @@ export const ChatInput = styled.textarea`
 
   &:focus {
     outline: none;
-    border-color: #007aff;
+    border-color: #8b5cf6;
     background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
   }
 `;
 
@@ -116,7 +121,7 @@ export const SendButton = styled.button<{ $disabled: boolean }>`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: ${(props) => (props.$disabled ? "#e2e8f0" : "#007aff")};
+  background: ${(props) => (props.$disabled ? "#e2e8f0" : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)")};
   color: white;
   border: none;
   display: flex;
@@ -127,7 +132,7 @@ export const SendButton = styled.button<{ $disabled: boolean }>`
   flex-shrink: 0;
 
   &:hover {
-    ${(props) => !props.$disabled && "transform: scale(1.05); background-color: #0063db;"}
+    ${(props) => !props.$disabled && "transform: scale(1.05); filter: brightness(1.1);"}
   }
 
   &:active {
@@ -149,7 +154,7 @@ export const ActionLink = styled.button`
   background: none;
   border: none;
   font-size: 10px;
-  color: #007aff;
+  color: #6366f1;
   cursor: pointer;
   padding: 0;
   &:hover {

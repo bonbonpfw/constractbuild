@@ -400,6 +400,7 @@ const ProfessionalView: React.FC = () => {
                 onUpload={handleFileUpload}
                 onDelete={handleFileDelete}
                 onPreview={handleFilePreview}
+                isGeneralMode={true}
               />
             </div>
           </div>

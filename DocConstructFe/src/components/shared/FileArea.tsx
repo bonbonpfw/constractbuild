@@ -11,6 +11,9 @@ import {
   FaFileImage,
   FaFileWord,
   FaFile,
+  FaTh,
+  FaList,
+  FaEnvelope,
 } from "react-icons/fa";
 import {
   DialogOverlay,
@@ -228,6 +231,125 @@ const EmptyStateContainer = styled.div`
   color: #64748b;
   gap: 12px;
   width: 100%;
+`;
+
+const ViewToggleContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+`;
+
+const ViewToggleButton = styled.button<{ $active: boolean }>`
+  width: 36px;
+  height: 36px;
+  border: 1px solid ${(p) => (p.$active ? "#3b82f6" : "#e2e8f0")};
+  background: ${(p) => (p.$active ? "#eff6ff" : "#fff")};
+  color: ${(p) => (p.$active ? "#3b82f6" : "#64748b")};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+
+  &:first-child {
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+  }
+
+  &:last-child {
+    border-radius: 0 8px 8px 0;
+  }
+
+  &:hover {
+    background: ${(p) => (p.$active ? "#eff6ff" : "#f8fafc")};
+  }
+`;
+
+const FileTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+`;
+
+const FileTableHead = styled.thead`
+  background: #f8fafc;
+`;
+
+const FileTableTh = styled.th`
+  padding: 12px 16px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e2e8f0;
+`;
+
+const FileTableTd = styled.td`
+  padding: 12px 16px;
+  text-align: right;
+  font-size: 13px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+`;
+
+const FileTableRow = styled.tr`
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f8fafc;
+  }
+`;
+
+const TableStatusBadge = styled.span<{ status?: string; state: DocumentState }>`
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: ${(p) => {
+    if (p.status === "Signed") return "#dcfce7";
+    if (p.status === "Filled") return "#fef9c3";
+    if (p.state === DocumentState.MISSING) return "#fee2e2";
+    return "#f1f5f9";
+  }};
+  color: ${(p) => {
+    if (p.status === "Signed") return "#166534";
+    if (p.status === "Filled") return "#854d0e";
+    if (p.state === DocumentState.MISSING) return "#dc2626";
+    return "#475569";
+  }};
+`;
+
+const TableActions = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+`;
+
+const TableIconButton = styled.button<{ danger?: boolean }>`
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid ${(p) => (p.danger ? "#fecaca" : "#e2e8f0")};
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${(p) => (p.danger ? "#ef4444" : "#3b82f6")};
+  transition: all 0.2s ease;
+  font-size: 12px;
+
+  &:hover {
+    background: ${(p) => (p.danger ? "#fef2f2" : "#eff6ff")};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 export const FilePreview: React.FC<{
@@ -488,11 +610,49 @@ type FileAreaProps = {
   onUploadGeneral?: (file: File) => void;
   isAutoFill?: boolean;
   autoFillingDocId?: string | null;
+  onDownloadAll?: () => void;
+  onEmailAll?: () => void;
+  downloadAllDisabled?: boolean;
+  emailAllDisabled?: boolean;
+  isGeneralMode?: boolean; // Simplified mode: no status column, no version upload
 };
 
 const FileArea: React.FC<FileAreaProps> = ({
-  files, disabled, onUpload, onDelete, onPreview, onAutoFill, onDownloadVersion, isAutoFill, autoFillingDocId,
+  files, disabled, onUpload, onDelete, onPreview, onAutoFill, onDownloadVersion, onUploadGeneral, isAutoFill, autoFillingDocId,
+  onDownloadAll, onEmailAll, downloadAllDisabled, emailAllDisabled, isGeneralMode = false,
 }) => {
+  // General mode is enabled if explicitly set OR if onUploadGeneral is provided
+  const generalMode = isGeneralMode || !!onUploadGeneral;
+  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
+  const [uploadDialogFileType, setUploadDialogFileType] = useState<string | null>(null);
+  const [versionsDialogFile, setVersionsDialogFile] = useState<FileAreaDocument | null>(null);
+
+  const getStatusLabelHe = (status?: string, state?: DocumentState) => {
+    if (status === "Signed") return "חתום";
+    if (status === "Filled") return "מלא";
+    if (state === DocumentState.MISSING) return "חסר";
+    return "הועלה";
+  };
+
+  const renderFileIcon = (fileName: string | null) => {
+    const name = fileName?.toLowerCase() || "";
+    if (name.endsWith(".pdf")) return <FaFilePdf />;
+    if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")) return <FaFileImage />;
+    if (name.endsWith(".doc") || name.endsWith(".docx")) return <FaFileWord />;
+    return <FaFile />;
+  };
+
+  const handleTableUpload = (fileType: string, status?: string) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf,.doc,.docx,.jpg,.jpeg,.png";
+    input.onchange = (e: Event) => {
+      const inputFiles = (e.target as HTMLInputElement).files;
+      if (inputFiles?.length) onUpload?.(fileType, inputFiles[0], "manual", status);
+    };
+    input.click();
+  };
+
   return (
     <FileAreaContainer>
       <FileAreaContent>
@@ -502,17 +662,266 @@ const FileArea: React.FC<FileAreaProps> = ({
             <div>אין מסמכים זמינים</div>
           </EmptyStateContainer>
         ) : (
-          <FileListContainer>
-            {files.map((file, index) => (
-              <FileItem
-                key={`${file.fileType}-${index}`} fileId={file.fileId || ""} fileName={file.fileName || ""} fileType={file.fileType}
-                state={file.state} status={file.status} disabled={disabled} onUpload={onUpload} onDelete={onDelete}
-                onPreview={onPreview} onAutoFill={onAutoFill} onDownloadVersion={onDownloadVersion}
-                onRequestUpload={(ft, f, m, s) => onUpload?.(ft, f, m, s)} isAutoFill={isAutoFill}
-                versions={file.versions} autoFillingDocId={autoFillingDocId}
-              />
-            ))}
-          </FileListContainer>
+          <>
+            <ViewToggleContainer>
+              <ViewToggleButton
+                $active={viewMode === "cards"}
+                onClick={() => setViewMode("cards")}
+                title="תצוגת כרטיסים"
+              >
+                <FaTh />
+              </ViewToggleButton>
+              <ViewToggleButton
+                $active={viewMode === "table"}
+                onClick={() => setViewMode("table")}
+                title="תצוגת טבלה"
+              >
+                <FaList />
+              </ViewToggleButton>
+              <div style={{ flex: 1 }} />
+              {onUploadGeneral && (
+                <TableIconButton
+                  onClick={() => {
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.multiple = true;
+                    input.accept = ".pdf,.jpg,.jpeg,.png";
+                    input.onchange = (e: Event) => {
+                      const inputFiles = (e.target as HTMLInputElement).files;
+                      if (inputFiles?.length) {
+                        Array.from(inputFiles).forEach((f) => onUploadGeneral(f));
+                      }
+                    };
+                    input.click();
+                  }}
+                  title="העלאת קבצים"
+                  style={{ marginRight: 8 }}
+                >
+                  <FaUpload />
+                </TableIconButton>
+              )}
+              {onEmailAll && (
+                <TableIconButton
+                  onClick={onEmailAll}
+                  disabled={emailAllDisabled}
+                  title="שלח במייל"
+                >
+                  <FaEnvelope />
+                </TableIconButton>
+              )}
+              {onDownloadAll && (
+                <TableIconButton
+                  onClick={onDownloadAll}
+                  disabled={downloadAllDisabled}
+                  title="הורד הכל"
+                  style={{ marginRight: 8 }}
+                >
+                  <FaDownload />
+                </TableIconButton>
+              )}
+            </ViewToggleContainer>
+
+            {viewMode === "cards" ? (
+              <FileListContainer>
+                {files.map((file, index) => (
+                  <FileItem
+                    key={`${file.fileType}-${index}`} fileId={file.fileId || ""} fileName={file.fileName || ""} fileType={file.fileType}
+                    state={file.state} status={file.status} disabled={disabled} onUpload={onUpload} onDelete={onDelete}
+                    onPreview={onPreview} onAutoFill={onAutoFill} onDownloadVersion={onDownloadVersion}
+                    onRequestUpload={(ft, f, m, s) => onUpload?.(ft, f, m, s)} isAutoFill={isAutoFill}
+                    versions={file.versions} autoFillingDocId={autoFillingDocId}
+                  />
+                ))}
+              </FileListContainer>
+            ) : (
+              <FileTable>
+                <FileTableHead>
+                  <tr>
+                    <FileTableTh style={{ width: "40px" }}></FileTableTh>
+                    <FileTableTh>סוג מסמך</FileTableTh>
+                    <FileTableTh>שם קובץ</FileTableTh>
+                    {!generalMode && <FileTableTh>סטטוס</FileTableTh>}
+                    <FileTableTh>פעולות</FileTableTh>
+                  </tr>
+                </FileTableHead>
+                <tbody>
+                  {files.map((file, index) => (
+                    <FileTableRow key={`${file.fileType}-${index}`}>
+                      <FileTableTd style={{ color: "#64748b", fontSize: "18px" }}>
+                        {renderFileIcon(file.fileName)}
+                      </FileTableTd>
+                      <FileTableTd style={{ fontWeight: 600 }}>{file.fileType}</FileTableTd>
+                      <FileTableTd>{file.fileName || "-"}</FileTableTd>
+                      {!generalMode && (
+                        <FileTableTd>
+                          <TableStatusBadge status={file.status} state={file.state}>
+                            {getStatusLabelHe(file.status, file.state)}
+                          </TableStatusBadge>
+                        </FileTableTd>
+                      )}
+                      
+                      <FileTableTd>
+                        <TableActions>
+                          {file.state === DocumentState.MISSING ? (
+                            <TableIconButton
+                              disabled={disabled}
+                              onClick={() => {
+                                if (generalMode) {
+                                  handleTableUpload(file.fileType);
+                                } else {
+                                  setUploadDialogFileType(file.fileType);
+                                }
+                              }}
+                              title="העלה מסמך"
+                            >
+                              <FaUpload />
+                            </TableIconButton>
+                          ) : (
+                            <>
+                              <TableIconButton
+                                onClick={() => onPreview?.(file.fileId || "", file.fileName || "")}
+                                title="תצוגה מקדימה"
+                              >
+                                <FaEye />
+                              </TableIconButton>
+                              <TableIconButton
+                                onClick={() => {
+                                  const hasVersions = !generalMode && file.versions && file.versions.length > 1;
+                                  if (hasVersions) {
+                                    setVersionsDialogFile(file);
+                                  } else {
+                                    onDownloadVersion?.(file.fileId || "");
+                                  }
+                                }}
+                                title="הורדה"
+                              >
+                                <FaDownload />
+                              </TableIconButton>
+                              {!generalMode && isAutoFill && onAutoFill && file.status === DocumentState.UPLOADED && (
+                                <TableIconButton
+                                  disabled={disabled || autoFillingDocId === file.fileId}
+                                  onClick={() => onAutoFill(file.fileId || "", file.fileType, file.fileName || "")}
+                                  title="מילוי אוטומטי"
+                                >
+                                  {autoFillingDocId === file.fileId ? <LoadingSpinner /> : <FaPen />}
+                                </TableIconButton>
+                              )}
+                              {!generalMode && file.status !== DocumentState.SIGNED && file.status !== DocumentState.GENERAL && (
+                                <TableIconButton
+                                  disabled={disabled}
+                                  onClick={() => handleTableUpload(file.fileType, file.status)}
+                                  title="עדכן גרסה"
+                                >
+                                  <FaUpload />
+                                </TableIconButton>
+                              )}
+                              <TableIconButton
+                                danger
+                                onClick={() => onDelete?.(file.fileId || "")}
+                                title="מחיקה"
+                              >
+                                <FaTrash />
+                              </TableIconButton>
+                            </>
+                          )}
+                        </TableActions>
+                      </FileTableTd>
+                    </FileTableRow>
+                  ))}
+                </tbody>
+              </FileTable>
+            )}
+          </>
+        )}
+
+        {/* Upload Status Dialog for non-general mode */}
+        {uploadDialogFileType && (
+          <DialogOverlay onClick={() => setUploadDialogFileType(null)}>
+            <DialogContainer onClick={(e) => e.stopPropagation()}>
+              <DialogHeader>
+                <DialogTitle>העלאת מסמך</DialogTitle>
+                <DialogCloseButton onClick={() => setUploadDialogFileType(null)}>&times;</DialogCloseButton>
+              </DialogHeader>
+              <div style={{ padding: "20px" }}>
+                <p>בחר את סטטוס המסמך שברצונך להעלות:</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
+                  {[
+                    { label: "ריק", status: DocumentState.UPLOADED, bg: "#f0f7ff", color: "#0071e3" },
+                    { label: "מלא עם פרטים", status: "Filled", bg: "#fff7e0", color: "#b0851f" },
+                    { label: "חתום", status: DocumentState.SIGNED, bg: "#e3f6ec", color: "#1d8450" }
+                  ].map(opt => (
+                    <Button 
+                      key={opt.label} 
+                      onClick={() => { 
+                        const fileType = uploadDialogFileType;
+                        setUploadDialogFileType(null); 
+                        handleTableUpload(fileType, opt.status); 
+                      }} 
+                      style={{ 
+                        backgroundColor: opt.bg, 
+                        color: opt.color, 
+                        border: `1px solid ${opt.color}`, 
+                        fontWeight: "bold", 
+                        position: "relative", 
+                        paddingRight: "30px", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center" 
+                      }}
+                    >
+                      {opt.label}
+                      <span style={{ position: "absolute", right: "10px", width: "12px", height: "12px", borderRadius: "50%", backgroundColor: opt.color }}></span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </DialogContainer>
+          </DialogOverlay>
+        )}
+
+        {/* Versions Dialog for table view */}
+        {versionsDialogFile && versionsDialogFile.versions && versionsDialogFile.versions.length > 0 && (
+          <DialogOverlay onClick={() => setVersionsDialogFile(null)}>
+            <div 
+              style={{ 
+                backgroundColor: "white", 
+                borderRadius: "12px", 
+                padding: "20px", 
+                width: "400px", 
+                maxWidth: "90%", 
+                maxHeight: "80vh", 
+                overflowY: "auto", 
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)", 
+                direction: "rtl" 
+              }} 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", borderBottom: "1px solid #eee", paddingBottom: "10px" }}>
+                <h3 style={{ margin: 0, fontSize: "18px" }}>גרסאות מסמך: {versionsDialogFile.fileType}</h3>
+                <button onClick={() => setVersionsDialogFile(null)} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#666" }}>&times;</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {versionsDialogFile.versions.map((version) => (
+                  <div key={version.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 15px", backgroundColor: "#f8f9fa", borderRadius: "8px", border: "1px solid #eee" }}>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: "bold" }}>{version.name}</div>
+                      <div style={{ fontSize: "13px", marginTop: "4px" }}>{new Date(version.created_at).toLocaleDateString("he-IL")}</div>
+                      <div style={{ fontSize: "12px", marginTop: "4px", color: version.status === "Signed" ? "#1d8450" : version.status === "Filled" ? "#b0851f" : "#0071e3", fontWeight: "bold" }}>{version.status}</div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        onDownloadVersion?.(version.id);
+                        setVersionsDialogFile(null);
+                      }} 
+                      style={{ background: "#0071e3", border: "none", borderRadius: "6px", cursor: "pointer", color: "white", fontSize: "14px", padding: "10px 18px", display: "flex", alignItems: "center", gap: "8px", fontWeight: "bold" }}
+                    >
+                      <FaDownload /> הורד
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogOverlay>
         )}
       </FileAreaContent>
     </FileAreaContainer>

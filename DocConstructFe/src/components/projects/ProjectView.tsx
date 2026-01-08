@@ -53,6 +53,7 @@ import ProjectProfessionalDialog from "./ProjectProfessionalDialog";
 import { Tab, Tabs } from "../shared/Tabs";
 import { Chat } from "./Chat";
 import EmailDialog from "./EmailDialog";
+import EditControls from "../shared/EditControls";
 
 const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
@@ -89,6 +90,7 @@ const MainLayout = styled.div`
   overflow: hidden;
   padding: 0 16px;
   direction: rtl;
+  align-items: stretch;
 
   @media (max-width: 1400px) {
     grid-template-columns: 160px 1fr 280px;
@@ -99,17 +101,16 @@ const MainLayout = styled.div`
 
 const ChatSidebar = styled.div`
   grid-area: chat;
-  width: clamp(240px, 22vw, 300px);
-  min-width: 220px;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   border: 1px solid #f0f2f5;
   direction: rtl;
+  min-height: 0;
+  height: 100%;
 `;
 
 const ChatHeader = styled.div`
@@ -125,11 +126,6 @@ const ChatTitle = styled.span`
   font-size: 15px;
   font-weight: 700;
   color: #1e293b;
-`;
-
-const ChatSubTitle = styled.span`
-  font-size: 12px;
-  color: #64748b;
 `;
 
 const SecondSidebar = styled.div`
@@ -157,16 +153,6 @@ const SecondSidebarContent = styled.div`
 
 const SidebarGroup = styled.div`
   margin-bottom: 24px;
-`;
-
-const SidebarGroupTitle = styled.div`
-  font-size: 12px;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0 15px 8px;
-  text-align: right;
 `;
 
 const SidebarButton = styled.button<{ active: boolean }>`
@@ -198,23 +184,11 @@ const SidebarButton = styled.button<{ active: boolean }>`
 const ProjectPanel = styled.div`
   grid-area: project;
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
   min-height: 0;
-
-  /* Custom Scrollbar */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-  }
+  height: 100%;
 `;
 
 const Card = styled.div`
@@ -237,6 +211,7 @@ const TabContent = styled.div`
   flex: 1;
   min-height: 0;
   width: 100%;
+  overflow: hidden;
 `;
 
 const TabPane = styled.div`
@@ -245,7 +220,8 @@ const TabPane = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 0 4px 8px;
 
   /* Custom Scrollbar */
@@ -266,6 +242,8 @@ const CompactFormGrid = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-top: 8px;
+  width: 100%;
+  max-width: 100%;
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(2, 1fr);
@@ -276,6 +254,8 @@ const CompactField = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 `;
 
 const CompactLabel = styled.label`
@@ -294,6 +274,8 @@ const ModernInput = styled(Input)`
   background-color: ${(p) => (p.disabled ? "#f8fafc" : "#ffffff")} !important;
   transition: all 0.2s ease !important;
   color: #1e293b !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 
   &:focus {
     border-color: #3b82f6 !important;
@@ -336,7 +318,6 @@ const ModernTextArea = styled(TextArea)`
     border-color: #f1f5f9 !important;
   }
 `;
-
 
 const CompactButton = styled(Button)`
   padding: 8px 20px;
@@ -465,7 +446,6 @@ const ProjectView: React.FC = () => {
   // Documents state
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [autoFillingDocId, setAutoFillingDocId] = useState<string | null>(null);
   const [engCoordForm, setEngCoordForm] = useState({
     status: "",
@@ -521,6 +501,22 @@ const ProjectView: React.FC = () => {
   const engCoordEnabled = isAllServices || hasService(ServiceType.ENG);
   const form4Enabled = isAllServices || hasService(ServiceType.FOUR);
 
+  // Helper to map project professionals to Professional type
+  const mapProfessionals = (professionals: any[]): Professional[] => {
+    return professionals.map((prof) => ({
+      id: prof.id,
+      name: prof.name,
+      email: prof.email,
+      professional_type: prof.professional_type,
+      status: prof.status,
+      national_id: "",
+      phone: "",
+      license_number: "",
+      license_expiration_date: "",
+      address: "",
+    }));
+  };
+
   const loadData = async () => {
     try {
       const [proj, statuses] = await Promise.all([
@@ -533,49 +529,18 @@ const ProjectView: React.FC = () => {
 
       // Extract professionals data directly from the project
       setIsLoadingProfessionals(true);
-      try {
-        if (proj.professionals && Array.isArray(proj.professionals)) {
-          // Map the professionals data to the Professional type
-          const projectProfessionals = proj.professionals.map((prof) => ({
-            id: prof.id,
-            name: prof.name,
-            email: prof.email,
-            professional_type: prof.professional_type,
-            status: prof.status,
-            // Add default values for required fields that might not be in the API response
-            national_id: "",
-            phone: "",
-            license_number: "",
-            license_expiration_date: "",
-            address: "",
-          }));
-          setProfessionals(projectProfessionals);
-        } else {
-          setProfessionals([]);
-        }
-      } catch (error) {
-        errorHandler(
-          error as ErrorResponseData,
-          "Failed to load professionals"
-        );
+      if (proj.professionals && Array.isArray(proj.professionals)) {
+        setProfessionals(mapProfessionals(proj.professionals));
+      } else {
         setProfessionals([]);
-      } finally {
-        setIsLoadingProfessionals(false);
       }
+      setIsLoadingProfessionals(false);
 
       // Load project documents
-      setIsLoadingDocuments(true);
-      try {
-        if (proj.documents && Array.isArray(proj.documents)) {
-          setDocuments(proj.documents);
-        } else {
-          setDocuments([]);
-        }
-      } catch (error) {
-        errorHandler(error as ErrorResponseData, "Failed to load documents");
+      if (proj.documents && Array.isArray(proj.documents)) {
+        setDocuments(proj.documents);
+      } else {
         setDocuments([]);
-      } finally {
-        setIsLoadingDocuments(false);
       }
     } catch (error) {
       const errorData = error as ErrorResponseData;
@@ -639,32 +604,11 @@ const ProjectView: React.FC = () => {
         originalData.current = updatedProject;
 
         // Update professionals list from the updated project data
-        if (
-          updatedProject.professionals &&
-          Array.isArray(updatedProject.professionals)
-        ) {
-          const projectProfessionals = updatedProject.professionals.map(
-            (prof) => ({
-              id: prof.id,
-              name: prof.name,
-              email: prof.email,
-              professional_type: prof.professional_type,
-              status: prof.status,
-              // Add default values for required fields that might not be in the API response
-              national_id: "",
-              phone: "",
-              license_number: "",
-              license_expiration_date: "",
-              address: "",
-            })
-          );
-          setProfessionals(projectProfessionals);
+        if (updatedProject.professionals && Array.isArray(updatedProject.professionals)) {
+          setProfessionals(mapProfessionals(updatedProject.professionals));
         }
       } catch (error) {
-        errorHandler(
-          error as ErrorResponseData,
-          "Failed to reload project data"
-        );
+        errorHandler(error as ErrorResponseData, "Failed to reload project data");
       }
     }
   };
@@ -707,9 +651,6 @@ const ProjectView: React.FC = () => {
     );
   };
 
-  const startEditing = () => {
-    setIsEditingDetails(true);
-  };
   const cancelEditing = () => {
     setFormData(originalData.current);
     setIsEditingDetails(false);
@@ -747,33 +688,11 @@ const ProjectView: React.FC = () => {
         originalData.current = updatedProject as Project;
 
         // Update professionals list from the updated project data
-        if (
-          updatedProject.professionals &&
-          Array.isArray(updatedProject.professionals)
-        ) {
-          const projectProfessionals = updatedProject.professionals.map(
-            (prof) => ({
-              id: prof.id,
-              name: prof.name,
-              email: prof.email,
-              professional_type: prof.professional_type,
-              status: prof.status,
-              // Add default values for required fields that might not be in the API response
-              national_id: "",
-              phone: "",
-              license_number: "",
-              license_expiration_date: "",
-              address: "",
-            })
-          );
-          setProfessionals(projectProfessionals);
+        if (updatedProject.professionals && Array.isArray(updatedProject.professionals)) {
+          setProfessionals(mapProfessionals(updatedProject.professionals));
         }
       } catch (error) {
-        errorHandler(
-          error as ErrorResponseData,
-          "Failed to reload project data"
-        );
-        // If we can't reload, at least update the local state with what we have
+        errorHandler(error as ErrorResponseData, "Failed to reload project data");
         setFormData(formData);
         originalData.current = formData;
       }
@@ -803,13 +722,6 @@ const ProjectView: React.FC = () => {
         return 'לא ידוע';
     }
   };
-
-  console.log(
-    "ProjectView render - isEditing:",
-    isEditingDetails,
-    "activeTab:",
-    activeTab
-  );
 
   // Convert ProjectDocument[] to FileAreaDocument[]
   const filesData: FileAreaDocument[] = [];
@@ -853,11 +765,6 @@ const ProjectView: React.FC = () => {
         status: versionDoc.status,
         created_at: versionDoc.created_at,
       }));
-
-      console.log(
-        `Document ${type} has ${versions.length} versions:`,
-        versions
-      );
 
       filesData.push({
         fileId: doc.id,
@@ -903,7 +810,6 @@ const ProjectView: React.FC = () => {
   ) => {
     if (!id || !file) return;
     try {
-      console.log(`Uploading document with status: ${status}`);
       await uploadProjectDocument(
         id,
         fileType,
@@ -914,9 +820,8 @@ const ProjectView: React.FC = () => {
         formData?.city || ""
       );
       await loadData();
-      toast.success(`${fileType} uploaded successfully with status: ${status}`);
+      toast.success(`${fileType} uploaded successfully`);
     } catch (error) {
-      console.error("File upload error details:", error);
       errorHandler(error as ErrorResponseData, `Failed to upload ${fileType}`);
     }
   };
@@ -947,7 +852,6 @@ const ProjectView: React.FC = () => {
       await loadData();
       toast.success("Document auto-filled successfully");
     } catch (error) {
-      console.error("Auto fill error details:", error);
       errorHandler(error as ErrorResponseData, "Failed to auto-fill document");
     } finally {
       // Clear loading state
@@ -973,16 +877,12 @@ const ProjectView: React.FC = () => {
 
   // Handler for downloading a specific version of a document
   const handleVersionDownload = async (versionId: string) => {
-    console.log(`handleVersionDownload called with versionId: ${versionId}`);
-
     if (!id) {
-      console.error("Project ID is missing");
       toast.error("שגיאה: מזהה פרויקט חסר");
       return;
     }
 
     if (!versionId) {
-      console.error("Version ID is missing");
       toast.error("שגיאה: מזהה גרסה חסר");
       return;
     }
@@ -990,59 +890,32 @@ const ProjectView: React.FC = () => {
     try {
       // Find the document version details
       let fileName = "";
-      let foundVersion = false;
-
       for (const file of filesData) {
         if (file.versions) {
           const version = file.versions.find((v) => v.id === versionId);
           if (version) {
             fileName = version.name;
-            foundVersion = true;
-            console.log(`Found version with name: ${fileName}`);
             break;
           }
         }
       }
 
-      if (!foundVersion) {
-        console.warn(
-          `Could not find version with ID: ${versionId} in local data`
-        );
+      const blob = await downloadProjectDocument(id, versionId);
+      if (blob.size === 0) {
+        toast.error("הקובץ שהורד ריק");
+        return;
       }
 
-      console.log(
-        `Downloading document with projectId: ${id}, versionId: ${versionId}`
-      );
-
-      // Download the specific version
-      try {
-        const blob = await downloadProjectDocument(id, versionId);
-        console.log(
-          `Document downloaded successfully, blob size: ${blob.size} bytes`
-        );
-
-        if (blob.size === 0) {
-          console.error("Downloaded blob is empty");
-          toast.error("הקובץ שהורד ריק");
-          return;
-        }
-
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName || `document-${versionId}.pdf`;
-        document.body.appendChild(a);
-        console.log(`Triggering download for: ${a.download}`);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast.success("הגרסה הורדה בהצלחה");
-      } catch (downloadError) {
-        console.error(`Error in downloadProjectDocument: ${downloadError}`);
-        throw downloadError;
-      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName || `document-${versionId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("הגרסה הורדה בהצלחה");
     } catch (error) {
-      console.error(`Error downloading version ${versionId}:`, error);
       errorHandler(
         error as ErrorResponseData,
         "Failed to download document version"
@@ -1089,21 +962,16 @@ const ProjectView: React.FC = () => {
     if (!id || !file) return;
 
     try {
-      const fileName = file.name;
-      console.log(
-        `Uploading general file: ${fileName}, size: ${file.size} bytes, status: ${DocumentState.GENERAL}`
-      );
       await uploadProjectDocument(
         id,
         "כללי",
-        fileName,
+        file.name,
         file,
         DocumentState.GENERAL
       );
       await loadData();
       toast.success("File uploaded successfully");
     } catch (error) {
-      console.error("File upload error:", error);
       errorHandler(error as ErrorResponseData, "Failed to upload file");
     }
   };
@@ -1324,45 +1192,19 @@ const ProjectView: React.FC = () => {
     if (!formData) return null;
     return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          borderBottom: "1px solid #f1f5f9",
-          paddingBottom: 16
+      <EditControls
+        isEditing={isEditingDetails}
+        onEdit={() => setIsEditingDetails(true)}
+        onSave={async () => {
+          await saveChanges();
+          setIsEditingDetails(false);
         }}
-      >
-        <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>פרטי הפרויקט</h2>
-        {!isEditingDetails ? (
-          <CompactButton onClick={() => setIsEditingDetails(true)}>
-            {renderIcon(FaIcons.FaEdit, 14)} עריכה
-          </CompactButton>
-        ) : (
-          <div style={{ display: "flex", gap: 12 }}>
-            <CompactButton
-              onClick={async () => {
-                await saveChanges();
-                setIsEditingDetails(false);
-              }}
-              disabled={saving}
-            >
-              {renderIcon(FaIcons.FaCheck, 14)} שמירה
-            </CompactButton>
-            <CompactButton
-              className="cancel"
-              onClick={() => {
-                cancelEditing();
-                setIsEditingDetails(false);
-              }}
-              disabled={saving}
-            >
-              {renderIcon(FaIcons.FaTimes, 14)} ביטול
-            </CompactButton>
-          </div>
-        )}
-      </div>
+        onCancel={() => {
+          cancelEditing();
+          setIsEditingDetails(false);
+        }}
+        saving={saving}
+      />
       
       <CompactFormGrid style={{ gap: "12px" }}>
         <div style={{ gridColumn: "span 3" }}>
@@ -1505,7 +1347,8 @@ const ProjectView: React.FC = () => {
         </div>
       </CompactFormGrid>
     </div>
-  );};
+  );
+  };
 
   return (
     <PageContainer>
@@ -1537,7 +1380,6 @@ const ProjectView: React.FC = () => {
             <ChatSidebar>
               <ChatHeader>
                 <ChatTitle>הודעות הפרויקט</ChatTitle>
-  
               </ChatHeader>
               <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
                 <Chat projectId={id} />
@@ -1548,7 +1390,6 @@ const ProjectView: React.FC = () => {
             <SecondSidebar>
               <SecondSidebarContent>
                 <SidebarGroup>
-            
                   <SidebarButton
                     active={activeCategory === "general"}
                     onClick={() => handleCategoryChange("general")}
@@ -1568,7 +1409,7 @@ const ProjectView: React.FC = () => {
 
             {/* Main Content Panel */}
             <ProjectPanel>
-              <Card style={{ marginBottom: "24px", flex: 1 }}>
+              <Card style={{ marginBottom: 0, flex: 1, height: "100%" }}>
                 {/* Top Sub-Tabs */}
                 {activeCategory === "general" && (
                   <Tabs
@@ -1594,22 +1435,28 @@ const ProjectView: React.FC = () => {
                 
                 {activeTab === "professionals" && (
                   <TabPane>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 12,
-                        borderBottom: "1px solid #f1f5f9",
-                        paddingBottom: 12
-                      }}
-                    >
-                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: 0 }}>בעלי מקצוע</h2>
-                      <CompactButton onClick={handleAddProfessional}>
-                        {renderIcon(FaIcons.FaPlus, 12)} הוסף בעל מקצוע
-                      </CompactButton>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "12px" }}>
+                      <button
+                        onClick={handleAddProfessional}
+                        title="הוסף בעל מקצוע"
+                        style={{ 
+                          width: "30px",
+                          height: "30px",
+                          fontSize: "14px",
+                          borderRadius: "6px",
+                          border: "1px solid #e2e8f0",
+                          backgroundColor: "#ffffff",
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <FaIcons.FaPlus />
+                      </button>
                     </div>
-
                     {isLoadingProfessionals ? (
                       <p style={{ fontSize: "13px", color: "#666" }}>
                         טוען בעלי מקצוע...
@@ -1695,148 +1542,102 @@ const ProjectView: React.FC = () => {
 
                 {activeTab === "team" && (
                   <TabPane>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 12,
-                        borderBottom: "1px solid #f1f5f9",
-                        paddingBottom: 12
+                    <EditControls
+                      isEditing={isEditingTeam}
+                      onEdit={() => setIsEditingTeam(true)}
+                      onSave={async () => {
+                        await saveTeam(teamData);
+                        setIsEditingTeam(false);
                       }}
-                    >
-                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", margin: 0 }}>צוות הפרויקט</h2>
-                      {!isEditingTeam ? (
-                        <CompactButton onClick={() => setIsEditingTeam(true)}>
-                          {renderIcon(FaIcons.FaEdit, 14)} עריכה
-                        </CompactButton>
-                      ) : (
-                        <div style={{ display: "flex", gap: 12 }}>
-                          <CompactButton
-                            onClick={async () => {
-                              await saveTeam(teamData);
-                              setIsEditingTeam(false);
-                            }}
-                            disabled={saving}
-                          >
-                            {renderIcon(FaIcons.FaCheck, 14)} שמירה
-                          </CompactButton>
-                          <CompactButton
-                            className="cancel"
-                            onClick={() => {
-                              setIsEditingTeam(false);
-                              loadTeamMembers();
-                            }}
-                            disabled={saving}
-                          >
-                            {renderIcon(FaIcons.FaTimes, 14)} ביטול
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
+                      onCancel={() => {
+                        setIsEditingTeam(false);
+                        loadTeamMembers();
+                      }}
+                      saving={saving}
+                    />
                     {rolesLoading ? (
                       <div>טוען תפקידים...</div>
                     ) : (
                       <div style={{ 
                         display: "grid", 
-                        gridTemplateColumns: "repeat(3, minmax(180px, 1fr))", 
-                        gap: "12px",
-                        width: "100%"
+                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", 
+                        gap: "8px",
+                        width: "100%",
+                        alignContent: "start"
                       }}>
                         {teamRoles.map((member) => (
                           <Card key={member.key} style={{ 
                             marginBottom: 0, 
-                            padding: "10px", 
-                            borderRadius: "10px",
+                            padding: "6px", 
+                            borderRadius: "8px",
                             border: "1px solid #e2e8f0",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
-                            height: "fit-content"
+                            boxShadow: "none",
+                            height: "auto"
                           }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: 10
-                              }}
-                            >
-                              <span style={{ fontWeight: 700, color: "#1e293b", fontSize: "13px" }}>
-                                {member.label}
-                              </span>
+                            <div style={{ fontWeight: 600, color: "#1e293b", fontSize: "11px", marginBottom: 4 }}>
+                              {member.label}
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                              <CompactField style={{ gap: "4px" }}>
-                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>שם מלא</CompactLabel>
-                                <ModernInput
-                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
-                                  value={teamData[member.key]?.name || ""}
-                                  onChange={(e) =>
-                                    setTeamData((prev) => ({
-                                      ...prev,
-                                      [member.key]: {
-                                        ...prev[member.key],
-                                        name: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  placeholder="שם מלא"
-                                  disabled={!isEditingTeam}
-                                />
-                              </CompactField>
-                              <CompactField style={{ gap: "4px" }}>
-                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>טלפון</CompactLabel>
-                                <ModernInput
-                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
-                                  value={teamData[member.key]?.phone || ""}
-                                  onChange={(e) =>
-                                    setTeamData((prev) => ({
-                                      ...prev,
-                                      [member.key]: {
-                                        ...prev[member.key],
-                                        phone: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  placeholder="טלפון"
-                                  disabled={!isEditingTeam}
-                                />
-                              </CompactField>
-                              <CompactField style={{ gap: "4px" }}>
-                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>דוא"ל</CompactLabel>
-                                <ModernInput
-                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
-                                  value={teamData[member.key]?.email || ""}
-                                  onChange={(e) =>
-                                    setTeamData((prev) => ({
-                                      ...prev,
-                                      [member.key]: {
-                                        ...prev[member.key],
-                                        email: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  placeholder={'דוא"ל'}
-                                  disabled={!isEditingTeam}
-                                />
-                              </CompactField>
-                              <CompactField style={{ gap: "4px" }}>
-                                <CompactLabel style={{ fontSize: "10px", marginBottom: "0" }}>כתובת</CompactLabel>
-                                <ModernInput
-                                  style={{ height: "28px", padding: "4px 8px", fontSize: "12px", width: "100%" }}
-                                  value={teamData[member.key]?.address || ""}
-                                  onChange={(e) =>
-                                    setTeamData((prev) => ({
-                                      ...prev,
-                                      [member.key]: {
-                                        ...prev[member.key],
-                                        address: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  placeholder="כתובת"
-                                  disabled={!isEditingTeam}
-                                />
-                              </CompactField>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={teamData[member.key]?.name || ""}
+                                onChange={(e) =>
+                                  setTeamData((prev) => ({
+                                    ...prev,
+                                    [member.key]: {
+                                      ...prev[member.key],
+                                      name: e.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder="שם מלא"
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={teamData[member.key]?.phone || ""}
+                                onChange={(e) =>
+                                  setTeamData((prev) => ({
+                                    ...prev,
+                                    [member.key]: {
+                                      ...prev[member.key],
+                                      phone: e.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder="טלפון"
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={teamData[member.key]?.email || ""}
+                                onChange={(e) =>
+                                  setTeamData((prev) => ({
+                                    ...prev,
+                                    [member.key]: {
+                                      ...prev[member.key],
+                                      email: e.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder={'דוא"ל'}
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={teamData[member.key]?.address || ""}
+                                onChange={(e) =>
+                                  setTeamData((prev) => ({
+                                    ...prev,
+                                    [member.key]: {
+                                      ...prev[member.key],
+                                      address: e.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder="כתובת"
+                                disabled={!isEditingTeam}
+                              />
                             </div>
                           </Card>
                         ))}
@@ -1847,44 +1648,12 @@ const ProjectView: React.FC = () => {
 
                 {activeTab === "documents" && (
                   <TabPane>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 24,
-                        borderBottom: "1px solid #f1f5f9",
-                        paddingBottom: 16
-                      }}
-                    >
-                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>מסמכים כלליים</h2>
-                      <CompactButton
-                        onClick={() => {
-                          const input = document.createElement("input");
-                          input.type = "file";
-                          input.multiple = true;
-                          input.accept = ".pdf,.jpg,.jpeg,.png";
-                          input.onchange = (e: Event) => {
-                            const files = (e.target as HTMLInputElement).files;
-                            if (!files || files.length === 0) return;
-                            Array.from(files).forEach((f) => handleUploadGeneralFile(f));
-                          };
-                          input.click();
-                        }}
-                      >
-                        {renderIcon(FaIcons.FaUpload, 14)} העלאת קבצים
-                      </CompactButton>
-                    </div>
                     <FileArea
                       files={generalFiles}
                       disabled={false}
-                      onUpload={handleFileUpload}
                       onDelete={handleFileDelete}
                       onPreview={handleFilePreview}
-                      onAutoFill={handleAutoFill}
                       onDownloadVersion={handleVersionDownload}
-                      isAutoFill={false}
-                      autoFillingDocId={autoFillingDocId}
                       onUploadGeneral={handleUploadGeneralFile}
                     />
                   </TabPane>
@@ -1893,42 +1662,6 @@ const ProjectView: React.FC = () => {
                 {/* Contextual Area for Stages */}
                 {(["start_work", "eng_coord", "form4"].includes(activeTab)) && (
                   <TabPane>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 24,
-                        borderBottom: "1px solid #f1f5f9",
-                        paddingBottom: 16
-                      }}
-                    >
-                      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b" }}>
-                        {activeTab === "start_work" ? "מסמכי תחילת עבודה" :
-                         activeTab === "eng_coord" ? "תיאום הנדסי" : "טופס 4"}
-                      </h2>
-                      {activeTab === "start_work" && (
-                        <div style={{ display: "flex", gap: "12px" }}>
-                          <CompactButton
-                            onClick={handleDownloadAllFiles}
-                            disabled={
-                              stageFiles.filter((f: FileAreaDocument) => f.state === DocumentState.UPLOADED).length === 0
-                            }
-                          >
-                            {renderIcon(FaIcons.FaDownload, 14)} הורד הכל
-                          </CompactButton>
-                          <CompactButton
-                            onClick={handleEmailAllFiles}
-                            disabled={
-                              stageFiles.filter((f: FileAreaDocument) => f.status === DocumentState.FILLED).length === 0
-                            }
-                          >
-                            {renderIcon(FaIcons.FaEnvelope, 14)} שלח במייל
-                          </CompactButton>
-                        </div>
-                      )}
-                    </div>
-
                     {activeTab === "start_work" ? (
                       <FileArea
                         files={stageFiles}
@@ -1940,6 +1673,10 @@ const ProjectView: React.FC = () => {
                         onDownloadVersion={handleVersionDownload}
                         isAutoFill={true}
                         autoFillingDocId={autoFillingDocId}
+                        onDownloadAll={handleDownloadAllFiles}
+                        onEmailAll={handleEmailAllFiles}
+                        downloadAllDisabled={stageFiles.filter((f: FileAreaDocument) => f.state === DocumentState.UPLOADED).length === 0}
+                        emailAllDisabled={stageFiles.filter((f: FileAreaDocument) => f.status === DocumentState.FILLED).length === 0}
                       />
                     ) : activeTab === "eng_coord" ? (
                       <div
