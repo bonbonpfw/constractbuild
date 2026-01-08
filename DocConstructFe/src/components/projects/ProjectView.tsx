@@ -362,6 +362,13 @@ const IconOnlyButton = styled(IconButton)`
   font-size: 14px;
 `;
 
+const CityLogo = styled.img`
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  margin-top: 10px;
+`;
+
 const ProfessionalCard = styled.div`
   display: flex;
   align-items: center;
@@ -1232,6 +1239,7 @@ const ProjectView: React.FC = () => {
           />
         </CompactField>
 
+
         <CompactField style={{ gap: "4px" }}>
           <CompactLabel style={{ fontSize: "12px" }}>מספר היתר</CompactLabel>
           <ModernInput
@@ -1354,8 +1362,28 @@ const ProjectView: React.FC = () => {
     <PageContainer>
       <TopPanel>
         <TopPanelLogo />
-        <TopPanelTitleHolder>
+        <TopPanelTitleHolder style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <TopPanelTitle>{formData?.name || "פרטי הפרויקט"}</TopPanelTitle>
+          {formData?.city && (() => {
+            const city = formData.city.toLowerCase();
+            // Tel Aviv
+            if (city.includes("תל אביב") || city.includes("תל-אביב") || city.includes("tel aviv") || city.includes("telaviv")) {
+              return <CityLogo src="https://upload.wikimedia.org/wikipedia/he/e/e0/Tel_Aviv_New_Logo.svg" alt="Tel Aviv Logo" title="תל אביב" />;
+            }
+            // Ramat Gan
+            if (formData.city.includes("רמת גן") || formData.city.includes("רמת-גן") || city.includes("ramat gan") || city.includes("ramatgan")) {
+              return <CityLogo src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Coat_of_arms_of_Ramat_Gan.svg" alt="Ramat Gan Logo" title="רמת גן" />;
+            }
+            // Ra'anana
+            if (formData.city.includes("רעננה") || city.includes("raanana") || city.includes("ra'anana")) {
+              return <CityLogo src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Coat_of_arms_of_Raanana.svg" alt="Ra'anana Logo" title="רעננה" />;
+            }
+            // Ramat HaSharon
+            if (formData.city.includes("רמת השרון") || formData.city.includes("רמת-השרון") || city.includes("ramat hasharon") || city.includes("ramathasharon")) {
+              return <CityLogo src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Flag_of_Ramat_HaSharon.svg" alt="Ramat HaSharon Logo" title="רמת השרון" />;
+            }
+            return null;
+          })()}
         </TopPanelTitleHolder>
         <TopPanelGroup>
           <IconOnlyButton onClick={() => router.back()} title="Back">

@@ -809,7 +809,7 @@ const FileArea: React.FC<FileAreaProps> = ({
                               {!generalMode && file.status !== DocumentState.SIGNED && file.status !== DocumentState.GENERAL && (
                                 <TableIconButton
                                   disabled={disabled}
-                                  onClick={() => handleTableUpload(file.fileType, file.status)}
+                                  onClick={() => setUploadDialogFileType(file.fileType)}
                                   title="עדכן גרסה"
                                 >
                                   <FaUpload />
