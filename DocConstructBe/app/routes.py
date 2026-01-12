@@ -1,6 +1,7 @@
 import os
 import mimetypes
 import tempfile
+import smtplib
 from data_model.enum import DocumentStatus
 from flask import send_file, request
 from flask_mail import Message
@@ -796,6 +797,7 @@ def init_routes(app):
             or app.config["FILLED_PROJECT_DOCUMENTS_EMAIL_BODY"]
         )
 
+        # Build Flask-Mail message
         message = Message(
             subject=email_subject,
             sender=app.config["MAIL_DEFAULT_SENDER_EMAIL"],
@@ -812,8 +814,23 @@ def init_routes(app):
                     data=fp.read(),
                 )
 
+        # Send using direct SMTP with proper EHLO sequence (Flask-Mail doesn't do this correctly for Outlook)
         try:
-            mail.send(message)
+            server = smtplib.SMTP(
+                app.config["MAIL_SERVER"],
+                app.config["MAIL_PORT"],
+                local_hostname=os.environ.get('MAIL_LOCAL_HOSTNAME', 'opazit.co.il')
+            )
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"])
+            server.sendmail(
+                app.config["MAIL_DEFAULT_SENDER_EMAIL"],
+                recipient_email,
+                message.as_string()
+            )
+            server.quit()
         except Exception as e:
             logger.exception(e)
             raise EmailSendError from e

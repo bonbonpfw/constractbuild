@@ -78,7 +78,7 @@ const EmailDialog: React.FC<EmailDialogProps> = ({
               type="email"
               value={
                 process.env.NEXT_PUBLIC_MAIL_DEFAULT_SENDER_EMAIL ||
-                "no-reply@test.com"
+                "miri@opazit.co.il"
               }
               disabled
               style={{ backgroundColor: "#f5f5f5" }}

@@ -28,7 +28,7 @@ class FlaskAppConfiguration:
 
     MAIL_DEFAULT_SENDER_EMAIL = os.environ.get(
         "MAIL_DEFAULT_SENDER_EMAIL",
-        "no-reply@test.com",
+        "miri@opazit.co.il",
     )
 
     FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT = os.environ.get(

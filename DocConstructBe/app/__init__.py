@@ -1,4 +1,5 @@
 import os
+import socket
 from flask import Flask
 
 from config.app_config import FlaskAppConfiguration
@@ -7,6 +8,12 @@ from data_model.models import init_tables
 from app.errors import handle_error
 from flask_executor import Executor
 from flask_mail import Mail
+
+
+_original_getfqdn = socket.getfqdn
+def _patched_getfqdn(name=''):
+    return os.environ.get('MAIL_LOCAL_HOSTNAME', 'opazit.co.il')
+socket.getfqdn = _patched_getfqdn
 
 
 # Create executor instance at module level
