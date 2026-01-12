@@ -183,13 +183,14 @@ class ProjectManager:
             ProjectDocument.status == status.value,
         )
         if exclude_if_exists_with_status:
-            # Subquery: get document names that have the excluded status
-            subquery = db_session.query(ProjectDocument.name).filter(
+            # Subquery: get document_types that have the excluded status
+            subquery = db_session.query(ProjectDocument.document_type).filter(
                 ProjectDocument.project_id == project_id,
                 ProjectDocument.status == exclude_if_exists_with_status.value,
             )
-            query = query.filter(~ProjectDocument.name.in_(subquery))
-        return query.all()
+            query = query.filter(~ProjectDocument.document_type.in_(subquery))
+        filled_documents = query.all()
+        return filled_documents
 
     def add_document(self, file_path: str, project_id: str, document_type: str,
                      document_name: str, document_status: DocumentStatus) -> ProjectDocument:
