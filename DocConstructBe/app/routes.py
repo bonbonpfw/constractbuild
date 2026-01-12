@@ -775,7 +775,9 @@ def init_routes(app):
         data = validate_request(Endpoints.SEND_FILLED_PROJECT_DOCUMENTS)
 
         documents = ProjectManager.get_documents_by_status(
-            project_id, status=DocumentStatus.FILLED
+            project_id,
+            status=DocumentStatus.FILLED,
+            exclude_if_exists_with_status=DocumentStatus.SIGNED
         )
         if not documents:
             raise ProjectDocumentNotFound

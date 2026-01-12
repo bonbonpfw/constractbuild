@@ -174,13 +174,22 @@ class ProjectManager:
     def get_documents_by_status(
         project_id: str,
         *,
-        status: DocumentStatus
+        status: DocumentStatus,
+        exclude_if_exists_with_status: DocumentStatus = None
     ) -> list[ProjectDocument]:
-        """Get all documents for a specific project with the given status."""
-        return db_session.query(ProjectDocument).filter(
+    
+        query = db_session.query(ProjectDocument).filter(
             ProjectDocument.project_id == project_id,
             ProjectDocument.status == status.value,
-        ).all()
+        )
+        if exclude_if_exists_with_status:
+            # Subquery: get document names that have the excluded status
+            subquery = db_session.query(ProjectDocument.name).filter(
+                ProjectDocument.project_id == project_id,
+                ProjectDocument.status == exclude_if_exists_with_status.value,
+            )
+            query = query.filter(~ProjectDocument.name.in_(subquery))
+        return query.all()
 
     def add_document(self, file_path: str, project_id: str, document_type: str,
                      document_name: str, document_status: DocumentStatus) -> ProjectDocument:
