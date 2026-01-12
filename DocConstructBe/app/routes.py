@@ -830,7 +830,7 @@ def init_routes(app):
             server.sendmail(
                 app.config["MAIL_DEFAULT_SENDER_EMAIL"],
                 recipient_email,
-                message.as_string()
+                message.as_string().encode('utf-8')
             )
             server.quit()
         except Exception as e:
