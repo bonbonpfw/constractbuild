@@ -392,10 +392,11 @@ def init_routes(app):
         data = validate_request(endpoint=Endpoints.GET_PROJECT_DOCUMENT_TYPES)
         city = data.get('city')
         service_type = data.get('service_type')
-        if city and city not in [City.TLV.value, City.RG.value]:
+        if not city:
             raise InvalidCityError(city=city)
+        city_docs = ProjectManager().get_document_types(city=city,service_type=service_type)
         return SuccessResponse({
-            'document_types': ProjectManager().get_document_types(city=city,service_type=service_type)
+            'document_types': city_docs
         }).generate_response()
 
     @app.route('/api/project/document/statuses', methods=['GET'])

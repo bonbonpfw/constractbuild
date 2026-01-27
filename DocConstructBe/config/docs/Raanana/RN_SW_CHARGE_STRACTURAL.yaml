@@ -1,0 +1,19 @@
+TYPES:
+    - structural_engineer
+
+
+1:
+  1:
+    - structural_engineer_id
+    - None
+    - None
+    - structural_engineer_license_number 
+    - structural_engineer_name
+    - None
+    - None
+    - structural_engineer_phone
+    - structural_engineer_name
+
+
+
+

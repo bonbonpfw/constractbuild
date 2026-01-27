@@ -12,11 +12,11 @@ TYPES:
     - None
     - None
     - None
-    - structural_engineer_email
+    - structural_engineer_mail
     - [structural_engineer_phone,structural_engineer_name]
     - structural_engineer_address
     - structural_engineer_id
-    - request_editor_email
+    - request_editor_mail
     - [request_editor_phone,request_editor_name]
     - request_editor_address
     - request_editor_id
@@ -24,27 +24,27 @@ TYPES:
     - None
     - None
     - None
-    - execution_inspector_email
+    - execution_inspector_mail
     - [execution_inspector_phone,execution_inspector_name]
     - execution_inspector_address
     - execution_inspector_id
-    - construction_inspection_officer_email
+    - construction_inspection_officer_mail
     - [construction_inspection_officer_phone,construction_inspection_officer_name]
     - construction_inspection_officer_address
     - construction_inspection_officer_id
-    - structural_engineer_email
+    - structural_engineer_mail
     - [structural_engineer_phone,structural_engineer_name]
     - structural_engineer_address
     - structural_engineer_id
-    - project_manager_email
+    - project_manager_mail
     - [project_manager_phone,project_manager_name]
     - project_manager_address
     - project_manager_id
-    - general_contractor_email
+    - general_contractor_mail
     - [general_contractor_phone,general_contractor_name]
     - general_contractor_address
     - general_contractor_id
-    - permit_owner_email
+    - permit_owner_mail
     - [permit_owner_phone,permit_owner_name]
     - permit_owner_address
     - permit_owner_id

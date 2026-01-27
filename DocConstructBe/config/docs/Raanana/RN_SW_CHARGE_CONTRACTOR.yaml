@@ -1,0 +1,13 @@
+TYPES:
+    - general_contractor
+
+1:
+    1:
+        - None
+        - None
+        - None
+        - general_contractor_license_number
+        - general_contractor_id 
+        - general_contractor_name
+    
+

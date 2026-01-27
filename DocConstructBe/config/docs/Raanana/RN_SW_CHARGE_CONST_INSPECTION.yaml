@@ -1,0 +1,19 @@
+TYPES:
+    - supervisor_engineer_construction
+
+
+1:
+  1:
+    - supervisor_engineer_construction_id
+    - None
+    - None
+    - supervisor_engineer_construction_license_number 
+    - supervisor_engineer_construction_name
+    - None
+    - None
+    - supervisor_engineer_construction_phone
+    - supervisor_engineer_construction_name
+    
+
+
+

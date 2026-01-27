@@ -257,15 +257,20 @@ class ProjectManager:
     @staticmethod
     def get_document_types(city: str,service_type: ProjectServiceType) -> list[str]:
         if city == City.TLV.value:
-            tlv_doc =  [document_type for document_type in ProjectDocumentType if document_type.name.startswith('TLV_')]
-            service_doc = [document_type.value for document_type in tlv_doc if document_type.name[4:].startswith(service_type.value)]
-            return service_doc
+            city_prefix = 'TLV_'
         elif city == City.RG.value:
-            rg_doc = [document_type for document_type in ProjectDocumentType if document_type.name.startswith('RG_')]
-            service_doc = [document_type.value for document_type in rg_doc if document_type.name[3:].startswith(service_type.value)]
-            return service_doc
+            city_prefix = 'RG_'
+        elif city == City.RN.value:
+            city_prefix = 'RN_'
+        elif city == City.RH.value: 
+            city_prefix = 'RH_' 
         else:
-            raise InvalidCityError(city=city)
+            raise InvalidCityError(city=city) 
+        city_doc =  [document_type for document_type in ProjectDocumentType if document_type.name.startswith(city_prefix)]
+        service_doc = [document_type.value for document_type in city_doc if document_type.name[len(city_prefix):].startswith(service_type.value)]
+        return service_doc
+     
+      
     
     @staticmethod
     def get_document_statuses() -> list[str]:

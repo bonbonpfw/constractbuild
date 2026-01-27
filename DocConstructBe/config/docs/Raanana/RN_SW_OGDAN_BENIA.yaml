@@ -1,0 +1,20 @@
+TYPES:
+    - project_manager
+    - permit_owner
+
+1:
+  1:
+    - None
+    - None
+    - project_manager_mail
+    - project_manager_phone 
+    - project_manager_name
+    - permit_owner_mail
+    - permit_owner_phone
+    - None
+    - permit_owner_name
+
+    
+
+
+

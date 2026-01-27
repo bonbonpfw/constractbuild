@@ -43,6 +43,16 @@ class ProjectDocumentType(Enum):
     TLV_ENG_FORCE_MAJORITY = 'יפוי כח יזם'
     TLV_ENG_COMMITMENT_TO_SIGN_CONTRACTOR = 'התחייבות לחתימת קבלן'
     TLV_ENG_TRAFFIC_ORDER = 'הסדרי תנועה'
+    RN_SW_OGDAN_BNIA = 'אוגדן בניה'
+    RN_SW_MODED_MIGRASH = 'מודד מגרש'
+    RN_SW_CHARGE_STRACTURAL = 'מינוי של אחראי לביצוע שלד'
+    RN_SW_CHARGE_ARCH_INSPECTION = 'מינוי אחראי לביקורת אדריכלות'
+    RN_SW_CHARGE_CONST_INSPECTION = 'מינוי אחראי לביקורת קונסטרוקציה'
+    RN_SW_CHARGE_CONTRACTOR = 'מינוי של קבלן'
+    RN_SW_PROJECT_TEAMS = 'פרטי אנשי קשר באתר'
+
+
+
    
 
 class City(Enum):
@@ -51,18 +61,6 @@ class City(Enum):
     RH = 'RamatHasharon'
     RN = 'Raanana'
 
-
-class ProjectDocPath(Enum):
-    TRASH_INSPECTION = os.path.join(CONFIG, "docs", "TRASH_INSPECTION.yaml")
-    ADAPTER_AGREEMENT = os.path.join(CONFIG, "docs", "ADAPTER_AGREEMENT.yaml")
-    START_WORK_REQUEST = os.path.join(CONFIG, "docs", "START_WORK_REQUEST.yaml")
-    STRUCTURAL_SUPERVISOR = os.path.join(CONFIG, "docs", "STRUCTURAL_SUPERVISOR.yaml")
-    EXECUTION_INSPECTION = os.path.join(CONFIG, "docs", "EXECUTION_INSPECTION.yaml")
-    PESTICIDAL_OWNER = "PESTICIDAL_OWNER.yaml"
-    CONTRACTOR_OWNER = os.path.join(CONFIG, "docs", "CONTRACTOR_OWNER.yaml")
-    PROJECT_TEAMS = os.path.join(CONFIG, "docs", "PROJECT_TEAMS.yaml")
-    GREEN_BUILD = os.path.join(CONFIG, "docs", "GREEN_BUILD.yaml")
-    
 
 class ProfessionalType(Enum):
     SUPERVISOR_ENGINEER = 'אחראי ביקורת - כללי'
