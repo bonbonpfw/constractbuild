@@ -1,17 +1,18 @@
 TYPES:
-    - project_manager
-    - permit_owner
+    - supervisor_engineer
 
 1:
     1:
+      - supervisor_engineer_id
       - None
       - None
-      - project_manager_mail
-      - project_manager_phone 
-      - project_manager_name
-      - permit_owner_mail
-      - permit_owner_phone
-      - permit_owner_name
+      - None 
+      - None
+      - None
+      - None
+      - None
+      - supervisor_engineer_name
+      - None
 
       
 

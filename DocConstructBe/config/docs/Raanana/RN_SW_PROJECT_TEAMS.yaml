@@ -1,17 +1,41 @@
 TYPES:
     - project_manager
     - permit_owner
+    - general_contractor
 
 1:
   1:
     - None
     - None
+    - None
     - project_manager_mail
-    - project_manager_phone 
-    - project_manager_name
+    - project_manager_phone
+    - project_manager_mail
+    - None
+    - general_contractor_license_number
+    - general_contractor_mail
+    - general_contractor_phone
+    - None
+    - general_contractor_name
+    - None
+    - None
     - permit_owner_mail
+    - None
     - permit_owner_phone
     - permit_owner_name
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
+    - None
 
     
 
