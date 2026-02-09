@@ -502,11 +502,14 @@ const ProjectView: React.FC = () => {
   const [teamData, setTeamData] = useState<
     Record<
       string,
-      { name: string; phone: string; email: string; address: string }
+      { id?: string; name: string; phone: string; email: string; address: string }
     >
   >({});
 
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [customMembers, setCustomMembers] = useState<
+    { id?: string; role: string; name: string; phone: string; email: string; address: string }[]
+  >([]);
 
   const [isEditingTeam, setIsEditingTeam] = useState(false);
 
@@ -604,12 +607,15 @@ const ProjectView: React.FC = () => {
     if (teamRoles.length > 0) {
       const data: Record<
         string,
-        { name: string; phone: string; email: string; address: string }
+        { id?: string; name: string; phone: string; email: string; address: string }
       > = {};
+      const predefinedRoleLabels = teamRoles.map((r) => r.label);
+      
       teamRoles.forEach((role) => {
         // Find the team member for this role
         const member = teamMembers.find((m: any) => m.role === role.label);
         data[role.key] = {
+          id: member?.id,
           name: member?.name || "",
           phone: member?.phone || "",
           email: member?.email || "",
@@ -617,6 +623,21 @@ const ProjectView: React.FC = () => {
         };
       });
       setTeamData(data);
+      
+      // Find team members with custom roles (not in predefined roles)
+      const customRoleMembers = teamMembers.filter(
+        (m: any) => !predefinedRoleLabels.includes(m.role)
+      );
+      setCustomMembers(
+        customRoleMembers.map((m: any) => ({
+          id: m.id,
+          role: m.role || "",
+          name: m.name || "",
+          phone: m.phone || "",
+          email: m.email || "",
+          address: m.address || "",
+        }))
+      );
     }
   }, [teamRoles, teamMembers]);
 
@@ -680,6 +701,25 @@ const ProjectView: React.FC = () => {
     setFormData((prev) =>
       prev ? ({ ...prev, [name]: value } as Project) : prev
     );
+  };
+
+  const handleStartWorkFieldChange = async (
+    fieldName: "start_work_status" | "start_work_date" | "start_work_target",
+    value: string
+  ) => {
+    if (!formData) return;
+    
+    const updatedFormData = { ...formData, [fieldName]: value || undefined } as Project;
+    setFormData(updatedFormData);
+    
+    try {
+      await updateProject(updatedFormData);
+      originalData.current = updatedFormData;
+      toast.success("נשמר בהצלחה");
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "Failed to save");
+      setFormData(formData); // Revert on error
+    }
   };
 
   const cancelEditing = () => {
@@ -1161,41 +1201,32 @@ const ProjectView: React.FC = () => {
     loadDocTypes();
   }, [activeTab, formData?.city, getServiceTypeForTab]);
 
-  const saveTeam = async (data: typeof teamData) => {
+  const saveTeam = async () => {
     if (!id) return;
-    const currentMembers = await getProjectTeamMembers(id);
-    let hasValidationError = false;
 
+    // Save predefined role team members
     for (const roleKey of Object.keys(teamData)) {
       const role = teamRoles.find((r) => r.key === roleKey);
       if (!role) continue;
       const memberData = teamData[roleKey];
-      const existing = currentMembers.find((m: any) => m.role === role.label);
 
-      // If all fields are empty, skip
+      // If all fields are empty, skip or delete existing
       if (
         !memberData.name &&
         !memberData.phone &&
         !memberData.email &&
         !memberData.address
       ) {
-        if (existing) {
-          await deleteProjectTeamMember(existing.id);
+        if (memberData.id) {
+          await deleteProjectTeamMember(memberData.id);
         }
         continue;
       }
 
-      // If some fields are filled but not all required, show error and skip
-      // if (!memberData.name || !memberData.address || !memberData.phone) {
-      //   hasValidationError = true;
-      //   toast.error(`יש למלא שם, כתובת וטלפון עבור תפקיד: ${role.label}`);
-      //   continue;
-      // }
-
-      // All required fields are filled, create or update
-      if (existing) {
+      // Create or update
+      if (memberData.id) {
         await updateProjectTeamMember({
-          id: existing.id,
+          id: memberData.id,
           name: memberData.name,
           address: memberData.address,
           phone: memberData.phone,
@@ -1213,10 +1244,41 @@ const ProjectView: React.FC = () => {
         });
       }
     }
-    await loadTeamMembers();
-    if (!hasValidationError) {
-      toast.success("Team members saved successfully");
+
+    // Save custom team members
+    for (const cm of customMembers) {
+      // Skip if role or name is empty
+      if (!cm.role || !cm.name) {
+        continue;
+      }
+
+      if (cm.id) {
+        await updateProjectTeamMember({
+          id: cm.id,
+          name: cm.name,
+          address: cm.address,
+          phone: cm.phone,
+          email: cm.email,
+          role: cm.role,
+        });
+      } else {
+        await createProjectTeamMember({
+          project_id: id,
+          name: cm.name,
+          address: cm.address || "",
+          phone: cm.phone || "",
+          email: cm.email,
+          role: cm.role,
+        });
+      }
     }
+
+    // Refresh team roles to include newly created custom roles
+    const roles = await getProjectTeamRoles();
+    setTeamRoles(roles.map((role: any) => ({ key: role.name, label: role.value })));
+    
+    await loadTeamMembers();
+    toast.success("Team members saved successfully");
   };
 
   const renderProjectDetails = () => {
@@ -1309,23 +1371,6 @@ const ProjectView: React.FC = () => {
         </CompactField>
 
         <CompactField style={{ gap: "4px" }}>
-          <CompactLabel style={{ fontSize: "12px" }}>סטטוס הפרויקט</CompactLabel>
-          <ModernSelect
-            style={{ height: "32px", padding: "0 10px", fontSize: "13px" }}
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            disabled={!isEditingDetails}
-          >
-            {statuses.map((s) => (
-              <option key={s} value={s}>
-                {getStatusLabel(s)}
-              </option>
-            ))}
-          </ModernSelect>
-        </CompactField>
-
-        <CompactField style={{ gap: "4px" }}>
           <CompactLabel style={{ fontSize: "12px" }}>סוג השירות</CompactLabel>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {SERVICE_TYPE_OPTIONS.map((option) => (
@@ -1350,18 +1395,6 @@ const ProjectView: React.FC = () => {
               </label>
             ))}
           </div>
-        </CompactField>
-
-        <CompactField style={{ gap: "4px" }}>
-          <CompactLabel style={{ fontSize: "12px" }}>תאריך תחילת עבודות</CompactLabel>
-          <ModernInput
-            style={{ height: "32px", padding: "6px 10px", fontSize: "13px" }}
-            name="status_due_date"
-            type="date"
-            value={formData.status_due_date || ""}
-            onChange={handleChange}
-            disabled={!isEditingDetails}
-          />
         </CompactField>
 
         <div style={{ gridColumn: "span 3" }}>
@@ -1462,21 +1495,63 @@ const ProjectView: React.FC = () => {
             {/* Main Content Panel */}
             <ProjectPanel>
               <Card style={{ marginBottom: 0, flex: 1, height: "100%" }}>
-                {/* Top Sub-Tabs */}
-                {activeCategory === "general" && (
-                  <Tabs
-                    tabs={generalTabs}
-                    activeTab={activeTab}
-                    onTabChange={(tab) => setActiveTab(tab as any)}
-                  />
-                )}
-                {activeCategory === "stages" && (
-                  <Tabs
-                    tabs={stageTabs}
-                    activeTab={activeTab}
-                    onTabChange={(tab) => setActiveTab(tab as any)}
-                  />
-                )}
+                {/* Top Sub-Tabs with Status Badge */}
+                <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid #e0e0e0", marginBottom: 12 }}>
+                  {activeCategory === "general" && (
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {generalTabs.map((tab) => (
+                        <button
+                          key={tab.value}
+                          onClick={() => setActiveTab(tab.value as any)}
+                          disabled={tab.disabled}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            padding: "6px 12px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            color: activeTab === tab.value ? "#0071e3" : "#666",
+                            cursor: tab.disabled ? "not-allowed" : "pointer",
+                            borderBottom: activeTab === tab.value ? "2px solid #0071e3" : "2px solid transparent",
+                            opacity: tab.disabled ? 0.6 : 1,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {activeCategory === "stages" && (
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {stageTabs.map((tab) => (
+                        <button
+                          key={tab.value}
+                          onClick={() => setActiveTab(tab.value as any)}
+                          disabled={tab.disabled}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            padding: "6px 12px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            color: activeTab === tab.value ? "#0071e3" : "#666",
+                            cursor: tab.disabled ? "not-allowed" : "pointer",
+                            borderBottom: activeTab === tab.value ? "2px solid #0071e3" : "2px solid transparent",
+                            opacity: tab.disabled ? 0.6 : 1,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <TabContent>
                   {activeTab === "details" && (
@@ -1598,7 +1673,7 @@ const ProjectView: React.FC = () => {
                       isEditing={isEditingTeam}
                       onEdit={() => setIsEditingTeam(true)}
                       onSave={async () => {
-                        await saveTeam(teamData);
+                        await saveTeam();
                         setIsEditingTeam(false);
                       }}
                       onCancel={() => {
@@ -1693,6 +1768,123 @@ const ProjectView: React.FC = () => {
                             </div>
                           </Card>
                         ))}
+                        {/* Custom team members */}
+                        {customMembers.map((cm, idx) => (
+                          <Card key={`custom-${idx}`} style={{
+                            marginBottom: 0,
+                            padding: "6px",
+                            borderRadius: "8px",
+                            border: "1px solid #c4b5fd",
+                            boxShadow: "none",
+                            height: "auto",
+                            position: "relative"
+                          }}>
+                            {isEditingTeam && (
+                              <button
+                                onClick={() => setCustomMembers((prev) => prev.filter((_, i) => i !== idx))}
+                                style={{
+                                  position: "absolute",
+                                  top: 2,
+                                  left: 2,
+                                  background: "transparent",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#c0392b",
+                                  fontSize: "12px",
+                                  padding: "2px",
+                                }}
+                              >
+                                <FaIcons.FaTimes />
+                              </button>
+                            )}
+                            <ModernInput
+                              style={{ height: "20px", padding: "2px 6px", fontSize: "11px", width: "100%", fontWeight: 600, marginBottom: 4 }}
+                              value={cm.role}
+                              onChange={(e) =>
+                                setCustomMembers((prev) =>
+                                  prev.map((m, i) => (i === idx ? { ...m, role: e.target.value } : m))
+                                )
+                              }
+                              placeholder="שם תפקיד"
+                              disabled={!isEditingTeam}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={cm.name}
+                                onChange={(e) =>
+                                  setCustomMembers((prev) =>
+                                    prev.map((m, i) => (i === idx ? { ...m, name: e.target.value } : m))
+                                  )
+                                }
+                                placeholder="שם מלא"
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={cm.phone}
+                                onChange={(e) =>
+                                  setCustomMembers((prev) =>
+                                    prev.map((m, i) => (i === idx ? { ...m, phone: e.target.value } : m))
+                                  )
+                                }
+                                placeholder="טלפון"
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={cm.email}
+                                onChange={(e) =>
+                                  setCustomMembers((prev) =>
+                                    prev.map((m, i) => (i === idx ? { ...m, email: e.target.value } : m))
+                                  )
+                                }
+                                placeholder={'דוא"ל'}
+                                disabled={!isEditingTeam}
+                              />
+                              <ModernInput
+                                style={{ height: "20px", padding: "2px 6px", fontSize: "10px", width: "100%" }}
+                                value={cm.address}
+                                onChange={(e) =>
+                                  setCustomMembers((prev) =>
+                                    prev.map((m, i) => (i === idx ? { ...m, address: e.target.value } : m))
+                                  )
+                                }
+                                placeholder="כתובת"
+                                disabled={!isEditingTeam}
+                              />
+                            </div>
+                          </Card>
+                        ))}
+                        {/* Add custom member button */}
+                        {isEditingTeam && (
+                          <Card
+                            style={{
+                              marginBottom: 0,
+                              padding: "6px",
+                              borderRadius: "8px",
+                              border: "2px dashed #cbd5e1",
+                              boxShadow: "none",
+                              height: "auto",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              minHeight: "80px",
+                            }}
+                            onClick={() =>
+                              setCustomMembers((prev) => [
+                                ...prev,
+                                { role: "", name: "", phone: "", email: "", address: "" },
+                              ])
+                            }
+                          >
+                            <div style={{ textAlign: "center", color: "#94a3b8" }}>
+                              <FaIcons.FaPlus style={{ fontSize: "16px", marginBottom: 4 }} />
+                              <div style={{ fontSize: "10px" }}>הוסף בעל תפקיד</div>
+                            </div>
+                          </Card>
+                        )}
                       </div>
                     )}
                   </TabPane>
@@ -1715,7 +1907,46 @@ const ProjectView: React.FC = () => {
                 {(["start_work", "eng_coord", "form4"].includes(activeTab)) && (
                   <TabPane>
                     {activeTab === "start_work" ? (
-                      <FileArea
+                      <>
+                        <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <CompactLabel style={{ fontSize: "13px", margin: 0 }}>סטטוס תחילת עבודות</CompactLabel>
+                            <ModernSelect
+                              style={{ height: "32px", padding: "0 10px", fontSize: "13px", width: "auto", minWidth: "180px" }}
+                              name="start_work_status"
+                              value={formData?.start_work_status || ""}
+                              onChange={(e) => handleStartWorkFieldChange("start_work_status", e.target.value)}
+                            >
+                              <option value="">בחר סטטוס</option>
+                              {statuses.map((s) => (
+                                <option key={s} value={s}>
+                                  {getStatusLabel(s)}
+                                </option>
+                              ))}
+                            </ModernSelect>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <CompactLabel style={{ fontSize: "13px", margin: 0 }}>ת.תחילת עבודות</CompactLabel>
+                            <ModernInput
+                              type="date"
+                              style={{ height: "32px", padding: "0 10px", fontSize: "13px", width: "auto", minWidth: "150px" }}
+                              name="start_work_date"
+                              value={formData?.start_work_date || ""}
+                              onChange={(e) => handleStartWorkFieldChange("start_work_date", e.target.value)}
+                            />
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <CompactLabel style={{ fontSize: "13px", margin: 0 }}>יעד פינוי דיירים</CompactLabel>
+                            <ModernInput
+                              type="date"
+                              style={{ height: "32px", padding: "0 10px", fontSize: "13px", width: "auto", minWidth: "150px" }}
+                              name="start_work_target"
+                              value={formData?.start_work_target || ""}
+                              onChange={(e) => handleStartWorkFieldChange("start_work_target", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <FileArea
                         files={stageFiles}
                         disabled={false}
                         onUpload={handleFileUpload}
@@ -1730,6 +1961,7 @@ const ProjectView: React.FC = () => {
                         downloadAllDisabled={stageFiles.filter((f: FileAreaDocument) => f.state === DocumentState.UPLOADED).length === 0}
                         emailAllDisabled={stageFiles.filter((f: FileAreaDocument) => f.status === DocumentState.FILLED).length === 0}
                       />
+                      </>
                     ) : activeTab === "eng_coord" ? (
                       <div
                         style={{
@@ -1773,16 +2005,6 @@ const ProjectView: React.FC = () => {
                                 setEngCoordForm((prev) => ({ ...prev, contact_name: e.target.value }))
                               }
                               placeholder="שם איש הקשר"
-                            />
-                          </CompactField>
-                          <CompactField>
-                            <CompactLabel>טלפון איש קשר</CompactLabel>
-                            <ModernInput
-                              value={engCoordForm.contact_phone}
-                              onChange={(e) =>
-                                setEngCoordForm((prev) => ({ ...prev, contact_phone: e.target.value }))
-                              }
-                              placeholder="לדוגמה: 050-1234567"
                             />
                           </CompactField>
                         </div>

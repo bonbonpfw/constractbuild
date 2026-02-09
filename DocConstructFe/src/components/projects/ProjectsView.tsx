@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import { getProjects } from '../../api';
+import { getProjects, ServiceType, SERVICE_TYPE_OPTIONS } from '../../api';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
 import { FaPlus, FaExclamationTriangle, FaTh, FaList } from 'react-icons/fa';
@@ -91,7 +91,7 @@ const Projects: React.FC = () => {
   const [showProjectCreationDialog, setShowProjectCreationDialog] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [selectedCity, setSelectedCity] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedServiceType, setSelectedServiceType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
   
@@ -111,19 +111,12 @@ const Projects: React.FC = () => {
   const filteredProjects = useMemo(() => {
     let filtered = projects;
     
-    // Filter by status
-    if (selectedStatus !== 'all') {
-      if (selectedStatus === 'final') {
-        filtered = filtered.filter((p) => p.status === ProjectStatus.FINAL);
-      } else if (selectedStatus === 'pre_permit') {
-        filtered = filtered.filter((p) => p.status === ProjectStatus.PRE_PERMIT);
-      }
-      else if (selectedStatus === 'post_permit') {
-        filtered = filtered.filter((p) => p.status === ProjectStatus.POST_PERMIT);
-      }
-    } else {
-      // If no status filter, exclude FINAL projects by default
-      filtered = filtered.filter((p) => p.status !== ProjectStatus.FINAL);
+    // Filter by service type
+    if (selectedServiceType !== 'all') {
+      filtered = filtered.filter((p) => {
+        const serviceTypes = Array.isArray(p.service_types) ? p.service_types : [];
+        return serviceTypes.includes(selectedServiceType);
+      });
     }
     
     // Filter by city
@@ -143,7 +136,7 @@ const Projects: React.FC = () => {
     }
     
     return filtered;
-  }, [projects, selectedCity, selectedStatus, searchTerm]);
+  }, [projects, selectedCity, selectedServiceType, searchTerm]);
 
   const fetchProjects = async () => {
     try {
@@ -366,14 +359,14 @@ const Projects: React.FC = () => {
                   ))}
                 </CitySelect>
                 <CitySelect
-                  value={selectedStatus}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}
-                  title="סנן לפי סטטוס"
+                  value={selectedServiceType}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedServiceType(e.target.value)}
+                  title="סנן לפי סוג שירות"
                 >
-                  <option value="all">כל הסטטוסים</option>
-                  <option value="pre_permit">לפני היתר</option>
-                  <option value="post_permit">אחרי היתר</option>
-                  <option value="final">אושר לתחילת עבודות</option>
+                  <option value="all">כל סוגי השירות</option>
+                  {SERVICE_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </CitySelect>
                 <ViewToggleButton
                   onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
