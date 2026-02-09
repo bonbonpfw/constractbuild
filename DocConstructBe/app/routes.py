@@ -98,6 +98,7 @@ def init_routes(app):
                 'request_number': project.request_number,
                 'permit_number': project.permit_number,
                 'status': project.status,
+                'service_types': project.service_types.split(",") if project.service_types else [],
                 'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
                 'is_expired': any(
                     ProfessionalManager.get_professional_status(prof.license_expiration_date).value == 'Expired'
@@ -139,6 +140,9 @@ def init_routes(app):
                 'engineering_coordinator_number': project.engineering_coordinator_number,
                 'firefighting_number': project.firefighting_number,
                 'status_due_date': project.status_due_date.isoformat() if project.status_due_date else None,
+                'start_work_status': project.start_work_status,
+                'start_work_date': project.start_work_date.isoformat() if project.start_work_date else None,
+                'start_work_target': project.start_work_target.isoformat() if project.start_work_target else None,
                 'professionals': [{
                     'id': prof.professional_id,
                     'name': prof.professional.name,
@@ -161,7 +165,7 @@ def init_routes(app):
                     'phone': team.phone,
                     'email': team.email,
                     'signature_file_path': team.signature_file_path,
-                    'role': team.role.value,
+                    'role': team.role,
                     'created_at': team.created_at.isoformat() if isinstance(team.created_at, datetime) else str(team.created_at) if team.created_at else None,
                     'updated_at': team.updated_at.isoformat() if isinstance(team.updated_at, datetime) else str(team.updated_at) if team.updated_at else None,
                 } for team in team_members],
@@ -202,6 +206,9 @@ def init_routes(app):
             construction_supervision_number=data.get('construction_supervision_number'),
             engineering_coordinator_number=data.get('engineering_coordinator_number'),
             firefighting_number=data.get('firefighting_number'),
+            start_work_status=data.get('start_work_status'),
+            start_work_date=data.get('start_work_date'),
+            start_work_target=data.get('start_work_target'),
         )
         return SuccessResponse().generate_response()
 
@@ -604,7 +611,7 @@ def init_routes(app):
                     'signature_file_path': team.signature_file_path,
                     'created_at': team.created_at.isoformat() if isinstance(team.created_at, datetime) else str(team.created_at) if team.created_at else None,
                     'updated_at': team.updated_at.isoformat() if isinstance(team.updated_at, datetime) else str(team.updated_at) if team.updated_at else None,
-                    'role': team.role.value,
+                    'role': team.role,
                 } for team in teams
             ]
         }).generate_response()
@@ -653,10 +660,27 @@ def init_routes(app):
     @jwt_required
     def get_project_team_roles():
         from data_model.enum import ProjectTeamRole
+        from data_model.models import ProjectTeamMember
+        from database.database import db_session
+        
+        # Get predefined roles from enum
         roles = [{
             'value': role.value,
             'name': role.name
         } for role in ProjectTeamRole]
+        
+        # Get all unique custom roles from existing team members
+        predefined_values = {role.value for role in ProjectTeamRole}
+        custom_roles = db_session.query(ProjectTeamMember.role).distinct().all()
+        
+        for (role_value,) in custom_roles:
+            if role_value and role_value not in predefined_values:
+                # Custom role - use the value as both name and value
+                roles.append({
+                    'value': role_value,
+                    'name': role_value
+                })
+        
         return SuccessResponse({'roles': roles}).generate_response()
 
     @app.route("/api/users", methods=["GET"])

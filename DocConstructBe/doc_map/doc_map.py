@@ -53,7 +53,7 @@ class DocumentFiller:
                  team_members: list[ProjectTeamMember], src_pdf_path: str):
         self.document_name = document_type.name
         self.team_members = team_members
-        self.permit_owner = next((member for member in team_members if member.role == ProjectTeamRole.PERMIT_OWNER), None)
+        self.permit_owner = next((member for member in team_members if member.role == ProjectTeamRole.PERMIT_OWNER.value), None)
         self.doc_required_members = professionals + team_members
         self.src_pdf_path = src_pdf_path
        

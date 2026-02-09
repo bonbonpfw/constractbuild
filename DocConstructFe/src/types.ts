@@ -108,6 +108,9 @@ export interface Project {
   firefighting_number: string;
   description: string;
   status_due_date?: string;
+  start_work_status?: string;
+  start_work_date?: string;
+  start_work_target?: string;
   status?: string;
   service_types?: string[];
   is_warning?: boolean;

@@ -34,5 +34,5 @@ ENV FLASK_APP=run.py
 # Add the backend directory to PYTHONPATH
 ENV PYTHONPATH=/app:$PYTHONPATH
 
-# Command to run the Flask application
-CMD ["gunicorn", "--preload", "--bind", "0.0.0.0:5001", "--workers", "2", "--threads", "2", "run:app"]
+# Run migrations then start the Flask application
+CMD python -m database.migrations.add_role_to_users && python -m database.migrations.add_start_work_fields_to_projects && gunicorn --preload --bind 0.0.0.0:5001 --workers 2 --threads 2 run:app

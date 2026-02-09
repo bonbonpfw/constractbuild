@@ -41,6 +41,9 @@ class ProjectUpdateSchema (Schema):
     description = fields.Str(required=False,allow_none=True)
     status = fields.Enum(ProjectStatus, by_value=True, required=False)
     status_due_date = fields.Date(required=False, allow_none=True)
+    start_work_status = fields.Str(required=False, allow_none=True)
+    start_work_date = fields.Date(required=False, allow_none=True)
+    start_work_target = fields.Date(required=False, allow_none=True)
     docs_path = fields.Str(required=False,allow_none=True)
 
 
@@ -181,7 +184,7 @@ class ProjectTeamSchema(Schema):
     phone = fields.Str(required=True)
     email = fields.Str(required=False, allow_none=True)
     signature_file_path = fields.Str(required=False, allow_none=True)
-    role = fields.Enum(ProjectTeamRole, by_value=True, required=True)
+    role = fields.Str(required=True)
     created_at = fields.DateTime(required=True)
     updated_at = fields.DateTime(required=True)
 
@@ -193,7 +196,7 @@ class ProjectTeamCreateSchema(Schema):
     phone = fields.Str(required=True)
     email = fields.Str(required=False, allow_none=True)
     signature_file_path = fields.Str(required=False, allow_none=True)
-    role = fields.Enum(ProjectTeamRole, by_value=True, required=True)
+    role = fields.Str(required=True)
 
 
 class ProjectTeamUpdateSchema(Schema):
@@ -203,7 +206,7 @@ class ProjectTeamUpdateSchema(Schema):
     phone = fields.Str(required=False)
     email = fields.Str(required=False, allow_none=True)
     signature_file_path = fields.Str(required=False, allow_none=True)
-    role = fields.Enum(ProjectTeamRole, by_value=True, required=False)
+    role = fields.Str(required=False)
 
 
 class ProjectTeamDeleteSchema(Schema):

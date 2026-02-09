@@ -100,7 +100,8 @@ class ProjectManager:
     def update(self, project_id: str, name: str, status: ProjectStatus, service_types: list[ProjectServiceType] = None, description: str = None,
                status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None,
                engineering_coordinator_number: str = None, firefighting_number: str = None,
-               permit_number: str = None) -> Project:
+               permit_number: str = None, start_work_status: str = None, start_work_date: date = None,
+               start_work_target: date = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
         project.description = description
@@ -115,6 +116,9 @@ class ProjectManager:
         project.permit_number = permit_number
         project.status = enum_to_value(status)
         project.status_due_date = status_due_date
+        project.start_work_status = start_work_status
+        project.start_work_date = start_work_date
+        project.start_work_target = start_work_target
         project.updated_at = datetime.datetime.now()
         db_session.commit()
         return project
@@ -596,10 +600,8 @@ class ProjectTeamManager:
     def get_all_by_project(project_id: str):
         try:
             team_members = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
-            # Expunge objects from session to prevent SQLAlchemy from tracking changes
             for team_member in team_members:
                 db_session.expunge(team_member)
-                team_member.role = ProjectTeamRole.map_to_value(team_member.role)
             return team_members
         except Exception:
             db_session.rollback()
@@ -615,13 +617,11 @@ class ProjectTeamManager:
 
     @staticmethod
     def create(project_id: str, name: str, address: str, phone: str, role: str, email: str = None, signature_file_path: str = None) -> ProjectTeamMember:
-        # Map role to enum for validation, then store as string
-        role_enum = ProjectTeamRole.map_to_value(role)
         team_member = ProjectTeamMember(
             name=name,
             address=address,
             phone=phone,
-            role=role_enum.value,
+            role=role,
             email=email,
             signature_file_path=signature_file_path,
             project_id=project_id
@@ -644,8 +644,7 @@ class ProjectTeamManager:
         if signature_file_path is not None:
             team_member.signature_file_path = signature_file_path
         if role is not None:
-            role_enum = ProjectTeamRole.map_to_value(role)
-            team_member.role = role_enum.value
+            team_member.role = role
         team_member.updated_at = datetime.datetime.now()
         db_session.commit()
         return team_member
