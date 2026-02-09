@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole, ProjectServiceType, UserRole
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole, ProjectServiceType, UserRole, CoordinationStatus
 
 # Project Schemas
 
@@ -44,6 +44,9 @@ class ProjectUpdateSchema (Schema):
     start_work_status = fields.Str(required=False, allow_none=True)
     start_work_date = fields.Date(required=False, allow_none=True)
     start_work_target = fields.Date(required=False, allow_none=True)
+    eng_coord_contact_name = fields.Str(required=False, allow_none=True)
+    coordination_status = fields.Enum(CoordinationStatus, by_value=True, required=False, allow_none=True)
+    coordination_target_date = fields.Date(required=False, allow_none=True)
     docs_path = fields.Str(required=False,allow_none=True)
 
 

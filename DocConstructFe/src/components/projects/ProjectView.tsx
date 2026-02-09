@@ -25,6 +25,7 @@ import {
 import {
   getProjectById,
   getProjectStatuses,
+  getCoordinationStatuses,
   updateProject,
   removeProfessionalFromProject,
   uploadProjectDocument,
@@ -485,6 +486,7 @@ const ProjectView: React.FC = () => {
     contact_phone: "",
     notes: "",
   });
+  const [coordinationStatuses, setCoordinationStatuses] = useState<{ value: string; name: string }[]>([]);
 
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
@@ -553,13 +555,15 @@ const ProjectView: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [proj, statuses] = await Promise.all([
+      const [proj, statuses, coordStatuses] = await Promise.all([
         getProjectById(id),
         getProjectStatuses(),
+        getCoordinationStatuses(),
       ]);
       setFormData(proj as Project);
       originalData.current = proj as Project;
       setStatuses(statuses);
+      setCoordinationStatuses(coordStatuses);
 
       // Extract professionals data directly from the project
       setIsLoadingProfessionals(true);
@@ -576,6 +580,14 @@ const ProjectView: React.FC = () => {
       } else {
         setDocuments([]);
       }
+
+      // Initialize eng_coord form from project data
+      setEngCoordForm((prev) => ({
+        ...prev,
+        contact_name: proj.eng_coord_contact_name || "",
+        status: proj.coordination_status || "",
+        target_date: proj.coordination_target_date || "",
+      }));
     } catch (error) {
       const errorData = error as ErrorResponseData;
       // Add proper checks to avoid "Cannot read properties of undefined"
@@ -719,6 +731,63 @@ const ProjectView: React.FC = () => {
     } catch (error) {
       errorHandler(error as ErrorResponseData, "Failed to save");
       setFormData(formData); // Revert on error
+    }
+  };
+
+  const handleEngCoordContactChange = async (contactName: string) => {
+    if (!formData) return;
+    
+    setEngCoordForm((prev) => ({ ...prev, contact_name: contactName }));
+    
+    const updatedFormData = { ...formData, eng_coord_contact_name: contactName || undefined } as Project;
+    setFormData(updatedFormData);
+    
+    try {
+      await updateProject(updatedFormData);
+      originalData.current = updatedFormData;
+      toast.success("נשמר בהצלחה");
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "Failed to save");
+      setFormData(formData); // Revert on error
+      setEngCoordForm((prev) => ({ ...prev, contact_name: formData.eng_coord_contact_name || "" }));
+    }
+  };
+
+  const handleCoordinationStatusChange = async (status: string) => {
+    if (!formData) return;
+    
+    setEngCoordForm((prev) => ({ ...prev, status: status }));
+    
+    const updatedFormData = { ...formData, coordination_status: status || undefined } as Project;
+    setFormData(updatedFormData);
+    
+    try {
+      await updateProject(updatedFormData);
+      originalData.current = updatedFormData;
+      toast.success("נשמר בהצלחה");
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "Failed to save");
+      setFormData(formData); // Revert on error
+      setEngCoordForm((prev) => ({ ...prev, status: formData.coordination_status || "" }));
+    }
+  };
+
+  const handleCoordinationTargetDateChange = async (targetDate: string) => {
+    if (!formData) return;
+    
+    setEngCoordForm((prev) => ({ ...prev, target_date: targetDate }));
+    
+    const updatedFormData = { ...formData, coordination_target_date: targetDate || undefined } as Project;
+    setFormData(updatedFormData);
+    
+    try {
+      await updateProject(updatedFormData);
+      originalData.current = updatedFormData;
+      toast.success("נשמר בהצלחה");
+    } catch (error) {
+      errorHandler(error as ErrorResponseData, "Failed to save");
+      setFormData(formData); // Revert on error
+      setEngCoordForm((prev) => ({ ...prev, target_date: formData.coordination_target_date || "" }));
     }
   };
 
@@ -1977,35 +2046,77 @@ const ProjectView: React.FC = () => {
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                           <CompactField>
                             <CompactLabel>סטטוס תיאום</CompactLabel>
-                            <ModernInput
+                            <ModernSelect
                               value={engCoordForm.status}
-                              onChange={(e) =>
-                                setEngCoordForm((prev) => ({ ...prev, status: e.target.value }))
-                              }
-                              placeholder="לדוגמה: בתהליך / נשלח / הושלם"
-                            />
+                              onChange={(e) => handleCoordinationStatusChange(e.target.value)}
+                            >
+                              <option value="">בחר סטטוס</option>
+                              {coordinationStatuses.map((s) => (
+                                <option key={s.name} value={s.value}>
+                                  {s.value}
+                                </option>
+                              ))}
+                            </ModernSelect>
                           </CompactField>
                           <CompactField>
-                            <CompactLabel>תאריך יעד</CompactLabel>
+                            <CompactLabel>תאריך יעד לפרוטוקול</CompactLabel>
                             <ModernInput
                               type="date"
                               value={engCoordForm.target_date}
-                              onChange={(e) =>
-                                setEngCoordForm((prev) => ({ ...prev, target_date: e.target.value }))
-                              }
+                              onChange={(e) => handleCoordinationTargetDateChange(e.target.value)}
                             />
                           </CompactField>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                           <CompactField>
                             <CompactLabel>איש קשר</CompactLabel>
-                            <ModernInput
-                              value={engCoordForm.contact_name}
-                              onChange={(e) =>
-                                setEngCoordForm((prev) => ({ ...prev, contact_name: e.target.value }))
-                              }
-                              placeholder="שם איש הקשר"
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <ModernSelect
+                                style={{ flex: 1 }}
+                                value={engCoordForm.contact_name}
+                                onChange={(e) => handleEngCoordContactChange(e.target.value)}
+                              >
+                                <option value="">בחר איש קשר</option>
+                                {/* Predefined role team members */}
+                                {Object.entries(teamData)
+                                  .filter(([_, member]) => member.name)
+                                  .map(([roleKey, member]) => {
+                                    const role = teamRoles.find((r) => r.key === roleKey);
+                                    return (
+                                      <option key={roleKey} value={member.name}>
+                                        {member.name} {role ? `(${role.label})` : ""}
+                                      </option>
+                                    );
+                                  })}
+                                {/* Custom team members */}
+                                {customMembers
+                                  .filter((cm) => cm.name)
+                                  .map((cm, idx) => (
+                                    <option key={`custom-${idx}`} value={cm.name}>
+                                      {cm.name} {cm.role ? `(${cm.role})` : ""}
+                                    </option>
+                                  ))}
+                              </ModernSelect>
+                              {engCoordForm.contact_name && (
+                                <IconOnlyButton
+                                  onClick={() => {
+                                    setActiveCategory("general");
+                                    setActiveTab("team");
+                                  }}
+                                  title="צפה בפרטי איש הקשר"
+                                  style={{
+                                    width: "36px",
+                                    height: "36px",
+                                    backgroundColor: "#f1f5f9",
+                                    color: "#3b82f6",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                  }}
+                                >
+                                  <FaIcons.FaExternalLinkAlt size={14} />
+                                </IconOnlyButton>
+                              )}
+                            </div>
                           </CompactField>
                         </div>
                         <div style={{ gridColumn: "span 2" }}>

@@ -30,7 +30,7 @@ from app.api import (
 )
 from app.response import SuccessResponse, ApiResponse
 from app.api_schema import API_ENDPOINTS, Endpoints
-from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole, City
+from data_model.enum import enum_to_value, ProjectDocumentType,ProjectTeamRole, City, CoordinationStatus
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -143,6 +143,9 @@ def init_routes(app):
                 'start_work_status': project.start_work_status,
                 'start_work_date': project.start_work_date.isoformat() if project.start_work_date else None,
                 'start_work_target': project.start_work_target.isoformat() if project.start_work_target else None,
+                'eng_coord_contact_name': project.eng_coord_contact_name,
+                'coordination_status': project.coordination_status,
+                'coordination_target_date': project.coordination_target_date.isoformat() if project.coordination_target_date else None,
                 'professionals': [{
                     'id': prof.professional_id,
                     'name': prof.professional.name,
@@ -209,6 +212,9 @@ def init_routes(app):
             start_work_status=data.get('start_work_status'),
             start_work_date=data.get('start_work_date'),
             start_work_target=data.get('start_work_target'),
+            eng_coord_contact_name=data.get('eng_coord_contact_name'),
+            coordination_status=data.get('coordination_status'),
+            coordination_target_date=data.get('coordination_target_date'),
         )
         return SuccessResponse().generate_response()
 
@@ -236,6 +242,13 @@ def init_routes(app):
         validate_request(endpoint=Endpoints.GET_PROJECT_CITIES)
         cities = [{'value': city.value, 'name': city.name} for city in City]
         return SuccessResponse({'cities': cities}).generate_response()
+
+    @app.route('/api/project/coordination-statuses', methods=['GET'])
+    @jwt_required
+    @auto_rollback
+    def get_coordination_statuses():
+        statuses = [{'value': status.value, 'name': status.name} for status in CoordinationStatus]
+        return SuccessResponse({'coordination_statuses': statuses}).generate_response()
 
     @app.route('/api/project/professionals', methods=['POST'])
     @jwt_required

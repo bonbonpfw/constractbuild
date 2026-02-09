@@ -97,6 +97,12 @@ export enum DocumentState {
   GENERAL = "General",
 }
 
+export enum CoordinationStatus {
+  PLANNING_AND_WAITING_FOR_COMMITTEE = "תכנון והמתנה לוועדה",
+  APPROVAL_ROUND = "סבב אישורים",
+  SIGNED_PROTOCOL = "פרוטוקול חתום",
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -111,6 +117,9 @@ export interface Project {
   start_work_status?: string;
   start_work_date?: string;
   start_work_target?: string;
+  eng_coord_contact_name?: string;
+  coordination_status?: string;
+  coordination_target_date?: string;
   status?: string;
   service_types?: string[];
   is_warning?: boolean;

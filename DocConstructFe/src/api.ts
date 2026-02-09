@@ -114,6 +114,13 @@ export const getProjectCities = async (): Promise<
   return response.data.cities;
 };
 
+export const getCoordinationStatuses = async (): Promise<
+  { value: string; name: string }[]
+> => {
+  const response = await axios.get(`${API_URL}/project/coordination-statuses`);
+  return response.data.coordination_statuses;
+};
+
 // Professionals API
 export const getProfessionals = async (): Promise<Professional[]> => {
   const response = await axios.get(`${API_URL}/professionals`);

@@ -101,7 +101,8 @@ class ProjectManager:
                status_due_date: date = None, request_number: str = None, construction_supervision_number: str = None,
                engineering_coordinator_number: str = None, firefighting_number: str = None,
                permit_number: str = None, start_work_status: str = None, start_work_date: date = None,
-               start_work_target: date = None) -> Project:
+               start_work_target: date = None, eng_coord_contact_name: str = None, coordination_status: str = None,
+               coordination_target_date: date = None) -> Project:
         project = self.get_by_id(project_id=project_id)
         project.name = name
         project.description = description
@@ -119,6 +120,9 @@ class ProjectManager:
         project.start_work_status = start_work_status
         project.start_work_date = start_work_date
         project.start_work_target = start_work_target
+        project.eng_coord_contact_name = eng_coord_contact_name
+        project.coordination_status = enum_to_value(coordination_status) if coordination_status else None
+        project.coordination_target_date = coordination_target_date
         project.updated_at = datetime.datetime.now()
         db_session.commit()
         return project

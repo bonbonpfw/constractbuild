@@ -20,6 +20,12 @@ class ProjectStatus(Enum):
     FINAL = 'Final'
 
 
+class CoordinationStatus(Enum):
+    PLANNING_AND_WAITING_FOR_COMMITTEE = 'תכנון והמתנה לוועדה'
+    APPROVAL_ROUND = 'סבב אישורים'
+    SIGNED_PROTOCOL = 'פרוטוקול חתום'
+
+
 
 
 class ProjectDocumentType(Enum):
