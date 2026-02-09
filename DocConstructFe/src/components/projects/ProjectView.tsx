@@ -79,6 +79,30 @@ const StatusBadge = styled.span<{ status: string }>`
           : "#e1273d"};
 `;
 
+const ProjectStatusBadge = styled.span<{ status: string }>`
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: ${({ status }) =>
+    status === ProjectStatus.PRE_PERMIT
+      ? "#fef3c7"
+      : status === ProjectStatus.POST_PERMIT
+        ? "#dbeafe"
+        : status === ProjectStatus.FINAL
+          ? "#dcfce7"
+          : "#f3f4f6"};
+  color: ${({ status }) =>
+    status === ProjectStatus.PRE_PERMIT
+      ? "#92400e"
+      : status === ProjectStatus.POST_PERMIT
+        ? "#1e40af"
+        : status === ProjectStatus.FINAL
+          ? "#166534"
+          : "#6b7280"};
+`;
+
 const MainLayout = styled.div`
   display: grid;
   grid-template-columns: 180px 1fr 320px;
@@ -1007,11 +1031,11 @@ const ProjectView: React.FC = () => {
     toast.success(`Downloading ${uploadedDocs.length} files`);
   };
 
-  const getPermitOwnerEmail = (): string => {
-    const permitOwner = teamMembers.find(
-      (member: any) => member.role === "בעל ההיתר"
+  const getProjectManagerEmail = (): string => {
+    const projectManager = teamMembers.find(
+      (member: any) => member.role === "מנהל הפרויקט"
     );
-    return permitOwner?.email || "";
+    return projectManager?.email || "";
   };
 
   const handleEmailAllFiles = () => {
@@ -1861,7 +1885,7 @@ const ProjectView: React.FC = () => {
           isOpen={isEmailDialogOpen}
           onClose={() => setIsEmailDialogOpen(false)}
           onSend={handleSendEmail}
-          defaultRecipientEmail={getPermitOwnerEmail()}
+          defaultRecipientEmail={getProjectManagerEmail()}
           defaultSubject={
             process.env.NEXT_PUBLIC_FILLED_PROJECT_DOCUMENTS_EMAIL_SUBJECT
           }
