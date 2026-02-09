@@ -166,7 +166,7 @@ const UserRole = styled.span`
 
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [userInfo, setUserInfo] = useState<{ username: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ username: string; role?: string } | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebarCollapsed");
@@ -240,21 +240,23 @@ const Sidebar: React.FC = () => {
         </SidebarGroup>
       </SidebarGroup>
       <BottomWrapper>
-        <UserManagementHolder>
-          <Link href="/users" passHref>
-            <SidebarItemHolder isActive={isActive("/users")}>
-              <SidebarItemIcon>
-                <FaUsers />
-              </SidebarItemIcon>
-              <SidebarItemLabel
-                isCollapsed={isCollapsed}
-                isActive={isActive("/users")}
-              >
-                ניהול משתמשים
-              </SidebarItemLabel>
-            </SidebarItemHolder>
-          </Link>
-        </UserManagementHolder>
+        {userInfo?.role === 'admin' && (
+          <UserManagementHolder>
+            <Link href="/users" passHref>
+              <SidebarItemHolder isActive={isActive("/users")}>
+                <SidebarItemIcon>
+                  <FaUsers />
+                </SidebarItemIcon>
+                <SidebarItemLabel
+                  isCollapsed={isCollapsed}
+                  isActive={isActive("/users")}
+                >
+                  ניהול משתמשים
+                </SidebarItemLabel>
+              </SidebarItemHolder>
+            </Link>
+          </UserManagementHolder>
+        )}
         {/* User Profile Section */}
         {userInfo && (
           <UserProfileSection isCollapsed={isCollapsed}>
@@ -263,7 +265,7 @@ const Sidebar: React.FC = () => {
             </UserAvatar>
             <UserInfo isCollapsed={isCollapsed}>
               <Username>{userInfo.username}</Username>
-              <UserRole>משתמש</UserRole>
+              <UserRole>{userInfo.role === 'admin' ? 'מנהל' : 'משתמש'}</UserRole>
             </UserInfo>
           </UserProfileSection>
         )}

@@ -287,3 +287,13 @@ class AuthenticationFailed(ApiError):
 
     def http_code(self):
         return HttpCodes.NOT_AUTHORIZED
+
+
+class Forbidden(ApiError):
+    """User does not have sufficient permissions."""
+
+    def __init__(self):
+        super().__init__(msg="אין הרשאה", code="forbidden")
+
+    def http_code(self):
+        return HttpCodes.NOT_AUTHORIZED

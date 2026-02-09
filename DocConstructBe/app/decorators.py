@@ -2,7 +2,7 @@ from functools import wraps
 import jwt
 
 from flask import request, jsonify
-from database.database import db_session 
+from database.database import db_session
 from config.sys_config import SECRET_KEY
 
 
@@ -35,6 +35,7 @@ def jwt_required(f):
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             request.user_id = data['user_id']
+            request.user_role = data.get('role', 'user')
         except jwt.ExpiredSignatureError:
             return jsonify({
                 "error_code": "unauthorized",
@@ -48,6 +49,22 @@ def jwt_required(f):
                 "status_code": "error_code",
             }), 401
 
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def admin_required(f):
+    """API endpoint decorator to enforce admin role. Must be used after @jwt_required."""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if getattr(request, 'user_role', 'user') != 'admin':
+            return jsonify({
+                "error_code": "forbidden",
+                "error_message": "אין הרשאה",
+                "status_code": "error_code",
+            }), 403
         return f(*args, **kwargs)
 
     return decorated_function

@@ -5,6 +5,10 @@ from config.sys_config import CONFIG
 
 
 
+class UserRole(Enum):
+    ADMIN = 'admin'
+    USER = 'user'
+
 class ProjectServiceType(Enum):
     START_WORK = 'SW'
     ENG_COORDINATOR = 'ENG'

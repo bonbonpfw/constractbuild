@@ -120,23 +120,25 @@ export interface Project {
 export interface User {
   id: string;
   username: string;
+  role: 'admin' | 'user';
 }
 
 export interface CreateUserValues {
   username: string;
   password: string;
   "confirm-password": string;
+  role: 'admin' | 'user';
 }
 
 export type EditUserValues = {
-  oldPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
+  role: 'admin' | 'user';
+  newPassword?: string;
+  confirmNewPassword?: string;
 };
 
-export type UpdateUserPasswordPayload = {
-  old_password: string;
-  new_password: string;
+export type UpdateUserPayload = {
+  role?: string;
+  new_password?: string;
 };
 
 export interface ProjectCreationFormData extends Omit<Project, "id"> {}

@@ -102,6 +102,7 @@ const UserManagement = () => {
           <thead>
             <tr>
               <th style={{ textAlign: "right" }}>שם משתמש</th>
+              <th style={{ textAlign: "right" }}>תפקיד</th>
               <th style={{ textAlign: "right" }} />
             </tr>
           </thead>
@@ -109,6 +110,7 @@ const UserManagement = () => {
             {users.map((user) => (
               <tr key={user.id}>
                 <TableBody style={{ textAlign: "right" }}>{user.username}</TableBody>
+                <TableBody style={{ textAlign: "right" }}>{user.role === 'admin' ? 'מנהל' : 'משתמש'}</TableBody>
                 <TableBody style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   <button
                     onClick={() => handleEditUser(user.id)}
@@ -166,7 +168,12 @@ const UserManagement = () => {
         <CreateUserDialog onClose={onModalClose} onUserCreated={fetchUsers} />
       )}
       {showEditModal && (
-        <EditUserDialog onClose={onModalClose} id={selectedUserId} />
+        <EditUserDialog 
+          onClose={onModalClose} 
+          id={selectedUserId} 
+          currentRole={users.find(u => u.id === selectedUserId)?.role || 'user'}
+          onUserUpdated={fetchUsers}
+        />
       )}
       {showDeleteDialog && (
         <DeletionDialog

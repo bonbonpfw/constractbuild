@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "../../styles/SharedStyles";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
-import { Form, Input } from "antd";
+import { Form, Input, Select } from "antd";
 import { CreateUserValues } from "../../types";
 import { createUser } from "../../api";
 
@@ -29,9 +29,9 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
 
   const handleSubmit = async (values: CreateUserValues) => {
     setLoading(true);
-    const { username, password } = values;
+    const { username, password, role } = values;
     try {
-      await createUser(username, password);
+      await createUser(username, password, role);
       onUserCreated();
       onClose();
     } catch (error) {
@@ -108,6 +108,17 @@ const CreateUserDialog: React.FC<CreateUsersDialogProps> = ({
                 size="large"
                 onPressEnter={() => form.submit()}
               />
+            </Form.Item>
+            <Form.Item
+              label="תפקיד"
+              name="role"
+              initialValue="user"
+              rules={[{ required: true, message: "Please select a role" }]}
+            >
+              <Select size="large">
+                <Select.Option value="user">משתמש</Select.Option>
+                <Select.Option value="admin">מנהל</Select.Option>
+              </Select>
             </Form.Item>
             <DialogActions>
               <Button variant="text" onClick={onClose} type="button">

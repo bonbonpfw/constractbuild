@@ -7,7 +7,7 @@ from flask import send_file, request
 from flask_mail import Message
 from datetime import datetime
 from app import mail
-from app.decorators import jwt_required, auto_rollback
+from app.decorators import jwt_required, auto_rollback, admin_required
 from app.errors import (
     ValidationError,
     InvalidProjectProfessionalDocument,
@@ -661,6 +661,7 @@ def init_routes(app):
 
     @app.route("/api/users", methods=["GET"])
     @jwt_required
+    @admin_required
     @auto_rollback
     def get_users() -> ApiResponse:
         """Return list of users."""
@@ -672,6 +673,7 @@ def init_routes(app):
 
     @app.route("/api/users", methods=["POST"])
     @jwt_required
+    @admin_required
     @auto_rollback
     def create_user() -> ApiResponse:
         """Create user."""
@@ -680,11 +682,13 @@ def init_routes(app):
         user = user_manager.create(
             username=data.get("username"),
             password=data.get("password"),
+            role=data.get("role", "user"),
         )
         return SuccessResponse({"id": user.id}).generate_response()
 
     @app.route("/api/users/<string:user_id>", methods=["DELETE"])
     @jwt_required
+    @admin_required
     @auto_rollback
     def delete_user(user_id: str) -> ApiResponse:
         """Deactivate user."""
@@ -694,16 +698,23 @@ def init_routes(app):
 
     @app.route("/api/users/<string:user_id>", methods=["PATCH"])
     @jwt_required
+    @admin_required
     @auto_rollback
-    def update_user_password(user_id: str) -> ApiResponse:
-        """Set user password."""
+    def update_user(user_id: str) -> ApiResponse:
+        """Update user role and/or password."""
         data = validate_request(Endpoints.USER_SET_PASSWORD)
         user_manager = UserManager()
         user = user_manager.get_by_id(user_id)
-        if user.verify_password(data.get("old_password")):
+        
+        # Update role if provided
+        if data.get("role"):
+            user_manager.set_role(user=user, role=data.get("role").value)
+        
+        # Update password if provided
+        if data.get("new_password"):
             user_manager.set_password(user=user, new_password=data.get("new_password"))
-            return SuccessResponse({"id": user.id}).generate_response()
-        raise AuthenticationFailed
+        
+        return SuccessResponse({"id": user.id}).generate_response()
 
     @app.route("/api/auth/token", methods=["POST"])
     def authenticate_user() -> ApiResponse:
@@ -717,7 +728,8 @@ def init_routes(app):
                 "token": token,
                 "user": {
                     "id": str(user.id),
-                    "username": user.username
+                    "username": user.username,
+                    "role": user.role
                 }
             }).generate_response()
         raise AuthenticationFailed

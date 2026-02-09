@@ -680,9 +680,9 @@ class UserManager:
     """Users collection controller."""
 
     @staticmethod
-    def create(*, username: str, password: str) -> User:
+    def create(*, username: str, password: str, role: str = 'user') -> User:
         """Create user and set password."""
-        user = User(username=username)
+        user = User(username=username, role=role)
         user.password = password
         db_session.add(user)
         db_session.commit()
@@ -701,6 +701,7 @@ class UserManager:
         expiration_hours = int(os.environ.get('JWT_EXPIRATION_HOURS', 4))
         payload = {
             "user_id": str(user.id),
+            "role": user.role,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=expiration_hours)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -730,6 +731,11 @@ class UserManager:
         user.password = new_password
         db_session.commit()
 
+    def set_role(self, *, user: User, role: str) -> None:
+        """Update user's role."""
+        user.role = role
+        db_session.commit()
+
     @staticmethod
     def serialize(user: User) -> dict[str, str]:
         """Serialize for response."""
@@ -737,6 +743,7 @@ class UserManager:
             "is_active": user.is_active,
             "id": user.id,
             "username": user.username,
+            "role": user.role,
         }
 
 

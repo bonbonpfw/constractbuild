@@ -1,4 +1,4 @@
-import React, { Dispatch, useState } from "react";
+import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import {
   Button,
@@ -10,34 +10,37 @@ import {
   DialogTitle,
 } from "../../styles/SharedStyles";
 import { errorHandler, ErrorResponseData } from "../shared/ErrorHandler";
-import { Form, Input } from "antd";
-import { CreateUserValues, EditUserValues, User } from "../../types";
-import { createUser, editUser } from "../../api";
+import { Form, Input, Select } from "antd";
+import { EditUserValues } from "../../types";
+import { editUser } from "../../api";
 
 interface EditUsersDialogProps {
   id: string | null;
+  currentRole: string;
   onClose: () => void;
+  onUserUpdated?: () => void;
 }
 
-const EditUserDialog: React.FC<EditUsersDialogProps> = ({ id, onClose }) => {
+const EditUserDialog: React.FC<EditUsersDialogProps> = ({ id, currentRole, onClose, onUserUpdated }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values: EditUserValues) => {
-    const { oldPassword, newPassword } = values;
+    const { role, newPassword } = values;
     setLoading(true);
 
     if (id) {
       try {
         await editUser(id, {
-          old_password: oldPassword,
-          new_password: newPassword,
+          role: role,
+          ...(newPassword && { new_password: newPassword }),
         });
 
+        onUserUpdated?.();
         onClose();
       } catch (error) {
         errorHandler(
           error as ErrorResponseData,
-          "Failed to update user password",
+          "Failed to update user",
         );
       } finally {
         setLoading(false);
@@ -66,20 +69,23 @@ const EditUserDialog: React.FC<EditUsersDialogProps> = ({ id, onClose }) => {
             colon={false}
             onFinish={handleSubmit}
             style={{ padding: "20px" }}
+            initialValues={{ role: currentRole }}
           >
             <Form.Item
-              label="סיסמה נוכחית"
-              name="oldPassword"
-              rules={[{ required: true, message: "נא להזין סיסמה נוכחית" }]}
+              label="תפקיד"
+              name="role"
+              rules={[{ required: true, message: "נא לבחור תפקיד" }]}
             >
-              <Input.Password placeholder="••••••••" size="large" />
+              <Select size="large">
+                <Select.Option value="user">משתמש</Select.Option>
+                <Select.Option value="admin">מנהל</Select.Option>
+              </Select>
             </Form.Item>
 
             <Form.Item
-              label="סיסמה חדשה"
+              label="סיסמה חדשה (השאר ריק אם לא רוצה לשנות)"
               name="newPassword"
               rules={[
-                { required: true, message: "נא להזין סיסמה חדשה" },
                 { min: 6, message: "הסיסמה חייבת להכיל לפחות 6 תווים" },
               ]}
             >
@@ -91,10 +97,10 @@ const EditUserDialog: React.FC<EditUsersDialogProps> = ({ id, onClose }) => {
               name="confirmNewPassword"
               dependencies={["newPassword"]}
               rules={[
-                { required: true, message: "נא לאשר את הסיסמה החדשה" },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
-                    if (!value || getFieldValue("newPassword") === value) {
+                    const newPassword = getFieldValue("newPassword");
+                    if (!newPassword || newPassword === value) {
                       return Promise.resolve();
                     }
                     return Promise.reject(new Error("הסיסמאות אינן תואמות"));

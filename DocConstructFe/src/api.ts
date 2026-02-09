@@ -4,7 +4,7 @@ import {
   Project,
   ProjectCreationFormData,
   DocumentState,
-  UpdateUserPasswordPayload,
+  UpdateUserPayload,
   ProfessionalCreationFormData,
 } from "./types";
 import Cookies from "js-cookie";
@@ -433,8 +433,8 @@ export const getUsers = async () => {
   return response.data;
 };
 
-export const createUser = async (username: string, password: string) => {
-  const response = await axios.post(`${API_URL}/users`, { username, password });
+export const createUser = async (username: string, password: string, role: string = 'user') => {
+  const response = await axios.post(`${API_URL}/users`, { username, password, role });
   return response.data;
 };
 
@@ -445,7 +445,7 @@ export const deleteUser = async (id: string) => {
 
 export const editUser = async (
   id: string,
-  payload: UpdateUserPasswordPayload,
+  payload: UpdateUserPayload,
 ) => {
   await axios.patch(`${API_URL}/users/${id}`, payload);
   return true;

@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validate
-from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole, ProjectServiceType
+from data_model.enum import ProjectDocumentType, ProfessionalDocumentType, ProfessionalType, ProjectStatus, ProjectTeamRole, ProjectServiceType, UserRole
 
 # Project Schemas
 
@@ -219,13 +219,14 @@ class UserCreateSchema(Schema):
 
     username = fields.Str(required=True)
     password = fields.Str(required=True)
+    role = fields.Enum(UserRole, by_value=True, required=False, load_default=UserRole.USER)
 
 
-class UserUpdatePasswordSchema(Schema):
-    """User update password API endpoint payload."""
+class UserUpdateSchema(Schema):
+    """User update API endpoint payload."""
 
-    old_password = fields.Str(required=True)
-    new_password = fields.Str(required=True)
+    role = fields.Enum(UserRole, by_value=True, required=False)
+    new_password = fields.Str(required=False)
 
 
 class AuthenticateUserSchema(Schema):
@@ -461,8 +462,8 @@ API_ENDPOINTS = {
     },
     Endpoints.USER_SET_PASSWORD: {
         "method": "PATCH",
-        "schema": UserUpdatePasswordSchema,
-        "description": "Set user password."
+        "schema": UserUpdateSchema,
+        "description": "Update user role and/or password."
     },
     Endpoints.AUTHENTICATE_USER: {
         "method": "POST",
