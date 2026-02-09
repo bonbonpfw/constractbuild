@@ -759,10 +759,11 @@ def init_routes(app):
         comment = ProjectCommentsManager.get_by_id(comment_id)
         if str(comment.project_id) != project_id:
             raise ProjectCommentNotFound
-        if str(comment.author_user_id) != request.user_id:
+        # Check if author_user_id exists (can be None if user was deleted)
+        if comment.author_user_id and str(comment.author_user_id) != request.user_id:
             raise AuthenticationFailed
         updated_comment = ProjectCommentsManager.update(
-            comment,
+            comment_id=comment_id,
             content=data.get("content"),
         )
         return SuccessResponse({

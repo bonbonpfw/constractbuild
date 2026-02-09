@@ -30,6 +30,15 @@ export default function Chat({ projectId }: { projectId: string }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesWrapperRef = useRef<HTMLDivElement>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+
+  const isNearBottom = () => {
+    if (!messagesWrapperRef.current) return true;
+    const { scrollTop, scrollHeight, clientHeight } = messagesWrapperRef.current;
+    const threshold = 100; // pixels from bottom
+    return scrollHeight - scrollTop - clientHeight < threshold;
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +51,7 @@ export default function Chat({ projectId }: { projectId: string }) {
       const newComment = await addProjectComment(projectId, input);
       setComments((prev) => [...prev, newComment]);
       setInput("");
+      setShouldAutoScroll(true);
       setTimeout(scrollToBottom, 100);
     } catch (err) {
       console.error("Failed to send comment:", err);
@@ -95,8 +105,27 @@ export default function Chat({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [comments]);
+    // Only auto-scroll if user is near bottom or just sent a message
+    if (shouldAutoScroll) {
+      const nearBottom = isNearBottom();
+      if (nearBottom) {
+        scrollToBottom();
+      }
+    }
+  }, [comments, shouldAutoScroll]);
+
+  useEffect(() => {
+    const wrapper = messagesWrapperRef.current;
+    if (!wrapper) return;
+
+    const handleScroll = () => {
+      const nearBottom = isNearBottom();
+      setShouldAutoScroll(nearBottom);
+    };
+
+    wrapper.addEventListener("scroll", handleScroll);
+    return () => wrapper.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const sortedComments = useMemo(() => {
     return [...comments].sort((a, b) => {
@@ -108,7 +137,7 @@ export default function Chat({ projectId }: { projectId: string }) {
 
   return (
     <ChatContainer>
-      <MessagesWrapper>
+      <MessagesWrapper ref={messagesWrapperRef}>
         {sortedComments.map((comment) => (
           <Message
             key={comment.id}

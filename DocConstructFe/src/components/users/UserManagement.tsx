@@ -174,6 +174,7 @@ const UserManagement = () => {
           isOpen={showDeleteDialog}
           onConfirm={onDelete}
           onCancel={() => setShowDeleteDialog(false)}
+          message={`האם אתה בטוח שברצונך למחוק את המשתמש ${users.find(u => u.id === selectedUserId)?.username || ''}?`}
         />
       )}
     </PageContainer>
