@@ -57,12 +57,12 @@ export const MessageBubble = styled.div<{ $isMine: boolean }>`
       ? `
     background-color: #dcf8c6;
     color: #303030;
-    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
   `
       : `
     background-color: #ffffff;
     color: #303030;
-    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   `}
 `;
 
