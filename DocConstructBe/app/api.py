@@ -584,7 +584,7 @@ def is_document_professional_missing(project_id: str, document_type: ProjectDocu
     project_professionals = ProjectManager.get_project_professionals(project_id=project_id)
     team_members = ProjectTeamManager.get_all_by_project(project_id=project_id)
     project_prof_types = [ProfessionalManager.get_prof_name(p_professional.professional_type) for p_professional in project_professionals]
-    project_team_types = [team_member.role.name for team_member in team_members]
+    project_team_types = [team_member.role if isinstance(team_member.role, str) else team_member.role.name for team_member in team_members]
     missing_members = [(name,value) for name,value in doc_required_members_map.items() if name.upper() not in project_prof_types + project_team_types]
     if missing_members:
         logger.info(f"Missing members: {missing_members}")
@@ -606,6 +606,7 @@ class ProjectTeamManager:
             team_members = db_session.query(ProjectTeamMember).filter(ProjectTeamMember.project_id == project_id).all()
             for team_member in team_members:
                 db_session.expunge(team_member)
+                team_member.role = ProjectTeamRole.map_to_value(team_member.role)
             return team_members
         except Exception:
             db_session.rollback()
@@ -620,7 +621,7 @@ class ProjectTeamManager:
         return team
 
     @staticmethod
-    def create(project_id: str, name: str, address: str, phone: str, role: str, email: str = None, signature_file_path: str = None) -> ProjectTeamMember:
+    def create(project_id: str, name: str, address: str, phone: str, role: str = None, email: str = None, signature_file_path: str = None) -> ProjectTeamMember:
         team_member = ProjectTeamMember(
             name=name,
             address=address,

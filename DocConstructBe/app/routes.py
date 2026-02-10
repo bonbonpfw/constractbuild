@@ -634,12 +634,13 @@ def init_routes(app):
     @auto_rollback
     def create_project_team():
         data = validate_request(endpoint=Endpoints.CREATE_PROJECT_TEAM)
+        role = data.get('role')
         team = ProjectTeamManager.create(
             project_id=str(data.get('project_id')),
             name=data.get('name'),
             address=data.get('address'),
             phone=data.get('phone'),
-            role=data.get('role'),
+            role=enum_to_value(role) if role is not None else None,
             email=data.get('email'),
             signature_file_path=data.get('signature_file_path'),
         )

@@ -136,6 +136,8 @@ class ProjectTeamRole(Enum):
     CONTRACTOR_REPRESENTATIVE = 'נציג הקבלן'
     PROJECT_MANAGER = 'מנהל הפרויקט'
     PERMIT_OWNER_REPRESENTATIVE = 'נציג בעל ההיתר'
+    CUSTOM_ROLE = 'custom_role'
+
 
     @staticmethod
     def get_all() -> list[str]:
@@ -158,7 +160,7 @@ class ProjectTeamRole(Enum):
             return ProjectTeamRole.PROJECT_MANAGER
         elif "נציג בעל ההיתר" == value:
             return ProjectTeamRole.PERMIT_OWNER_REPRESENTATIVE
-        return ProjectTeamRole.PERMIT_OWNER
+        return value
 
 def enum_to_value(enum_member_or_value):
     return enum_member_or_value.value if hasattr(enum_member_or_value, "value") else enum_member_or_value

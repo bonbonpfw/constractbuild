@@ -298,7 +298,7 @@ class DocumentFiller:
         version = len(coordinates)
         path  = project_doc_path_for_city(city=city,doc=self.document_name,version=version)
         self.document_positions = DocumentMap.load_prof_doc_config(path)
-        required_members = [member for member in self.doc_required_members if member.role.name.lower() in self.document_positions.get("TYPES")]
+        required_members = [member for member in self.doc_required_members if (member.role if isinstance(member.role, str) else member.role.name).lower() in self.document_positions.get("TYPES")]
         
         reader = PdfReader(pdf_path)
         writer = PdfWriter()
@@ -401,7 +401,7 @@ class DocumentFiller:
         if not isinstance(i, str):
             return ""
             
-        prefix = required_member.role.name.lower()
+        prefix = (required_member.role if isinstance(required_member.role, str) else required_member.role.name).lower()
         
         if i == f"{prefix}_name":
             return required_member.name or ""

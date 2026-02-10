@@ -8,7 +8,7 @@ from sqlalchemy import Column, Boolean, String, Date, ForeignKey, UniqueConstrai
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from data_model.enum import ProjectServiceType
+from data_model.enum import  ProjectTeamRole
 from app.errors import ValidationError
 from database.base_model import Base
 from database.database import engine
@@ -210,18 +210,18 @@ class ProjectTeamMember(Base):
     email = Column(String, nullable=True)
     signature_file_path = Column(String, nullable=True)
     # Allowed roles: 'permit_owner' (בעל ההיתר), 'request_editor' (עורך הבקשה), 'contractor_representative' (נציג הקבלן), 'project_manager' (מנהל הפרויקט), 'permit_owner_representative' (נציג בעל ההיתר)
-    role = Column(String, nullable=False)
+    role = Column(String, nullable=False, default=ProjectTeamRole.CUSTOM_ROLE.value)
     created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC), nullable=False)
     project_id = Column(UUID_F(), ForeignKey('projects.id'), nullable=False)
 
-    def __init__(self, project_id: str, name: str, address: str, phone: str, role: str, email: str = None, signature_file_path: str = None):
+    def __init__(self, project_id: str, name: str, address: str, phone: str, role: str = None, email: str = None, signature_file_path: str = None):
         super().__init__()
         self.project_id = project_id
         self.name = name
         self.address = address
         self.phone = phone
-        self.role = role
+        self.role = role if role is not None else ProjectTeamRole.CUSTOM_ROLE.value
         self.email = email
         self.signature_file_path = signature_file_path
 
