@@ -206,9 +206,6 @@ const Projects: React.FC = () => {
           key={project.id}
           onClick={() => handleProjectClick(project.id)}
         >
-          <StatusBadge status={project.status || 'draft'}>
-            {getStatusLabel(project.status)}
-          </StatusBadge>
           {project.is_expired && (
             <WarningBadge color="#d32f2f" title="יש בעלי מקצוע עם רישיון שפג תוקף!">
               <FaExclamationTriangle />
