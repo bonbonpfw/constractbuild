@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy import inspect, text
 
-from DocConstructBe.database.database import engine
+from database.database import engine
 
 
 def upgrade() -> None:

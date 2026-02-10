@@ -5,6 +5,7 @@ from flask import Flask
 from config.app_config import FlaskAppConfiguration
 from config.sys_config import DOCUMENTS_FOLDER
 from data_model.models import init_tables
+from database.migrations import run_all_migrations
 from app.errors import handle_error
 from flask_executor import Executor
 from flask_mail import Mail
@@ -37,6 +38,9 @@ def create_app():
 
     )
     init_tables()
+    
+    # Run all database migrations
+    run_all_migrations()
 
     app.register_error_handler(code_or_exception=Exception, f=handle_error)
 
