@@ -11,7 +11,7 @@
           - construction_inspection_officer_id
           - construction_inspection_officer_name
           - permit_owner_mail
-          - None
+          - permit_owner_mail
       2:
           - None
           - None
