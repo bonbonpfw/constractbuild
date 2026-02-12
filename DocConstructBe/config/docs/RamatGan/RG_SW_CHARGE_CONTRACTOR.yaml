@@ -7,7 +7,7 @@
       1:
           - None
           - None
-          - general_contractor_license_number_expiration_date
+          - general_contractor_license_expiration_date
           - general_contractor_license_number
           - permit_owner_mail
           - None
