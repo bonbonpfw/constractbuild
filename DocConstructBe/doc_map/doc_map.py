@@ -359,14 +359,22 @@ class DocumentFiller:
                                 break
                     
                     # Only proceed with display and drawing if we have text
-      
+
                     if text:
                         logger.info(f"Text: {text}")
                         text = get_display(text)
                         text_width = c.stringWidth(text, "ArialHebrew", font_size)
+
+                        # Auto-shrink font size if text is too wide for the field
+                        min_font_size = 5
+                        while text_width > width and font_size > min_font_size:
+                            font_size -= 0.5
+                            c.setFont("ArialHebrew", font_size)
+                            text_width = c.stringWidth(text, "ArialHebrew", font_size)
+
                         text_x = x + (width - text_width) / 2  # מרכוז
                         text_y = y + 5
-                        
+
                         c.drawString(text_x, text_y, text)
                     
                     c.setStrokeColorRGB(0.5, 0.5, 0.5)
