@@ -160,7 +160,9 @@ class ProjectTeamRole(Enum):
             return ProjectTeamRole.PROJECT_MANAGER
         elif "נציג בעל ההיתר" == value:
             return ProjectTeamRole.PERMIT_OWNER_REPRESENTATIVE
-        return value
+        elif "custom_role" == value:
+            return ProjectTeamRole.CUSTOM_ROLE
+        return ProjectTeamRole.CUSTOM_ROLE
 
 def enum_to_value(enum_member_or_value):
     return enum_member_or_value.value if hasattr(enum_member_or_value, "value") else enum_member_or_value
