@@ -29,10 +29,12 @@ export default function Message({
   const formattedTime = messageDate.toLocaleTimeString("he-IL", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Jerusalem",
   });
   const formattedDate = messageDate.toLocaleDateString("he-IL", {
     day: "numeric",
     month: "short",
+    timeZone: "Asia/Jerusalem",
   });
 
   const [isEditing, setIsEditing] = useState(false);
