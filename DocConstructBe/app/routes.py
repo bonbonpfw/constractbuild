@@ -813,7 +813,7 @@ def init_routes(app):
         if comment.author_user_id and str(comment.author_user_id) != request.user_id:
             raise AuthenticationFailed
         updated_comment = ProjectCommentsManager.update(
-            comment_id=comment_id,
+            comment=comment,
             content=data.get("content"),
         )
         return SuccessResponse({

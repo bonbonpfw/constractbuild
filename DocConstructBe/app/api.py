@@ -63,7 +63,7 @@ class ProjectManager:
     @staticmethod
     def get_all() -> list[Project]:
         from sqlalchemy.orm import joinedload
-        return db_session.query(Project).options(joinedload(Project.team_members)).all()
+        return db_session.query(Project).options(joinedload(Project.team_members)).order_by(Project.name).all()
 
     @staticmethod
     def get_by_id(project_id: str) -> Project:
