@@ -135,11 +135,13 @@ const Projects: React.FC = () => {
       });
     }
 
-    // Sort by name in Hebrew alphabetical order (א-ת)
+    // Sort by name א-ת
     filtered = [...filtered].sort((a, b) => {
       const nameA = a.name || '';
       const nameB = b.name || '';
-      return nameA.localeCompare(nameB, 'he');
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return 0;
     });
 
     return filtered;
@@ -206,9 +208,7 @@ const Projects: React.FC = () => {
 
   const renderCardView = () => (
     <CardGrid>
-      {[...filteredProjects]
-        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'he'))
-        .map((project) => (
+      {filteredProjects.map((project) => (
         <Card
           key={project.id}
           onClick={() => handleProjectClick(project.id)}
