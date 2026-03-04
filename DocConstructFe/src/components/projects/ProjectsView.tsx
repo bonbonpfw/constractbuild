@@ -134,7 +134,14 @@ const Projects: React.FC = () => {
         return name.includes(term) || requestNumber.includes(term);
       });
     }
-    
+
+    // Sort by name in Hebrew alphabetical order (א-ת)
+    filtered = [...filtered].sort((a, b) => {
+      const nameA = a.name || '';
+      const nameB = b.name || '';
+      return nameA.localeCompare(nameB, 'he');
+    });
+
     return filtered;
   }, [projects, selectedCity, selectedServiceType, searchTerm]);
 
